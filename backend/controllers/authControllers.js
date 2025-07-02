@@ -126,24 +126,30 @@ const updateUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Update allowed fields
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    
+    user.department = req.body.department || user.department;
+    user.profileImageUrl = req.body.profileImageUrl || user.profileImageUrl;
+
+    // Handle password update (only if sent)
     if (req.body.password) {
-      // Hash password
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(req.body.password, salt);
     }
-    
+
+    const updatedUser = await user.save();
+
     res.json({
       _id: updatedUser.id,
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
       department: updatedUser.department,
+      profileImageUrl: updatedUser.profileImageUrl,
       token: generateToken(updatedUser._id),
-    })
-
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
