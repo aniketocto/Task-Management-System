@@ -67,6 +67,30 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check if password is correct
+    const isMatch = await bycrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Return user data with jwt
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profileImageUrl: user.profileImageUrl,
+      role: user.role,
+      department: user.department,
+      token: generateToken(user._id),
+    })
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
