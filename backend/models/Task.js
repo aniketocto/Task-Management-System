@@ -10,7 +10,7 @@ const todoSchema = new mongoose.Schema({
 
 const taskSchema = new mongoose.Schema(
   {
-    title: { tpe: String, required: true },
+    title: { type: String, required: true },
     description: { type: String },
     priority: {
       type: String,
