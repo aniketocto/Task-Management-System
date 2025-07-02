@@ -14,10 +14,11 @@ app.use(
   })
 );
 
+connectDB();
+
+
 // Middleware
 app.use(express.json());
-
-connectDB();
 
 // Routes
 // app.use("/api/auth", authRoutes);
