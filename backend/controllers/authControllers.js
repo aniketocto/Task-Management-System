@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const bycrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 //Generate JWT Token
@@ -13,7 +13,14 @@ const generateToken = (userId) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, profileImageUrl, department, adminInviteToken } = req.body;
+    const {
+      name,
+      email,
+      password,
+      profileImageUrl,
+      department,
+      adminInviteToken,
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -21,7 +28,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Determine user role: Admin if correct token is provides, otherwise user
+    // Determine role
     let role = "user";
     if (
       adminInviteToken &&
@@ -31,8 +38,8 @@ const registerUser = async (req, res) => {
     }
 
     // Hash password
-    const salt = await bycrypt.genSalt(10);
-    const hashedPassword = await bycrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
     const user = await User.create({
@@ -41,10 +48,10 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
       profileImageUrl,
       role,
-      department
+      department,
     });
 
-    // Return user data with jwt
+    // Return user data + JWT
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -54,13 +61,10 @@ const registerUser = async (req, res) => {
       department: user.department,
       token: generateToken(user._id),
     });
-
-
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 // @desc Login user
 // @route POST /api/auth/login
 // @access Public
@@ -76,7 +80,7 @@ const loginUser = async (req, res) => {
     }
 
     // Check if password is correct
-    const isMatch = await bycrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -90,7 +94,7 @@ const loginUser = async (req, res) => {
       role: user.role,
       department: user.department,
       token: generateToken(user._id),
-    })
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -102,6 +106,11 @@ const loginUser = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -113,6 +122,28 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    
+    if (req.body.password) {
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
+    }
+    
+    res.json({
+      _id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      department: updatedUser.department,
+      token: generateToken(updatedUser._id),
+    })
+
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
