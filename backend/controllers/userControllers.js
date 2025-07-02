@@ -13,12 +13,32 @@ const getUsers = async (req, res) => {
     // Add tasks count to each user
     const usersWithTaskCount = await Promise.all(
       users.map(async (user) => {
+        const newTask = await Task.countDocuments({
+          assignedTo: user._id,
+          status: "new",
+        });
         const pendingTask = await Task.countDocuments({
-            assignedTo: user._id,
+          assignedTo: user._id,
           status: "pending",
         });
+        const inProgressTask = await Task.countDocuments({
+          assignedTo: user._id,
+          status: "inProgress",
+        });
+        const completedTask = await Task.countDocuments({
+          assignedTo: user._id,
+          status: "completed",
+        });
+        return {
+          ...user._doc,
+          newTask,
+          pendingTask,
+          inProgressTask,
+          completedTask,
+        };
       })
     );
+    res.json(usersWithTaskCount);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -30,6 +50,11 @@ const getUsers = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
