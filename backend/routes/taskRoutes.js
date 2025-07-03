@@ -1,8 +1,5 @@
 const express = require("express");
-const {
-  protect,
-  roleCheck,
-} = require("../middlewares/authMiddleware");
+const { protect, roleCheck } = require("../middlewares/authMiddleware");
 const {
   getTasks,
   getTask,
@@ -11,15 +8,29 @@ const {
   deleteTask,
   updateTaskChecklist,
   updateTaskStatus,
+  getDashboardData,
+  getUserDashboardData,
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
 
+// Dashboard Route
+router.get(
+  "/dashboard-data",
+  protect,
+  roleCheck("admin", "superAdmin"),
+  getDashboardData
+); // All data dashboard for admin
+
+router.get(
+  "/user-dashboard-data",
+  protect,
+  roleCheck("admin", "superAdmin"),
+  getUserDashboardData
+); // Data Daskboard particular user    
+
+
 // Task Management Route
-
-// router.get("/dashboard-data", protect, adminOnly, getDashboardData); // All data dashboard for admin
-
-// router.get("/user-dashboard-data", protect, adminOnly, getUserDashboardData); // Data Daskboard particular user
 
 router.get("/", protect, getTasks); // Get All Tasks (Superadmin, Admin: all, User: only their tasks)
 
@@ -38,6 +49,6 @@ router.delete("/:id", protect, roleCheck("admin", "superAdmin"), deleteTask); //
 
 router.put("/:id/status", protect, updateTaskStatus); // Update task status
 
-router.put("/:id/todo", protect, updateTaskChecklist);
+router.put("/:id/todo", protect, updateTaskChecklist); 
 
 module.exports = router;

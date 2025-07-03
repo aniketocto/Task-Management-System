@@ -10,7 +10,7 @@ const getTasks = async (req, res) => {
     }
 
     let tasks;
-    if (req.user.role === "admin") {
+    if (req.user.role === "admin" || req.user.role === "superAdmin") {
       tasks = await Task.find(filter).populate(
         "assignedTo",
         "name email profileImageUrl"
@@ -204,7 +204,6 @@ const updateTask = async (req, res) => {
 
 const deleteTask = async (req, res) => {
   try {
-
     const task = await Task.findById(req.params.id);
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -212,7 +211,6 @@ const deleteTask = async (req, res) => {
 
     await task.deleteOne();
     res.json({ message: "Task Delete Successfully" });
-
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -220,12 +218,188 @@ const deleteTask = async (req, res) => {
 
 const updateTaskStatus = async (req, res) => {
   try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const isAssigned = task.assignedTo.some(
+      (user) => user.toString() === req.user._id.toString()
+    );
+
+    if (
+      !isAssigned &&
+      req.user.role !== "superAdmin" &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to update this task." });
+    }
+
+    task.status = req.body.status;
+
+    if (task.status === "completed") {
+      task.todoChecklist.forEach((item) => {
+        item.completed = true;
+      });
+      task.progress = 100;
+    }
+
+    await task.save();
+    res.status(200).json({ message: "Task status updated successfully", task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 const updateTaskChecklist = async (req, res) => {
+  try {
+    const { todoChecklist } = req.body;
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    if (
+      !task.assignedTo.includes(req.user._id) &&
+      req.user.role !== "superAdmin" &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "You are not authorized to update the task checklist.",
+      });
+    }
+
+    task.todoChecklist = todoChecklist;
+
+    // Auto update progress based on completed items
+    const completedCount = task.todoChecklist.filter(
+      (item) => item.completed
+    ).length;
+    const totalItems = task.todoChecklist.length;
+    task.progress =
+      totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+
+    const now = new Date();
+
+    if (task.progress === 100) {
+      if (now > task.dueDate) {
+        task.status = "delayed"; // completed, but late
+      } else {
+        task.status = "completed"; // completed on time
+      }
+    } else if (now > task.dueDate) {
+      task.status = "pending"; // overdue & not completed
+    } else if (task.progress > 0) {
+      task.status = "inProgress";
+    } else {
+      task.status = "new";
+    }
+
+    await task.save();
+
+    const updatedTask = await Task.findById(req.params.id).populate(
+      "assignedTo",
+      "name email profileImageUrl"
+    );
+
+    res.status(200).json({
+      message: "Task checklist updated successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getDashboardData = async (req, res) => {
+  try {
+    // Fetch statistics
+    const totalTasks = await Task.countDocuments();
+    const newTasks = await Task.countDocuments({ status: "new" });
+    const inProgressTasks = await Task.countDocuments({ status: "inProgress" });
+    const completedTasks = await Task.countDocuments({ status: "completed" });
+    const overdueTasks = await Task.countDocuments({
+      status: { $ne: "completed" },
+      dueDate: { $lt: new Date() },
+    });
+    const delayedTasks = await Task.countDocuments({
+      status: "completed",
+      dueDate: { $lt: new Date() },
+    });
+
+    // Ensure all task status
+    const taskStatuses = [
+      "new",
+      "pending",
+      "inProgress",
+      "completed",
+      "delayed",
+    ];
+
+    const taskDistributionRaw = await Task.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const taskDistribution = taskStatuses.reduce((acc, status) => {
+      const formattedKey = status.replace(/\s+/g, "");
+      acc[formattedKey] =
+        taskDistributionRaw.find((item) => item._id === status)?.count || 0;
+      return acc;
+    }, {});
+    taskDistribution["All"] = totalTasks;
+
+    // Ensure all priority level
+    const taskPriorities = ["high", "medium", "low"];
+    const taskPrioritiesLevelsRaw = await Task.aggregate([
+      {
+        $group: {
+          _id: "$priority",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const taskPrioritiesLevels = taskPriorities.reduce((acc, priority) => {
+      acc[priority] =
+        taskPrioritiesLevelsRaw.find((item) => item._id === priority)?.count ||
+        0;
+      return acc;
+    }, {});
+
+    // Fetch recent 10 tasks
+    const recentTasks = await Task.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("title status prioity dueDate createdAt");
+
+    res.status(200).json({
+      statistic: {
+        totalTasks,
+        newTasks,
+        inProgressTasks,
+        completedTasks,
+        overdueTasks,
+        delayedTasks,
+      },
+      charts: {
+        taskDistribution,
+        taskPrioritiesLevels,
+      },
+      recentTasks,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getUserDashboardData = async (req, res) => {
   try {
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -240,4 +414,6 @@ module.exports = {
   deleteTask,
   updateTaskStatus,
   updateTaskChecklist,
+  getDashboardData,
+  getUserDashboardData,
 };
