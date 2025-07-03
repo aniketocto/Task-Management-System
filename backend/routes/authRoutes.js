@@ -8,6 +8,7 @@ const {
 } = require("../controllers/authControllers");
 const upload = require("../middlewares/uploadMiddleware");
 
+
 const router = express.Router();
 
 // Auth Routes;
