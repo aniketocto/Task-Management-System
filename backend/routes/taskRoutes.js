@@ -25,7 +25,6 @@ router.get(
 router.get(
   "/user-dashboard-data",
   protect,
-  roleCheck("admin", "superAdmin"),
   getUserDashboardData
 ); // Data Daskboard particular user    
 
