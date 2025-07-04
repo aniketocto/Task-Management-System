@@ -7,7 +7,7 @@ import { validateEmail, validatePassword } from "../../utils/helper";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState([]);
 
   const navigate = useNavigate();
 
@@ -15,18 +15,27 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    const errors = [];
+
     if (!validateEmail(email)) {
-      setError("Email must be a valid @getunstoppable.in address");
-      return;
+      errors.push("Email must be a valid @getunstoppable.in address");
     }
+
     if (!validatePassword(password)) {
-      setError("Please enter the password");
-      return;
+      errors.push(
+        "Password must have at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be at least 8 characters long."
+      );
     }
 
-    setError("");
+    if (errors.length > 0) {
+      setError(errors); // display errors
+      return; // ⛔ stop here
+    }
 
-    // Login Api Call
+    setError([]); // no errors
+
+    // 🚀 proceed with Login Api Call
+    console.log(email, password);
   };
 
   return (
@@ -53,7 +62,13 @@ const Login = () => {
             type="password"
           />
 
-          {error && <p className="text-sm text-red-500 pb-2.5">{error}</p>}
+          {Array.isArray(error) && error.length > 0 && (
+            <ul className="text-red-500 text-sm pb-2.5">
+              {error.map((err, idx) => (
+                <li key={idx}>• {err}</li>
+              ))}
+            </ul>
+          )}
 
           <button type="submit" className="btn-primary">
             Login
