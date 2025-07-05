@@ -13,9 +13,9 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    const acessToken = localStorage.getItem("token");
-    if (acessToken) {
-      config.headers.Authorization = `Bearer ${acessToken}`;
+    const accessToken = localStorage.getItem("taskManagerToken");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -45,3 +45,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export default axiosInstance;
