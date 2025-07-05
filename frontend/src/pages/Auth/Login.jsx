@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
@@ -6,12 +6,16 @@ import { validateEmail, validatePassword } from "../../utils/helper";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
+import { UserContext } from "../../context/userContext";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState([]);
 
   const navigate = useNavigate();
+
+  const { updateUser } = useContext(UserContext);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -47,12 +51,15 @@ const Login = () => {
 
       if (token) {
         localStorage.setItem("taskManagerToken", token);
+        updateUser(response.data);
 
-        if (role === "admin") {
+        if (role === "admin" || role === "superAdmin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/user/dashboard");
         }
+      } else {
+        setError(["Something went wrong"]);
       }
     } catch (error) {
       if (error.response && error.response.data) {
