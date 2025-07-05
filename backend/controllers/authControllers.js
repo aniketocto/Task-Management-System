@@ -22,7 +22,7 @@ const registerUser = async (req, res) => {
       adminInviteToken,
     } = req.body;
 
-    // Check if user already exists
+    // Check if user already existsx` 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
