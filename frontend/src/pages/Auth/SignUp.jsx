@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
 import Input from "components/Inputs/Input";
 import SelectInput from "components/Inputs/SelectInput";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -17,6 +17,12 @@ const SignUp = () => {
 
   const [error, setError] = useState("");
 
+    const location = useLocation();
+
+  // Parse query params
+  const params = new URLSearchParams(location.search);
+  const isAdmin = params.get("admin") === "true";
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     const errors = [];
@@ -26,6 +32,11 @@ const SignUp = () => {
     }
     if (!validateEmail(email)) {
       errors.push("Email must be a valid @getunstoppable.in address");
+    }
+    if (isAdmin) {
+      if(!adminInviteToken) {
+        errors.push("Please enter your admin invite token");
+      }
     }
     if (!validatePassword(password)) {
       errors.push(
@@ -85,13 +96,16 @@ const SignUp = () => {
               placeholder="example@getunstoppable.in"
               type="text"
             />
-            <Input
+            {
+            isAdmin && (
+              <Input
               value={adminInviteToken}
               onChange={({ target }) => setAdminInviteToken(target.value)}
               label="Admin Token"
               placeholder="Admin Token"
               type="text"
             />
+            )}
             <SelectInput
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
@@ -146,8 +160,8 @@ const SignUp = () => {
             </Link>
           </p>
           <p className="text-[13px] text-slate-800 mt-3">
-            Admin Sign In
-            <Link to="/sign-in?admin=true" className="text-primary font-medium underline">
+            Admin Sign In?
+            <Link to="/sign-up?admin=true" className="text-primary font-medium underline">
               Admin
             </Link>
           </p>
