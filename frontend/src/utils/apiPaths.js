@@ -1,0 +1,37 @@
+const BASE_URL = "https://localhost:8000";
+
+export const API_PATHS = {
+  AUTH: {
+    REGISTER: "/api/auth/register",
+    LOGIN: "/api/auth/login",
+    GET_PROFILE: "/api/auth/profile",
+    UPDATE_PROFILE: "/api/auth/profile",
+    UPLOAD_IMAGE: "/api/auth/upload-image",
+  },
+  USERS: {
+    GET_ALL_USERS: "/api/users", //get all user
+    GET_USER_BY_ID: (userId) => `/api/users/${userId}`, //get user by id
+    CREATE_USER: "/api/users", // create a new user admin only
+    UPDATE_USER_BY_ID: (userId) => `/api/users/${userId}`, // update user by id admin only
+    DELETE_USER_BY_ID: (userId) => `/api/users/${userId}`, // delete user by id admin only
+  },
+  TASKS: {
+    GET_DASHBOARD_DATA: "/api/tasks/dashboard-data", // get dashboard data
+    GET_USER_DASHBOARD_DATA: "/api/tasks/user-dashboard-data", // get user dashboard data
+    GET_ALL_TASKS: "/api/tasks", // get all tasks
+    GET_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // get task by id
+    CREATE_TASK: "/api/tasks", // create a new task admin only
+    UPDATE_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // update task by id admin only
+    DELETE_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // delete task by id admin only
+
+    UPDATE_TASK_STATUS: (taskId) => `/api/tasks/${taskId}/status`, // update task status
+    UPDATE_TASK_CHECKLIST: (taskId) => `/api/tasks/${taskId}/todo`, // update task checklist
+  },
+  REPORTS: {
+    EXPORT_TASKS: "/api/reports/export/tasks", // export all tasks
+    EXPORT_USERS: "/api/reports/export/users", // export all tasks
+  },
+  IMAGE: {
+    UPLOAD_IMAGE: "/api/auth/upload-image",
+  }
+};
