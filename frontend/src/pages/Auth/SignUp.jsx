@@ -1,10 +1,14 @@
 import { validateEmail, validatePassword } from "../../utils/helper";
 import AuthLayout from "../../components/layouts/AuthLayout";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
-import Input from "components/Inputs/Input";
-import SelectInput from "components/Inputs/SelectInput";
-import { Link, useLocation } from "react-router-dom";
+import Input from "../../components/Inputs/Input";
+import SelectInput from "../../components/Inputs/SelectInput";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
+import uploadImage from "../../utils/uploadImage";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -17,7 +21,10 @@ const SignUp = () => {
 
   const [error, setError] = useState("");
 
-    const location = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { updateUser } = useContext(UserContext);
 
   // Parse query params
   const params = new URLSearchParams(location.search);
@@ -27,6 +34,8 @@ const SignUp = () => {
     e.preventDefault();
     const errors = [];
 
+    let profileImgUrl = "";
+
     if (!name) {
       errors.push("Please enter your name");
     }
@@ -34,7 +43,7 @@ const SignUp = () => {
       errors.push("Email must be a valid @getunstoppable.in address");
     }
     if (isAdmin) {
-      if(!adminInviteToken) {
+      if (!adminInviteToken) {
         errors.push("Please enter your admin invite token");
       }
     }
@@ -57,16 +66,45 @@ const SignUp = () => {
     // all good
     setError([]);
 
-    console.log({
-      userData: {
+    // 🚀 proceed with Sign up Api Call
+    try {
+      
+      // upload profile if present
+      if (profilePic) {
+        const imgUplaodRes = await uploadImage(profilePic);
+        profileImgUrl = imgUplaodRes.imageUrl || "";
+      }
+
+      const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+        name,
         email,
         password,
-        profilePic,
-        name,
+        profileImageUrl: profileImgUrl,
         adminInviteToken,
         department,
-      },
-    });
+      });
+
+      const { token, role } = response.data;
+
+      if (token) {
+        localStorage.setItem("taskManagerToken", token);
+        updateUser(response.data);
+
+        if (role === "admin" || role === "superAdmin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/user/dashboard");
+        }
+      } else {
+        setError(["Something went wrong"]);
+      }
+    } catch (error) {
+      if (error.response && error.response.data) {
+        setError([error.response.data.message]);
+      } else {
+        setError(["Something went wrong"]);
+      }
+    }
   };
 
   return (
@@ -96,15 +134,14 @@ const SignUp = () => {
               placeholder="example@getunstoppable.in"
               type="text"
             />
-            {
-            isAdmin && (
+            {isAdmin && (
               <Input
-              value={adminInviteToken}
-              onChange={({ target }) => setAdminInviteToken(target.value)}
-              label="Admin Token"
-              placeholder="Admin Token"
-              type="text"
-            />
+                value={adminInviteToken}
+                onChange={({ target }) => setAdminInviteToken(target.value)}
+                label="Admin Token"
+                placeholder="Admin Token"
+                type="text"
+              />
             )}
             <SelectInput
               value={department}
@@ -161,7 +198,10 @@ const SignUp = () => {
           </p>
           <p className="text-[13px] text-slate-800 mt-3">
             Admin Sign In?
-            <Link to="/sign-up?admin=true" className="text-primary font-medium underline">
+            <Link
+              to="/sign-up?admin=true"
+              className="text-primary font-medium underline"
+            >
               Admin
             </Link>
           </p>
