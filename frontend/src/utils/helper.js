@@ -32,3 +32,7 @@ export const getGreeting = () => {
     return "Good Night";
   }
 };
+
+export const addThousandsSeperator = (num) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};

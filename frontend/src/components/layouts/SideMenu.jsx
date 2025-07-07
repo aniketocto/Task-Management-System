@@ -25,7 +25,6 @@ const SideMenu = ({ activeMenu }) => {
   };
 
   useEffect(() => {
-    console.log(user);
     if (user) {
       setSideMenuData(
         user?.role === "admin" || user?.role === "superAdmin"
