@@ -2,16 +2,33 @@ const Task = require("../models/Task");
 
 const getTasks = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, month } = req.query;
 
     let filter = {};
 
+    // Apply status filter if provided
     if (status) {
       filter.status = status;
     }
 
+    // Apply monthly filter if provided
+    if (month) {
+      const [year, monthNum] = month.split("-");
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+
+    // Check if user is privileged
+    const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
+
+    // Apply user filter based on role
     let tasks;
-    if (req.user.role === "admin" || req.user.role === "superAdmin") {
+    if (isPrivileged) {
       tasks = await Task.find(filter).populate(
         "assignedTo",
         "name email profileImageUrl"
@@ -36,42 +53,50 @@ const getTasks = async (req, res) => {
       })
     );
 
-    // Status Summary Count
-    const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
+    // Base filter for counting (includes month filter if provided)
+    let baseCountFilter = {};
 
-    const allTasks = await Task.countDocuments(
+    if (month) {
+      const [year, monthNum] = month.split("-");
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+      baseCountFilter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+
+    // Add user filter to base count filter if not privileged
+    if (!isPrivileged) {
+      baseCountFilter.assignedTo = req.user._id;
+    }
+
+    // Helper function to count tasks with specific status
+    const countWith = (status) =>
+      Task.countDocuments({ ...baseCountFilter, status });
+
+    // Count all tasks and status-specific tasks
+    const [
+      allTasks,
+      newTasks,
+      pendingTasks,
+      inProgressTasks,
+      completedTasks,
+      delayedTasks,
+    ] = await Promise.all([
+      Task.countDocuments(baseCountFilter),
+      countWith("new"),
+      countWith("pending"),
+      countWith("inProgress"),
+      countWith("completed"),
+      countWith("delayed"),
+    ]);
+
+    // Get monthly data (last 12 months)
+    const monthlyData = await getMonthlyTaskData(
       isPrivileged ? {} : { assignedTo: req.user._id }
     );
-
-    const newTasks = await Task.countDocuments({
-      ...filter,
-      status: "new",
-      ...(!isPrivileged && { assignedTo: req.user._id }),
-    });
-
-    const pendingTasks = await Task.countDocuments({
-      ...filter,
-      status: "pending",
-      ...(!isPrivileged && { assignedTo: req.user._id }),
-    });
-
-    const inProgressTasks = await Task.countDocuments({
-      ...filter,
-      status: "inProgress",
-      ...(!isPrivileged && { assignedTo: req.user._id }),
-    });
-
-    const completedTasks = await Task.countDocuments({
-      ...filter,
-      status: "completed",
-      ...(!isPrivileged && { assignedTo: req.user._id }),
-    });
-
-    const delayedTasks = await Task.countDocuments({
-      ...filter,
-      status: "delayed",
-      ...(!isPrivileged && { assignedTo: req.user._id }),
-    });
 
     res.status(200).json({
       tasks,
@@ -83,10 +108,84 @@ const getTasks = async (req, res) => {
         completedTasks,
         delayedTasks,
       },
+      monthlyData,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// Helper function to get monthly task data
+const getMonthlyTaskData = async (baseFilter) => {
+  const monthsData = [];
+
+  const earliestTask = await Task.findOne(baseFilter).sort({ createdAt: 1 });
+  const startDate = earliestTask?.createdAt || new Date();
+  const now = new Date();
+
+  const totalMonths =
+    (now.getFullYear() - startDate.getFullYear()) * 12 +
+    (now.getMonth() - startDate.getMonth());
+
+  for (let i = totalMonths; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const nextMonthDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - i + 1,
+      1
+    );
+
+    const monthFilter = {
+      ...baseFilter,
+      createdAt: {
+        $gte: monthDate,
+        $lt: nextMonthDate,
+      },
+    };
+    const monthLabel = monthDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+    });
+
+    const monthValue = `${monthDate.getFullYear()}-${String(
+      monthDate.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    const countWith = (status) =>
+      Task.countDocuments({ ...monthFilter, status });
+
+    const [
+      all,
+      newTasks,
+      pendingTasks,
+      inProgressTasks,
+      completedTasks,
+      delayedTasks,
+    ] = await Promise.all([
+      Task.countDocuments(monthFilter),
+      countWith("new"),
+      countWith("pending"),
+      countWith("inProgress"),
+      countWith("completed"),
+      countWith("delayed"),
+    ]);
+
+    monthsData.push({
+      label: monthLabel,
+      value: monthValue,
+      count: all,
+      statusBreakdown: {
+        all,
+        newTasks,
+        pendingTasks,
+        inProgressTasks,
+        completedTasks,
+        delayedTasks,
+      },
+    });
+  }
+
+  return monthsData;
 };
 
 const getTask = async (req, res) => {
