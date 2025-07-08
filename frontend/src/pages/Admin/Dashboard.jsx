@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
 import { useUserAuth } from "../../hooks/useUserAuth";
@@ -18,6 +18,9 @@ const Dashboard = () => {
 
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get("userId");
 
   const [dashboardData, setDashboardData] = useState(null);
   const [pieChartData, setPieChartData] = useState([]);
@@ -47,10 +50,13 @@ const Dashboard = () => {
     setBarChartData(taskPriorityData);
   };
 
-  const getDashboardData = async () => {
+  const getDashboardData = async (userId = null) => {
     try {
       const response = await axiosInstance.get(
-        API_PATHS.TASKS.GET_DASHBOARD_DATA
+        API_PATHS.TASKS.GET_DASHBOARD_DATA,
+        {
+          params: userId ? { userId } : {},
+        }
       );
 
       if (response.data) {
@@ -63,10 +69,9 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    getDashboardData();
-
+    getDashboardData(userId);
     return () => {};
-  }, []);
+  }, [userId]);
 
   const onSeeMore = () => {
     navigate("/admin/tasks");
