@@ -2,16 +2,14 @@ const Task = require("../models/Task");
 
 const getTasks = async (req, res) => {
   try {
-    const { status, month } = req.query;
+    const { status, month, page = 1, limit = 12 } = req.query;
+
+    const skip = (page - 1) * limit;
 
     let filter = {};
 
-    // Apply status filter if provided
-    if (status) {
-      filter.status = status;
-    }
+    if (status) filter.status = status;
 
-    // Apply monthly filter if provided
     if (month) {
       const [year, monthNum] = month.split("-");
       const startDate = new Date(year, monthNum - 1, 1);
@@ -23,60 +21,39 @@ const getTasks = async (req, res) => {
       };
     }
 
-    // Check if user is privileged
     const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
 
-    // Apply user filter based on role
-    let tasks;
-    if (isPrivileged) {
-      tasks = await Task.find(filter).populate(
-        "assignedTo",
-        "name email profileImageUrl"
-      );
-    } else {
-      tasks = await Task.find({ assignedTo: req.user._id, ...filter }).populate(
-        "assignedTo",
-        "name email profileImageUrl"
-      );
+    if (!isPrivileged) {
+      filter.assignedTo = req.user._id;
     }
 
-    // Add completed todoChecklist count to each task
+    // fetch paginated tasks
+    let tasks = await Task.find(filter)
+      .populate("assignedTo", "name email profileImageUrl")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    // attach completed todo count
     tasks = await Promise.all(
-      tasks.map(async (task) => {
+      tasks.map((task) => {
         const completedTodoCount = task.todoChecklist.filter(
           (item) => item.completed
         ).length;
+
         return {
           ...task._doc,
-          completedTodoCount: completedTodoCount,
+          completedTodoCount,
         };
       })
     );
 
-    // Base filter for counting (includes month filter if provided)
-    let baseCountFilter = {};
+    // total count for pagination
+    const totalCount = await Task.countDocuments(filter);
 
-    if (month) {
-      const [year, monthNum] = month.split("-");
-      const startDate = new Date(year, monthNum - 1, 1);
-      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+    // status summary
+    const countWith = (status) => Task.countDocuments({ ...filter, status });
 
-      baseCountFilter.createdAt = {
-        $gte: startDate,
-        $lte: endDate,
-      };
-    }
-
-    // Add user filter to base count filter if not privileged
-    if (!isPrivileged) {
-      baseCountFilter.assignedTo = req.user._id;
-    }
-
-    // Helper function to count tasks with specific status
-    const countWith = (status) =>
-      Task.countDocuments({ ...baseCountFilter, status });
-
-    // Count all tasks and status-specific tasks
     const [
       allTasks,
       newTasks,
@@ -85,7 +62,7 @@ const getTasks = async (req, res) => {
       completedTasks,
       delayedTasks,
     ] = await Promise.all([
-      Task.countDocuments(baseCountFilter),
+      Task.countDocuments(filter),
       countWith("new"),
       countWith("pending"),
       countWith("inProgress"),
@@ -93,13 +70,13 @@ const getTasks = async (req, res) => {
       countWith("delayed"),
     ]);
 
-    // Get monthly data (last 12 months)
     const monthlyData = await getMonthlyTaskData(
       isPrivileged ? {} : { assignedTo: req.user._id }
     );
 
     res.status(200).json({
       tasks,
+      totalCount, // 👈 send total so frontend can calculate pages
       statusSummary: {
         all: allTasks,
         newTasks,
@@ -170,6 +147,17 @@ const getMonthlyTaskData = async (baseFilter) => {
       countWith("delayed"),
     ]);
 
+    const priorities = ["high", "medium", "low"];
+    const priorityCounts = {};
+    await Promise.all(
+      priorities.map(async (priority) => {
+        priorityCounts[priority] = await Task.countDocuments({
+          ...monthFilter,
+          priority,
+        });
+      })
+    );
+
     monthsData.push({
       label: monthLabel,
       value: monthValue,
@@ -182,10 +170,34 @@ const getMonthlyTaskData = async (baseFilter) => {
         completedTasks,
         delayedTasks,
       },
+      priorityBreakdown: {
+        ...priorityCounts,
+      },
+      charts: {
+        taskDistribution: {
+          new: newTasks,
+          pending: pendingTasks,
+          inProgress: inProgressTasks,
+          completed: completedTasks,
+          delayed: delayedTasks,
+          All: all,
+        },
+        taskPrioritiesLevels: {
+          high: priorityCounts.high,
+          medium: priorityCounts.medium,
+          low: priorityCounts.low,
+        },
+      },
     });
   }
 
-  return monthsData;
+  // 🆕 Add total count outside of months
+  const totalAllTasks = await Task.countDocuments(baseFilter);
+
+  return {
+    monthsData,
+    allTimeTotal: totalAllTasks,
+  };
 };
 
 const getTask = async (req, res) => {
@@ -485,6 +497,8 @@ const getDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt");
 
+    const monthlyData = await getMonthlyTaskData({});
+
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -499,6 +513,7 @@ const getDashboardData = async (req, res) => {
         taskPrioritiesLevels,
       },
       recentTasks,
+      monthlyData,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

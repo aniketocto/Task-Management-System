@@ -6,18 +6,28 @@ import { API_PATHS } from "../../utils/apiPaths";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
 import TaskCard from "../../components/Cards/TaskCard";
+import ReactPaginate from "react-paginate";
 
 const ManageTask = () => {
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const tasksPerPage = 12;
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [allMonthCount, setAllMonthCount] = useState(0);
   const navigate = useNavigate();
 
-  const getAllTasks = async () => {
+  const getAllTasks = async (currentPage = 1) => {
     try {
       const response = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
         params: {
           status: filterStatus === "All" ? "" : filterStatus,
+          month: filterMonth || undefined,
+          page: currentPage,
+          limit: tasksPerPage,
         },
       });
 
@@ -41,21 +51,32 @@ const ManageTask = () => {
       ];
 
       setTabs(statusArray);
+
+      // 👇 set available months from backend response
+      setAvailableMonths(
+        response.data?.monthlyData?.monthsData?.filter((m) => m.count > 0) || []
+      );
+      setAllMonthCount(response.data?.monthlyData?.allTimeTotal || 0);
+
+      // you must also return total count from API, e.g., response.data.totalCount
+      const totalCount = response.data?.statusSummary?.all || 0;
+      setTotalPages(Math.ceil(totalCount / tasksPerPage));
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
   };
+
+  // 🔄 Call whenever filterStatus or filterMonth changes
+  useEffect(() => {
+    getAllTasks();
+    return () => {};
+  }, [filterStatus, filterMonth, page]);
 
   const handleClick = (taskData) => {
     navigate("/admin/create-task", { state: { taskId: taskData } });
   };
 
   const handleDownloadTaskReport = () => {};
-
-  useEffect(() => {
-    getAllTasks(filterStatus);
-    return () => {};
-  }, [filterStatus]);
 
   return (
     <DashboardLayout activeMenu="Manage Tasks">
@@ -73,13 +94,41 @@ const ManageTask = () => {
           </div>
 
           {tabs?.[0]?.count > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* status tabs */}
               <TaskStatusTabs
                 tabs={tabs}
                 activeTab={filterStatus}
                 setActiveTab={setFilterStatus}
               />
+              {availableMonths.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Month:
+                  </label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => setFilterMonth(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                  >
+                    <option value="">All Months ({allMonthCount})</option>
 
+                    {/* render in reverse order so latest comes first */}
+                    {[...availableMonths]
+                      .sort((a, b) => b.value.localeCompare(a.value)) // descending
+                      .slice(0, 12) // only the most recent 12
+                      .map((m) => (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                        >
+                          {m.label} ({m.count})
+                        </option>
+                      ))}
+                  </select>
+                </>
+              )}
+              {/* download button */}
               <button className="hidden md:flex download-btn">
                 <LuFileSpreadsheet className="text-gray-400 text-lg" />
                 Download Report
@@ -107,6 +156,23 @@ const ManageTask = () => {
             />
           ))}
         </div>
+
+        {/* Pagination */}
+        <ReactPaginate
+          previousLabel={"← Prev"}
+          nextLabel={"Next →"}
+          breakLabel={"..."}
+          pageCount={totalPages}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={3}
+          onPageChange={(e) => setPage(e.selected + 1)}
+          containerClassName={"flex gap-2 mt-4 justify-center"}
+          pageClassName={"px-3 py-1 border rounded"}
+          activeClassName={"bg-primary text-white"}
+          previousClassName={"px-3 py-1 border rounded"}
+          nextClassName={"px-3 py-1 border rounded"}
+          disabledClassName={"opacity-50 cursor-not-allowed"}
+        />
       </div>
     </DashboardLayout>
   );

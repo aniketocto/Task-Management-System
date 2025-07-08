@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
 import { useUserAuth } from "../../hooks/useUserAuth";
@@ -12,6 +12,7 @@ import { LuArrowRight } from "react-icons/lu";
 import TaskListTable from "../../components/layouts/TaskListTable";
 import CustomPieChart from "../../components/Charts/CustomPieChart";
 import CustomBarChart from "../../components/Charts/CustomBarChart";
+import { infoCard } from "../../utils/data";
 
 const Dashboard = () => {
   useUserAuth();
@@ -19,17 +20,18 @@ const Dashboard = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const [searchParams] = useSearchParams();
-  const userId = searchParams.get("userId");
 
   const [dashboardData, setDashboardData] = useState(null);
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
 
+  const [filterMonth, setFilterMonth] = useState("");
+  const [availableMonths, setAvailableMonths] = useState([]);
+
   // Prepare chart Data
   const prepareChartData = (data) => {
-    const taskDistribution = data?.taskDistribution || null;
-    const taskPriority = data?.taskPrioritiesLevels || null;
+    const taskDistribution = data?.taskDistribution || {};
+    const taskPriority = data?.taskPrioritiesLevels || {};
 
     const taskDistributionData = [
       { status: "new", count: taskDistribution?.new || 0 },
@@ -50,18 +52,15 @@ const Dashboard = () => {
     setBarChartData(taskPriorityData);
   };
 
-  const getDashboardData = async (userId = null) => {
+  const getDashboardData = async () => {
     try {
-      const response = await axiosInstance.get(
-        API_PATHS.TASKS.GET_DASHBOARD_DATA,
-        {
-          params: userId ? { userId } : {},
-        }
-      );
+      const res = await axiosInstance.get(API_PATHS.TASKS.GET_DASHBOARD_DATA);
+      if (res.data) {
+        setDashboardData(res.data);
+        setAvailableMonths(res.data?.monthlyData?.monthsData || []);
 
-      if (response.data) {
-        setDashboardData(response.data);
-        prepareChartData(response.data?.charts || null);
+        // default: all-time charts
+        prepareChartData(res.data?.charts);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -69,9 +68,27 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    getDashboardData(userId);
+    getDashboardData();
     return () => {};
-  }, [userId]);
+  }, []);
+
+  // Filter chart data
+  useEffect(() => {
+    if (!dashboardData) return;
+
+    if (filterMonth === "") {
+      // no month selected → use all-time charts
+      prepareChartData(dashboardData?.charts);
+    } else {
+      const monthData = availableMonths.find((m) => m.value === filterMonth);
+      if (monthData?.charts) {
+        prepareChartData(monthData.charts);
+      } else {
+        // fallback in case charts are missing
+        prepareChartData(null);
+      }
+    }
+  }, [filterMonth, dashboardData, availableMonths]);
 
   const onSeeMore = () => {
     navigate("/admin/tasks");
@@ -81,58 +98,54 @@ const Dashboard = () => {
     <DashboardLayout activeMenu="Dashboard">
       <div className="card my-5">
         <div>
-          <div className="col-span-3">
-            <h2 className="text-xl md:text-2xl">
-              {getGreeting()}! {user?.name}
-            </h2>
-            <p className="text-sm md:text-[13px] text-gray-400 mt-1.5">
-              {moment().format("dddd Do MMM YYYY")}
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl md:text-2xl">
+                {getGreeting()}! {user?.name}
+              </h2>
+              <p className="text-sm md:text-[13px] text-gray-400 mt-1.5">
+                {moment().format("dddd Do MMM YYYY")}
+              </p>
+            </div>
+            <div className="flex gap-3 mb-4">
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="border rounded px-3 py-2 text-sm text-gray-700"
+              >
+                <option value="">All</option>
+                {availableMonths
+                  .sort((a, b) => b.value.localeCompare(a.value))
+                  .map((m) => (
+                    <option
+                      key={m.value}
+                      value={m.value}
+                      disabled={m.count === 0}
+                    >
+                      {m.label} ({m.count})
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-5">
-          <InfoCard
-            label="New Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.new || 0
-            )}
-            color="bg-primary"
-          />
-          <InfoCard
-            label="InProgress Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.inProgress || 0
-            )}
-            color="bg-yellow-500"
-          />
-          <InfoCard
-            label="Completed Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.completed || 0
-            )}
-            color="bg-green-500"
-          />
-          <InfoCard
-            label="Pending Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.pending || 0
-            )}
-            color="bg-cyan-500"
-          />
-          <InfoCard
-            label="Delayed Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.delayed || 0
-            )}
-            color="bg-red-500"
-          />{" "}
-          <InfoCard
-            label="Total Tasks"
-            value={addThousandsSeperator(
-              dashboardData?.charts?.taskDistribution?.All || 0
-            )}
-            color="bg-purple-500"
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+          {infoCard.map(({ label, key, color }) => {
+            const monthData =
+              availableMonths.find((m) => m.value === filterMonth)?.charts ||
+              dashboardData?.charts;
+
+            return (
+              <InfoCard
+                key={key}
+                label={label}
+                value={addThousandsSeperator(
+                  monthData?.taskDistribution?.[key] || 0
+                )}
+                color={color}
+              />
+            );
+          })}
         </div>
       </div>
 
