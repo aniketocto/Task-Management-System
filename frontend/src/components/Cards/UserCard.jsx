@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const UserCard = ({ userInfo }) => {
   const navigate = useNavigate();
   const handleClick = () => {
-    navigate(`/admin/dashboard?userId=${userInfo._id}`);
+    // navigate(`/admin/dashboard?userId=${userInfo._id}`);
   };
 
   return (

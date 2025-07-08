@@ -20,7 +20,6 @@ const Dashboard = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-
   const [dashboardData, setDashboardData] = useState(null);
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
@@ -107,7 +106,10 @@ const Dashboard = () => {
                 {moment().format("dddd Do MMM YYYY")}
               </p>
             </div>
-            <div className="flex gap-3 mb-4">
+            <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+              <label className="text-sm font-medium text-gray-600">
+                Month:
+              </label>
               <select
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}

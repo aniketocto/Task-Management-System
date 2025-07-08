@@ -2,7 +2,7 @@ const Task = require("../models/Task");
 
 const getTasks = async (req, res) => {
   try {
-    const { status, month, page = 1, limit = 12 } = req.query;
+    const { department, status, month, page = 1, limit = 12 } = req.query;
 
     const skip = (page - 1) * limit;
 
@@ -23,18 +23,55 @@ const getTasks = async (req, res) => {
 
     const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
 
+    // Base filter for user access control
+    let baseFilter = {};
     if (!isPrivileged) {
-      filter.assignedTo = req.user._id;
+      baseFilter.assignedTo = { $in: [req.user._id] };
     }
 
-    // fetch paginated tasks
+    // Department filter
+    if (department) {
+      const usersInDept = await User.find({ department }).select("_id");
+      const userIds = usersInDept.map((u) => u._id);
+
+      if (!isPrivileged) {
+        // For non-privileged users, check if they belong to the requested department
+        if (userIds.some((id) => id.toString() === req.user._id.toString())) {
+          filter.assignedTo = { $in: [req.user._id] };
+        } else {
+          // User doesn't belong to requested department, return empty results
+          return res.status(200).json({
+            tasks: [],
+            totalCount: 0,
+            statusSummary: {
+              all: 0,
+              newTasks: 0,
+              pendingTasks: 0,
+              inProgressTasks: 0,
+              completedTasks: 0,
+              delayedTasks: 0,
+            },
+            monthlyData: { monthsData: [], allTimeTotal: 0 },
+            departmentBreakdown: {},
+            userBreakdown: {},
+          });
+        }
+      } else {
+        filter.assignedTo = { $in: userIds };
+      }
+    } else {
+      // Apply base filter when no department specified
+      filter = { ...filter, ...baseFilter };
+    }
+
+    // Fetch paginated tasks
     let tasks = await Task.find(filter)
-      .populate("assignedTo", "name email profileImageUrl")
+      .populate("assignedTo", "name email profileImageUrl department")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
 
-    // attach completed todo count
+    // Attach completed todo count
     tasks = await Promise.all(
       tasks.map((task) => {
         const completedTodoCount = task.todoChecklist.filter(
@@ -48,10 +85,10 @@ const getTasks = async (req, res) => {
       })
     );
 
-    // total count for pagination
+    // Total count for pagination
     const totalCount = await Task.countDocuments(filter);
 
-    // status summary
+    // Status summary
     const countWith = (status) => Task.countDocuments({ ...filter, status });
 
     const [
@@ -70,13 +107,15 @@ const getTasks = async (req, res) => {
       countWith("delayed"),
     ]);
 
-    const monthlyData = await getMonthlyTaskData(
-      isPrivileged ? {} : { assignedTo: req.user._id }
+    // Get enhanced monthly data with department and user breakdown
+    const monthlyData = await getEnhancedMonthlyTaskData(
+      isPrivileged ? {} : { assignedTo: { $in: [req.user._id] } },
+      department
     );
 
     res.status(200).json({
       tasks,
-      totalCount, // 👈 send total so frontend can calculate pages
+      totalCount,
       statusSummary: {
         all: allTasks,
         newTasks,
@@ -92,8 +131,11 @@ const getTasks = async (req, res) => {
   }
 };
 
-// Helper function to get monthly task data
-const getMonthlyTaskData = async (baseFilter) => {
+// Enhanced helper function to get monthly task data with department and user breakdown
+const getEnhancedMonthlyTaskData = async (
+  baseFilter,
+  departmentFilter = null
+) => {
   const monthsData = [];
 
   const earliestTask = await Task.findOne(baseFilter).sort({ createdAt: 1 });
@@ -119,6 +161,7 @@ const getMonthlyTaskData = async (baseFilter) => {
         $lt: nextMonthDate,
       },
     };
+
     const monthLabel = monthDate.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -147,6 +190,7 @@ const getMonthlyTaskData = async (baseFilter) => {
       countWith("delayed"),
     ]);
 
+    // Priority breakdown
     const priorities = ["high", "medium", "low"];
     const priorityCounts = {};
     await Promise.all(
@@ -157,6 +201,12 @@ const getMonthlyTaskData = async (baseFilter) => {
         });
       })
     );
+
+    // Department breakdown for this month
+    const departmentBreakdown = await getDepartmentBreakdown(monthFilter);
+
+    // User breakdown for this month
+    const userBreakdown = await getUserBreakdown(monthFilter, departmentFilter);
 
     monthsData.push({
       label: monthLabel,
@@ -173,6 +223,8 @@ const getMonthlyTaskData = async (baseFilter) => {
       priorityBreakdown: {
         ...priorityCounts,
       },
+      departmentBreakdown,
+      userBreakdown,
       charts: {
         taskDistribution: {
           new: newTasks,
@@ -187,17 +239,161 @@ const getMonthlyTaskData = async (baseFilter) => {
           medium: priorityCounts.medium,
           low: priorityCounts.low,
         },
+        departmentDistribution: departmentBreakdown,
+        topUsers: Object.entries(userBreakdown)
+          .sort(([, a], [, b]) => b.total - a.total)
+          .slice(0, 10)
+          .reduce((acc, [userId, data]) => {
+            acc[userId] = data;
+            return acc;
+          }, {}),
       },
     });
   }
 
-  // 🆕 Add total count outside of months
+  // Total count outside of months
   const totalAllTasks = await Task.countDocuments(baseFilter);
 
   return {
     monthsData,
     allTimeTotal: totalAllTasks,
   };
+};
+
+// Helper function to get department breakdown
+const getDepartmentBreakdown = async (monthFilter) => {
+  const pipeline = [
+    { $match: monthFilter },
+    { $unwind: "$assignedTo" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    {
+      $group: {
+        _id: "$user.department",
+        total: { $sum: 1 },
+        new: { $sum: { $cond: [{ $eq: ["$status", "new"] }, 1, 0] } },
+        pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
+        inProgress: {
+          $sum: { $cond: [{ $eq: ["$status", "inProgress"] }, 1, 0] },
+        },
+        completed: {
+          $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+        },
+        delayed: { $sum: { $cond: [{ $eq: ["$status", "delayed"] }, 1, 0] } },
+        high: { $sum: { $cond: [{ $eq: ["$priority", "high"] }, 1, 0] } },
+        medium: { $sum: { $cond: [{ $eq: ["$priority", "medium"] }, 1, 0] } },
+        low: { $sum: { $cond: [{ $eq: ["$priority", "low"] }, 1, 0] } },
+      },
+    },
+    { $sort: { total: -1 } },
+  ];
+
+  const results = await Task.aggregate(pipeline);
+
+  const breakdown = {};
+  results.forEach((dept) => {
+    breakdown[dept._id || "Unknown"] = {
+      total: dept.total,
+      statusBreakdown: {
+        new: dept.new,
+        pending: dept.pending,
+        inProgress: dept.inProgress,
+        completed: dept.completed,
+        delayed: dept.delayed,
+      },
+      priorityBreakdown: {
+        high: dept.high,
+        medium: dept.medium,
+        low: dept.low,
+      },
+    };
+  });
+
+  return breakdown;
+};
+
+// Helper function to get user breakdown
+const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
+  const pipeline = [
+    { $match: monthFilter },
+    { $unwind: "$assignedTo" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+  ];
+
+  // Add department filter if specified
+  if (departmentFilter) {
+    pipeline.push({
+      $match: { "user.department": departmentFilter },
+    });
+  }
+
+  pipeline.push(
+    {
+      $group: {
+        _id: {
+          userId: "$user._id",
+          userName: "$user.name",
+          userEmail: "$user.email",
+          userDepartment: "$user.department",
+        },
+        total: { $sum: 1 },
+        new: { $sum: { $cond: [{ $eq: ["$status", "new"] }, 1, 0] } },
+        pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
+        inProgress: {
+          $sum: { $cond: [{ $eq: ["$status", "inProgress"] }, 1, 0] },
+        },
+        completed: {
+          $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+        },
+        delayed: { $sum: { $cond: [{ $eq: ["$status", "delayed"] }, 1, 0] } },
+        high: { $sum: { $cond: [{ $eq: ["$priority", "high"] }, 1, 0] } },
+        medium: { $sum: { $cond: [{ $eq: ["$priority", "medium"] }, 1, 0] } },
+        low: { $sum: { $cond: [{ $eq: ["$priority", "low"] }, 1, 0] } },
+      },
+    },
+    { $sort: { total: -1 } }
+  );
+
+  const results = await Task.aggregate(pipeline);
+
+  const breakdown = {};
+  results.forEach((user) => {
+    breakdown[user._id.userId] = {
+      name: user._id.userName,
+      email: user._id.userEmail,
+      department: user._id.userDepartment,
+      total: user.total,
+      statusBreakdown: {
+        new: user.new,
+        pending: user.pending,
+        inProgress: user.inProgress,
+        completed: user.completed,
+        delayed: user.delayed,
+      },
+      priorityBreakdown: {
+        high: user.high,
+        medium: user.medium,
+        low: user.low,
+      },
+    };
+  });
+
+  return breakdown;
 };
 
 const getTask = async (req, res) => {
@@ -497,7 +693,7 @@ const getDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt");
 
-    const monthlyData = await getMonthlyTaskData({});
+    const monthlyData = await getEnhancedMonthlyTaskData({});
 
     res.status(200).json({
       statistic: {

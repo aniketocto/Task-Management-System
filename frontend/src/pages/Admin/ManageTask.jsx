@@ -18,6 +18,9 @@ const ManageTask = () => {
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
   const [allMonthCount, setAllMonthCount] = useState(0);
+  const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
+  const [departments, setDepartments] = useState([]); // available dept list
+
   const navigate = useNavigate();
 
   const getAllTasks = async (currentPage = 1) => {
@@ -33,12 +36,40 @@ const ManageTask = () => {
 
       let tasks = response.data?.tasks || [];
 
+      if (tasks.length === 0 && filterStatus !== "All") {
+        // fallback to "All" if no tasks for this status+month
+        setFilterStatus("All");
+        return;
+      }
+
       // sort by createdAt descending (newest first)
       tasks = tasks.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
 
       setAllTasks(tasks);
+
+      // derive unique departments
+      const uniqueDepartments = Array.from(
+        new Set(
+          tasks.flatMap((task) =>
+            task.assignedTo?.map((user) => user.department).filter(Boolean)
+          )
+        )
+      );
+
+      setDepartments(uniqueDepartments);
+
+      // filter tasks by department here
+      const filteredTasks = tasks.filter((task) => {
+        if (!filterDepartment) return true; // no filter → include all
+        return task.assignedTo?.some(
+          (user) => user.department === filterDepartment
+        );
+      });
+
+      // finally set them
+      setAllTasks(filteredTasks);
 
       const statusSummary = response.data?.statusSummary || {};
       const statusArray = [
@@ -70,7 +101,7 @@ const ManageTask = () => {
   useEffect(() => {
     getAllTasks();
     return () => {};
-  }, [filterStatus, filterMonth, page]);
+  }, [filterStatus, filterMonth, page, filterDepartment]);
 
   const handleClick = (taskData) => {
     navigate("/admin/create-task", { state: { taskId: taskData } });
@@ -101,6 +132,8 @@ const ManageTask = () => {
                 activeTab={filterStatus}
                 setActiveTab={setFilterStatus}
               />
+
+              {/* month filter */}
               {availableMonths.length > 0 && (
                 <>
                   <label className="text-sm font-medium text-gray-600">
@@ -118,16 +151,33 @@ const ManageTask = () => {
                       .sort((a, b) => b.value.localeCompare(a.value)) // descending
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
-                        <option
-                          key={m.value}
-                          value={m.value}
-                        >
+                        <option key={m.value} value={m.value}>
                           {m.label} ({m.count})
                         </option>
                       ))}
                   </select>
                 </>
               )}
+              {departments.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Department:
+                  </label>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
               {/* download button */}
               <button className="hidden md:flex download-btn">
                 <LuFileSpreadsheet className="text-gray-400 text-lg" />
@@ -137,42 +187,50 @@ const ManageTask = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {allTasks?.map((item) => (
-            <TaskCard
-              key={item._id}
-              title={item.title}
-              desc={item.description}
-              priority={item.priority}
-              status={item.status}
-              progress={item.progress}
-              createdAt={item.createdAt}
-              dueDate={item.dueDate}
-              assignedTo={item.assignedTo?.map((item) => item.profileImageUrl)}
-              attachmentsCount={item.attachments?.length || 0}
-              completedTodoCount={item.completedTodoCount || 0}
-              todoChecklist={item.todoChecklist || []}
-              onClick={() => handleClick(item._id)}
-            />
-          ))}
-        </div>
+        {allTasks.length === 0 ? (
+          <p>No tasks found for this status in selected month.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              {allTasks?.map((item) => (
+                <TaskCard
+                  key={item._id}
+                  title={item.title}
+                  desc={item.description}
+                  priority={item.priority}
+                  status={item.status}
+                  progress={item.progress}
+                  createdAt={item.createdAt}
+                  dueDate={item.dueDate}
+                  assignedTo={item.assignedTo?.map(
+                    (item) => item.profileImageUrl
+                  )}
+                  attachmentsCount={item.attachments?.length || 0}
+                  completedTodoCount={item.completedTodoCount || 0}
+                  todoChecklist={item.todoChecklist || []}
+                  onClick={() => handleClick(item._id)}
+                />
+              ))}
+            </div>
 
-        {/* Pagination */}
-        <ReactPaginate
-          previousLabel={"← Prev"}
-          nextLabel={"Next →"}
-          breakLabel={"..."}
-          pageCount={totalPages}
-          marginPagesDisplayed={2}
-          pageRangeDisplayed={3}
-          onPageChange={(e) => setPage(e.selected + 1)}
-          containerClassName={"flex gap-2 mt-4 justify-center"}
-          pageClassName={"px-3 py-1 border rounded"}
-          activeClassName={"bg-primary text-white"}
-          previousClassName={"px-3 py-1 border rounded"}
-          nextClassName={"px-3 py-1 border rounded"}
-          disabledClassName={"opacity-50 cursor-not-allowed"}
-        />
+            {/* Pagination */}
+            <ReactPaginate
+              previousLabel={"← Prev"}
+              nextLabel={"Next →"}
+              breakLabel={"..."}
+              pageCount={totalPages}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={3}
+              onPageChange={(e) => setPage(e.selected + 1)}
+              containerClassName={"flex gap-2 mt-4 justify-center"}
+              pageClassName={"px-3 py-1 border rounded"}
+              activeClassName={"bg-primary text-white"}
+              previousClassName={"px-3 py-1 border rounded"}
+              nextClassName={"px-3 py-1 border rounded"}
+              disabledClassName={"opacity-50 cursor-not-allowed"}
+            />
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
