@@ -8,7 +8,7 @@ const AvatarGroup = ({ avatars, maxVisible = 3 }) => {
           key={index}
           src={avatar}
           alt={`Avatar ${index + 1}`}
-          className="w-9 h-9 rounded-full border-2 border-white -ml-3 first:ml-0"
+          className="w-9 h-9 rounded-full border-2 border-white object-contain -ml-3 first:ml-0"
         />
       ))}
 
