@@ -11,7 +11,7 @@ const TaskStatusTabs = ({ tabs, activeTab, setActiveTab }) => {
       >
         {tabs.map((tab, index) => (
           <option key={index} value={tab.label} disabled={tab.count === 0}>
-            {tab.label} ({tab.count})
+            {tab.label} 
           </option>
         ))}
       </select>

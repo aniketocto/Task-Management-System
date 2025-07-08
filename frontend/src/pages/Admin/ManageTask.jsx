@@ -71,7 +71,51 @@ const ManageTask = () => {
       // finally set them
       setAllTasks(filteredTasks);
 
-      const statusSummary = response.data?.statusSummary || {};
+      const isDeptFiltered = !!filterDepartment;
+
+      let statusSummary, monthsData, allTimeTotal;
+
+      if (isDeptFiltered) {
+        // Filtered view
+        monthsData = response.data.monthlyData.monthsData
+          .map((month) => {
+            const deptStats = month.departmentBreakdown?.[filterDepartment];
+            if (!deptStats) return null;
+
+            return {
+              ...month,
+              count: deptStats.total,
+              statusBreakdown: deptStats.statusBreakdown,
+              priorityBreakdown: deptStats.priorityBreakdown,
+            };
+          })
+          .filter(Boolean);
+
+        allTimeTotal = monthsData.reduce((sum, m) => sum + m.count, 0);
+
+        // Status summary by department
+        const totalStatuses = monthsData.reduce((acc, m) => {
+          Object.entries(m.statusBreakdown || {}).forEach(([status, count]) => {
+            acc[status] = (acc[status] || 0) + count;
+          });
+          return acc;
+        }, {});
+
+        statusSummary = {
+          all: allTimeTotal,
+          newTasks: totalStatuses.new || 0,
+          pendingTasks: totalStatuses.pending || 0,
+          inProgressTasks: totalStatuses.inProgress || 0,
+          completedTasks: totalStatuses.completed || 0,
+          delayedTasks: totalStatuses.delayed || 0,
+        };
+      } else {
+        // No department filter → use full response
+        monthsData = response.data.monthlyData.monthsData;
+        allTimeTotal = response.data.monthlyData.allTimeTotal;
+        statusSummary = response.data.statusSummary;
+      }
+
       const statusArray = [
         { label: "All", count: statusSummary?.all || 0 },
         { label: "new", count: statusSummary?.newTasks || 0 },
@@ -144,7 +188,8 @@ const ManageTask = () => {
                     onChange={(e) => setFilterMonth(e.target.value)}
                     className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
                   >
-                    <option value="">All Months ({allMonthCount})</option>
+                    {/* <option value="">All Months ({allMonthCount})</option> */}
+                    <option value="">All Months</option>
 
                     {/* render in reverse order so latest comes first */}
                     {[...availableMonths]
@@ -152,7 +197,7 @@ const ManageTask = () => {
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
                         <option key={m.value} value={m.value}>
-                          {m.label} ({m.count})
+                          {m.label} 
                         </option>
                       ))}
                   </select>
