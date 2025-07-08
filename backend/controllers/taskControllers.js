@@ -3,6 +3,7 @@ const Task = require("../models/Task");
 const getTasks = async (req, res) => {
   try {
     const { status } = req.query;
+
     let filter = {};
 
     if (status) {
@@ -36,29 +37,40 @@ const getTasks = async (req, res) => {
     );
 
     // Status Summary Count
+    const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
+
     const allTasks = await Task.countDocuments(
-      req.user.role === "admin" ? {} : { assignedTo: req.user._id }
+      isPrivileged ? {} : { assignedTo: req.user._id }
     );
 
     const newTasks = await Task.countDocuments({
       ...filter,
       status: "new",
-      ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+      ...(!isPrivileged && { assignedTo: req.user._id }),
     });
+
     const pendingTasks = await Task.countDocuments({
       ...filter,
       status: "pending",
-      ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+      ...(!isPrivileged && { assignedTo: req.user._id }),
     });
+
     const inProgressTasks = await Task.countDocuments({
       ...filter,
       status: "inProgress",
-      ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+      ...(!isPrivileged && { assignedTo: req.user._id }),
     });
+
     const completedTasks = await Task.countDocuments({
       ...filter,
       status: "completed",
-      ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+      ...(!isPrivileged && { assignedTo: req.user._id }),
+    });
+
+    const delayedTasks = await Task.countDocuments({
+      ...filter,
+      status: "delayed",
+      ...(!isPrivileged && { assignedTo: req.user._id }),
     });
 
     res.status(200).json({
@@ -69,6 +81,7 @@ const getTasks = async (req, res) => {
         pendingTasks,
         inProgressTasks,
         completedTasks,
+        delayedTasks,
       },
     });
   } catch (error) {
