@@ -9,6 +9,7 @@ import { LuTrash } from "react-icons/lu";
 import SelectOption from "../../components/Inputs/SelectOption";
 import SelectUsers from "../../components/Inputs/SelectUsers";
 import TodoListInput from "../../components/Inputs/TodoListInput";
+import AddAttachmentInputs from "../../components/Inputs/AddAttachmentInputs";
 
 const CreateTask = () => {
   const location = useLocation();
@@ -25,7 +26,7 @@ const CreateTask = () => {
   });
 
   const [currentTask, setCurrentTask] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
@@ -47,12 +48,67 @@ const CreateTask = () => {
   };
 
   // Create Tasks
-  const createTask = async () => {};
+  const createTask = async () => {
+    setLoading(true);
+
+    try {
+      const todoList = taskData.todoChecklist?.map((item) => ({
+        text: item,
+        completed: false,
+      }));
+
+      const response = await axiosInstance.post(API_PATHS.TASKS.CREATE_TASK, {
+        ...taskData,
+        dueDate: new Date(taskData.dueDate).toISOString(),
+        todoChecklist: todoList,
+      });
+
+      if (response.status === 201) {
+        toast.success("Task created successfully");
+        clearData();
+        // navigate("/admin/tasks");
+      }
+    } catch (error) {
+      console.error("Error creating task:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Update Tasks
   const updateTask = async () => {};
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    setError([]);
+
+    // Input Validation
+    if (!taskData.title.trim()) {
+      setError((prevError) => [...prevError, "Please enter task title"]);
+      return;
+    }
+    if (!taskData.description.trim()) {
+      setError((prevError) => [...prevError, "Please enter task description"]);
+      return;
+    }
+    if (!taskData.dueDate) {
+      setError((prevError) => [...prevError, "Please select due date"]);
+      return;
+    }
+    if (!taskData.assignedTo || taskData.assignedTo.length === 0) {
+      setError((prevError) => [...prevError, "Task is not assigned to anyone"]);
+      return;
+    }
+    if (taskData.todoChecklist.length === 0) {
+      setError((prevError) => [...prevError, "Please add todo checklist"]);
+      return;
+    }
+    if (taskId) {
+      updateTask();
+      return;
+    }
+
+    createTask();
+  };
 
   // get task by id
   const getTaskById = async () => {};
@@ -111,7 +167,7 @@ const CreateTask = () => {
 
             {/* Priority DueDate AssignTo */}
             <div className="grid grid-cols-12 gap-4 mt-2">
-              <div className="col-spans-6 md:col-span-4">
+              <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-600">
                   Priority
                 </label>
@@ -124,7 +180,7 @@ const CreateTask = () => {
                 />
               </div>
               {/* Due Date */}
-              <div className="col-span-6 md:col-span-4 ">
+              <div className="col-span-12 md:col-span-4 ">
                 <label className="text-xs font-medium text-slate-600">
                   Due Date
                 </label>
@@ -140,7 +196,7 @@ const CreateTask = () => {
                 />
               </div>
               {/* Assigned To */}
-              <div className="grid col-span-6 md:col-span-4">
+              <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-600">
                   Assign To
                 </label>
@@ -175,6 +231,46 @@ const CreateTask = () => {
                   handleValueChange("todoChecklist", value);
                 }}
               />
+            </div>
+
+            {/* Attachments */}
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-600">
+                Attachments
+              </label>
+
+              <AddAttachmentInputs
+                attachments={taskData?.attachments}
+                setAttachments={(value) => {
+                  if (!Array.isArray(value)) {
+                    console.error(
+                      `Invalid value for attachments:`,
+                      value,
+                      typeof value
+                    );
+                    throw new Error("attachments must be array");
+                  }
+                  handleValueChange("attachments", value);
+                }}
+              />
+            </div>
+
+            {Array.isArray(error) && error.length > 0 && (
+              <ul className="text-red-500 text-sm pb-2.5">
+                {error.map((err, idx) => (
+                  <li key={idx}>• {err}</li>
+                ))}
+              </ul>
+            )}
+
+            <div className="flex justify-end mt-7">
+              <button
+                className="add-btn"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {taskId ? "Update Task" : "Create Task"}
+              </button>
             </div>
           </div>
         </div>

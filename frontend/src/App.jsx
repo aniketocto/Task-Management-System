@@ -22,6 +22,7 @@ import PrivateRoute from "./routes/PrivateRoute";
 import UserProvider from "./context/userProvider";
 import { useContext } from "react";
 import { UserContext } from "./context/userContext";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -35,8 +36,8 @@ function App() {
             {/* Admin Routes */}
             <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
               <Route path="/admin/dashboard" element={<Dashboard />} />
-              <Route path="/admin/manage-tasks" element={<ManageTask />} />
-              <Route path="/admin/manage-users" element={<ManageUser />} />
+              <Route path="/admin/tasks" element={<ManageTask />} />
+              <Route path="/admin/users" element={<ManageUser />} />
               <Route path="/admin/create-task" element={<CreateTask />} />
             </Route>
 
@@ -54,6 +55,16 @@ function App() {
           </Routes>
         </Router>
       </div>
+
+      <Toaster
+        toastOptions={{
+          className: "",
+          duration: 5000,
+          style: {
+            fontSize: "13px",
+          },
+        }}
+      />
     </UserProvider>
   );
 }
@@ -65,7 +76,7 @@ const Root = () => {
 
   if (loading) return <Outlet />;
 
-  if(!user) {
+  if (!user) {
     return <Navigate to="/login" />;
   }
 

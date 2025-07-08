@@ -13,15 +13,15 @@ import {
 const CustomBarChart = ({ data }) => {
   // Function to alternate colors
   const getBarColor = (entry) => {
-    switch (entry?.status) {
-      case "Low":
-        return "#00bc7d";
-      case "Medium":
-        return "#fe9900";
-      case "High":
-        return "#ff1f57";
+    switch (entry?.priority) {
+      case "low":
+        return "#22c55e"; // Green
+      case "medium":
+        return "#eab308"; // Yellow
+      case "high":
+        return "#ef4444"; // Red
       default:
-        return "#00bc7d";
+        return "#22c55e"; // Default to green
     }
   };
 
