@@ -114,7 +114,7 @@ const TaskCard = ({
           </div>
         </div>
 
-        <div className="">
+        <div className="flex items-center justify-between">
           <AvatarGroup avatars={assignedTo || []} maxVisible={3} />
 
           {attachmentsCount > 0 && (

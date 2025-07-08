@@ -89,7 +89,7 @@ const ManageTask = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {allTasks?.map((item, index) => (
+          {allTasks?.map((item) => (
             <TaskCard
               key={item._id}
               title={item.title}
@@ -103,7 +103,7 @@ const ManageTask = () => {
               attachmentsCount={item.attachments?.length || 0}
               completedTodoCount={item.completedTodoCount || 0}
               todoChecklist={item.todoChecklist || []}
-              onClick={() => handleClick(item)}
+              onClick={() => handleClick(item._id)}
             />
           ))}
         </div>

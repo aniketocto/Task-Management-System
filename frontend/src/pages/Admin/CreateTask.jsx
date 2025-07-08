@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { PRIORITY_OPTIONS } from "../../utils/data";
 import axiosInstance from "../../utils/axiosInstance";
@@ -10,8 +10,13 @@ import SelectOption from "../../components/Inputs/SelectOption";
 import SelectUsers from "../../components/Inputs/SelectUsers";
 import TodoListInput from "../../components/Inputs/TodoListInput";
 import AddAttachmentInputs from "../../components/Inputs/AddAttachmentInputs";
+import moment from "moment";
+import { UserContext } from "../../context/userContext";
+import Modal from "../../components/layouts/Modal";
+import DeleteAlert from "../../components/layouts/DeleteAlert";
 
 const CreateTask = () => {
+  const { user } = useContext(UserContext);
   const location = useLocation();
   const { taskId } = location.state || {};
   const navigate = useNavigate();
@@ -66,7 +71,7 @@ const CreateTask = () => {
       if (response.status === 201) {
         toast.success("Task created successfully");
         clearData();
-        // navigate("/admin/tasks");
+        navigate("/admin/tasks");
       }
     } catch (error) {
       console.error("Error creating task:", error);
@@ -76,8 +81,50 @@ const CreateTask = () => {
   };
 
   // Update Tasks
-  const updateTask = async () => {};
+  const updateTask = async () => {
+    setLoading(true);
 
+    try {
+      const todoList = taskData.todoChecklist?.map((item) => {
+        const prevTodoCheckList = currentTask?.todoChecklist || [];
+        const matchedTask = prevTodoCheckList.find(
+          (task) => task.text === item
+        );
+
+        return {
+          text: item,
+          completed: matchedTask ? matchedTask.completed : false,
+        };
+      });
+
+      const payload = {
+        ...taskData,
+        todoChecklist: todoList,
+      };
+
+      if (user?.role !== "superAdmin") {
+        delete payload.dueDate;
+      }
+
+      const response = await axiosInstance.put(
+        API_PATHS.TASKS.UPDATE_TASK_BY_ID(taskId),
+        payload
+      );
+
+      if (response.status === 200) {
+        toast.success("Task updating successfully");
+        clearData();
+        navigate("/admin/tasks");
+      }
+    } catch (error) {
+      toast.error("Error updating task. Task not updated");
+      console.error("Error updating task:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Submit
   const handleSubmit = async () => {
     setError([]);
 
@@ -111,7 +158,59 @@ const CreateTask = () => {
   };
 
   // get task by id
-  const getTaskById = async () => {};
+  const getTaskById = async () => {
+    try {
+      const response = await axiosInstance.get(
+        API_PATHS.TASKS.GET_TASK_BY_ID(taskId)
+      );
+
+      if (response.data) {
+        const taskInfo = response.data;
+        setCurrentTask(taskInfo);
+
+        setTaskData((prevData) => ({
+          ...prevData,
+          title: taskInfo.title,
+          description: taskInfo.description,
+          priority: taskInfo.priority,
+          dueDate: taskInfo.dueDate
+            ? moment(taskInfo.dueDate).format("YYYY-MM-DD")
+            : null,
+          assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
+          todoChecklist:
+            taskInfo.todoChecklist?.map((item) => item?.text) || [],
+          attachments: taskInfo.attachments || [],
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching task:", error);
+    }
+  };
+
+  // Delete Task
+  const deleteTask = async () => {
+    try {
+      const response = await axiosInstance.delete(
+        API_PATHS.TASKS.DELETE_TASK_BY_ID(taskId)
+      );
+
+      if (response) {
+        setOpenDeleteAlert(false);
+        toast.success("Task deleted successfully");
+        navigate("/admin/tasks");
+      }
+    } catch (error) {
+      toast.error("Error deleting task. Task not deleted");
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (taskId) {
+      getTaskById();
+    }
+    return () => {};
+  }, [taskId]);
 
   return (
     <DashboardLayout activeMenu="Create Task">
@@ -127,7 +226,7 @@ const CreateTask = () => {
                   className="flex items-center gap-1.5 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
                   onClick={() => setOpenDeleteAlert(true)}
                 >
-                  <LuTrash className="text-base" />
+                  <LuTrash className="text-base" /> Delete
                 </button>
               )}
             </div>
@@ -187,6 +286,7 @@ const CreateTask = () => {
 
                 <input
                   type="date"
+                  disabled={taskId && user?.role !== "superAdmin"}
                   className="form-input"
                   value={taskData.dueDate ?? ""}
                   onChange={({ target }) => {
@@ -275,6 +375,17 @@ const CreateTask = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={openDeleteAlert}
+        onClose={() => setOpenDeleteAlert(false)}
+        title="Delete Task"
+      >
+        <DeleteAlert
+          content="Are you sure sure you want to delete this task"
+          onDelete={() => deleteTask()}
+        />
+      </Modal>
     </DashboardLayout>
   );
 };

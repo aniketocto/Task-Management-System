@@ -59,7 +59,7 @@ function App() {
       <Toaster
         toastOptions={{
           className: "",
-          duration: 5000,
+          duration: 3000,
           style: {
             fontSize: "13px",
           },
