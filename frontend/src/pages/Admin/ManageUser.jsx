@@ -32,12 +32,12 @@ const ManageUser = () => {
         <div className="flex md:flex-row md:items-center justify-between">
           <h2 className="text-2xl md:text-xl font-medium">Team Members</h2>
 
-          <button
+          {/* <button
             className="flex download-btn"
             onClick={handleUserDownloadReports}
           >
             Download Report
-          </button>
+          </button> */}
         </div>
 
         <div className="mt-4 space-y-6">
@@ -62,6 +62,8 @@ const ManageUser = () => {
                   <UserCard key={user._id} userInfo={user} />
                 ))}
               </div>
+
+              
             </div>
           ))}
         </div>
