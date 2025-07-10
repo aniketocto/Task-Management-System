@@ -28,12 +28,17 @@ const getUsers = async (req, res) => {
           assignedTo: user._id,
           status: "completed",
         });
+        const delayedTask = await Task.countDocuments({
+          assignedTo: user._id,
+          status: "delayed",
+        });
         return {
           ...user._doc,
           newTask,
           pendingTask,
           inProgressTask,
           completedTask,
+          delayedTask
         };
       })
     );
