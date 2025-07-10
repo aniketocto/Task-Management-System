@@ -46,7 +46,7 @@ function App() {
               <Route path="/user/dashboard" element={<UserDashboard />} />
               <Route path="/user/tasks" element={<MyTasks />} />
               <Route
-                path="/admin/task-detail/:id"
+                path="/user/task-detail/:id"
                 element={<ViewTaskDetails />}
               />
             </Route>

@@ -94,7 +94,7 @@ const MyTasks = () => {
   }, [availableMonths]);
 
   const handleClick = (taskId) => {
-    navigate(`/admin/task-detail/${ taskId}`);
+    navigate(`/user/task-detail/${ taskId}`);
   };
 
   return (
