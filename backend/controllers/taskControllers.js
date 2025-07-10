@@ -812,6 +812,8 @@ const getUserDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt");
 
+    const monthlyData = await getEnhancedMonthlyTaskData({});
+
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -826,6 +828,7 @@ const getUserDashboardData = async (req, res) => {
         taskPrioritiesLevels,
       },
       recentTasks,
+      // monthlyData,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

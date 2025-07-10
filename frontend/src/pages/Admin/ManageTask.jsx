@@ -223,7 +223,7 @@ const ManageTask = () => {
                     className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
                   >
                     {/* <option value="">All Months ({allMonthCount})</option> */}
-                    <option value="">All Months</option>
+                    {/* <option value="">All Months</option> */}
 
                     {/* render in reverse order so latest comes first */}
                     {[...availableMonths]
@@ -239,11 +239,11 @@ const ManageTask = () => {
               )}
 
               {/* status tabs */}
-              <TaskStatusTabs
+              {/* <TaskStatusTabs
                 tabs={tabs}
                 activeTab={filterStatus}
                 setActiveTab={setFilterStatus}
-              />
+              /> */}
 
               {/* download button */}
               <button className="hidden md:flex download-btn">
