@@ -1,3 +1,4 @@
+const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 
 const getTasks = async (req, res) => {
@@ -463,7 +464,18 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    res.status(201).json({ message: "Task created successfully", task });
+    await Promise.all(
+      assignedTo.map((userId) =>
+        Notification.create({
+          user: userId,
+          message: `You have been assigned a new task: ${task.title}`,
+          taskId: task._id, // optional: if you want to link it explicitly
+          type: "task", // optional: if you added type field
+        })
+      )
+    );
+
+    res.json({ message: "Task & notifications created successfully", task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -482,7 +494,6 @@ const updateTask = async (req, res) => {
     if (role === "user") {
       if (req.body.todoChecklist) {
         task.todoChecklist = req.body.todoChecklist;
-        
 
         const updatedTask = await task.save();
         return res.status(200).json({
