@@ -5,7 +5,11 @@ import { useUserAuth } from "../../hooks/useUserAuth";
 import React, { useContext, useEffect, useState } from "react";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
-import { addThousandsSeperator, getGreeting } from "../../utils/helper";
+import {
+  addThousandsSeperator,
+  findChartsOrFallback,
+  getGreeting,
+} from "../../utils/helper";
 import moment from "moment";
 import InfoCard from "../../components/Cards/InfoCard";
 import { LuArrowRight } from "react-icons/lu";
@@ -26,6 +30,9 @@ const Dashboard = () => {
 
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
+
+  const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
+  const [departments, setDepartments] = useState([]); // available dept list
 
   // Prepare chart Data
   const prepareChartData = (data) => {
@@ -57,6 +64,18 @@ const Dashboard = () => {
       if (res.data) {
         setDashboardData(res.data);
         setAvailableMonths(res.data?.monthlyData?.monthsData || []);
+        const allDepartments = new Set();
+
+        (res.data?.monthlyData?.monthsData || []).forEach((month) => {
+          const deptBreakdown = month.departmentBreakdown || {};
+          Object.keys(deptBreakdown).forEach((dept) => {
+            allDepartments.add(dept);
+          });
+        });
+
+        setDepartments(
+          Array.from(allDepartments).map((d) => ({ label: d, value: d }))
+        );
 
         // default: all-time charts
         prepareChartData(res.data?.charts);
@@ -75,23 +94,60 @@ const Dashboard = () => {
   useEffect(() => {
     if (!dashboardData) return;
 
-    if (filterMonth === "") {
-      // no month selected → use all-time charts
-      prepareChartData(dashboardData?.charts);
-    } else {
-      const monthData = availableMonths.find((m) => m.value === filterMonth);
-      if (monthData?.charts) {
-        prepareChartData(monthData.charts);
-      } else {
-        // fallback in case charts are missing
-        prepareChartData(null);
-      }
-    }
-  }, [filterMonth, dashboardData, availableMonths]);
+    const chartsToUse = findChartsOrFallback({
+      month: filterMonth,
+      department: filterDepartment,
+      availableMonths,
+      dashboardData,
+      setFilterMonth,
+      setFilterDepartment,
+    });
+
+    prepareChartData(chartsToUse);
+  }, [filterMonth, filterDepartment, dashboardData, availableMonths]);
 
   const onSeeMore = () => {
     navigate("/admin/tasks");
   };
+
+  useEffect(() => {
+    if (!filterMonth && availableMonths.length > 0) {
+      const currentMonth = new Date().toISOString().slice(0, 7); // e.g. '2025-07'
+
+      const match = availableMonths.find((m) => m.value === currentMonth);
+      if (match) {
+        setFilterMonth(currentMonth);
+      }
+    }
+  }, [availableMonths]);
+
+  let departmentBreakdown = {};
+
+  // if a month is selected
+  if (filterMonth) {
+    const monthData = availableMonths.find((m) => m.value === filterMonth);
+    if (monthData) {
+      departmentBreakdown = monthData.departmentBreakdown || {};
+    }
+  } else {
+    // all-time fallback
+    departmentBreakdown = dashboardData?.charts?.departmentDistribution || {};
+  }
+
+  const departmentTotals = {};
+  Object.entries(departmentBreakdown).forEach(([dept, data]) => {
+    departmentTotals[dept] = data.total || 0;
+  });
+
+  const chartsToUse =
+    findChartsOrFallback({
+      month: filterMonth,
+      department: filterDepartment,
+      availableMonths,
+      dashboardData,
+      setFilterMonth,
+      setFilterDepartment,
+    }) || {};
 
   return (
     <DashboardLayout activeMenu="Dashboard">
@@ -106,48 +162,72 @@ const Dashboard = () => {
                 {moment().format("dddd Do MMM YYYY")}
               </p>
             </div>
-            <div className="flex gap-1 mb-4 items-start flex-col justify-start">
-              <label className="text-sm font-medium text-gray-600">
-                Month:
-              </label>
-              <select
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(e.target.value)}
-                className="border rounded px-3 py-2 text-sm text-gray-700"
-              >
-                <option value="">All</option>
-                {availableMonths
-                  .sort((a, b) => b.value.localeCompare(a.value))
-                  .map((m) => (
-                    <option
-                      key={m.value}
-                      value={m.value}
-                      disabled={m.count === 0}
-                    >
-                      {m.label} ({m.count})
-                    </option>
-                  ))}
-              </select>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+                <label className="text-sm font-medium text-gray-600">
+                  Month:
+                </label>
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  className="border rounded px-3 py-2 text-sm text-gray-700"
+                >
+                  {/* <option value="">All</option> */}
+                  {availableMonths
+                    .sort((a, b) => b.value.localeCompare(a.value))
+                    .map((m) => (
+                      <option
+                        key={m.value}
+                        value={m.value}
+                        disabled={m.total === 0}
+                      >
+                        {m.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+                <label className="text-sm font-medium text-gray-600">
+                  Department:
+                </label>
+                <select
+                  value={filterDepartment}
+                  onChange={(e) => setFilterDepartment(e.target.value)}
+                  className="border rounded px-3 py-2 text-sm text-gray-700"
+                >
+                  <option value="">All</option>
+                  {departments
+                    .sort((a, b) => b.value.localeCompare(a.value))
+                    .map((m) => {
+                      const isDisabled =
+                        !departmentTotals[m.value] ||
+                        departmentTotals[m.value] === 0;
+                      return (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          disabled={isDisabled}
+                        >
+                          {m.label}
+                        </option>
+                      );
+                    })}
+                </select>
+              </div>
             </div>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
-          {infoCard.map(({ label, key, color }) => {
-            const monthData =
-              availableMonths.find((m) => m.value === filterMonth)?.charts ||
-              dashboardData?.charts;
-
-            return (
-              <InfoCard
-                key={key}
-                label={label}
-                value={addThousandsSeperator(
-                  monthData?.taskDistribution?.[key] || 0
-                )}
-                color={color}
-              />
-            );
-          })}
+          {infoCard.map(({ label, key, color }) => (
+            <InfoCard
+              key={key}
+              label={label}
+              value={addThousandsSeperator(
+                chartsToUse.taskDistribution?.[key] || 0
+              )}
+              color={color}
+            />
+          ))}
         </div>
       </div>
 

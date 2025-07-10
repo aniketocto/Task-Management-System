@@ -239,14 +239,7 @@ const getEnhancedMonthlyTaskData = async (
           medium: priorityCounts.medium,
           low: priorityCounts.low,
         },
-        departmentDistribution: departmentBreakdown,
-        topUsers: Object.entries(userBreakdown)
-          .sort(([, a], [, b]) => b.total - a.total)
-          .slice(0, 10)
-          .reduce((acc, [userId, data]) => {
-            acc[userId] = data;
-            return acc;
-          }, {}),
+        departmentDistribution: departmentBreakdown
       },
     });
   }
@@ -312,6 +305,21 @@ const getDepartmentBreakdown = async (monthFilter) => {
         high: dept.high,
         medium: dept.medium,
         low: dept.low,
+      },
+      charts: {
+        taskDistribution: {
+          new: dept.new,
+          pending: dept.pending,
+          inProgress: dept.inProgress,
+          completed: dept.completed,
+          delayed: dept.delayed,
+          All: dept.total,
+        },
+        taskPrioritiesLevels: {
+          high: dept.high,
+          medium: dept.medium,
+          low: dept.low,
+        },
       },
     };
   });
@@ -389,6 +397,21 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         high: user.high,
         medium: user.medium,
         low: user.low,
+      },
+      charts: {
+        taskDistribution: {
+          new: user.new,
+          pending: user.pending,
+          inProgress: user.inProgress,
+          completed: user.completed,
+          delayed: user.delayed,
+          All: user.total,
+        },
+        taskPrioritiesLevels: {
+          high: user.high,
+          medium: user.medium,
+          low: user.low,
+        },
       },
     };
   });

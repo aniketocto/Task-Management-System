@@ -36,9 +36,19 @@ const ManageTask = () => {
 
       let tasks = response.data?.tasks || [];
 
-      if (tasks.length === 0 && filterStatus !== "All") {
-        // fallback to "All" if no tasks for this status+month
-        setFilterStatus("All");
+      // if (tasks.length === 0 && filterStatus !== "All"  ) {
+      //   // fallback to "All" if no tasks for this status+month
+      //   setFilterStatus("All");
+      //   return;
+      // }
+
+      if (tasks.length === 0) {
+        if (filterStatus !== "All") {
+          setFilterStatus("All");
+        } else if (filterDepartment) {
+          setFilterDepartment("");
+        }
+
         return;
       }
 
@@ -147,6 +157,17 @@ const ManageTask = () => {
     return () => {};
   }, [filterStatus, filterMonth, page, filterDepartment]);
 
+  useEffect(() => {
+    if (!filterMonth && availableMonths.length > 0) {
+      const currentMonth = new Date().toISOString().slice(0, 7); // e.g. '2025-07'
+
+      const match = availableMonths.find((m) => m.value === currentMonth);
+      if (match) {
+        setFilterMonth(currentMonth);
+      }
+    }
+  }, [availableMonths]);
+
   const handleClick = (taskData) => {
     navigate("/admin/create-task", { state: { taskId: taskData } });
   };
@@ -170,13 +191,26 @@ const ManageTask = () => {
 
           {tabs?.[0]?.count > 0 && (
             <div className="flex flex-wrap items-center gap-3">
-              {/* status tabs */}
-              <TaskStatusTabs
-                tabs={tabs}
-                activeTab={filterStatus}
-                setActiveTab={setFilterStatus}
-              />
-
+              {/* department filter */}
+              {departments.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Department:
+                  </label>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                  >
+                    <option value="">All Departments </option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
               {/* month filter */}
               {availableMonths.length > 0 && (
                 <>
@@ -197,31 +231,19 @@ const ManageTask = () => {
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
                         <option key={m.value} value={m.value}>
-                          {m.label} 
+                          {m.label}
                         </option>
                       ))}
                   </select>
                 </>
               )}
-              {departments.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Department:
-                  </label>
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
-                  >
-                    <option value="">All Departments</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
+
+              {/* status tabs */}
+              <TaskStatusTabs
+                tabs={tabs}
+                activeTab={filterStatus}
+                setActiveTab={setFilterStatus}
+              />
 
               {/* download button */}
               <button className="hidden md:flex download-btn">
