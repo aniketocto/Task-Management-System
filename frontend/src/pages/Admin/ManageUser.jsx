@@ -19,7 +19,7 @@ const ManageUser = () => {
     }
   };
 
-  const handleUserDownloadReports = async () => {};
+  // const handleUserDownloadReports = async () => {};
 
   useEffect(() => {
     getAllUsers();
