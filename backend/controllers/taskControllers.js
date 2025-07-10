@@ -239,7 +239,7 @@ const getEnhancedMonthlyTaskData = async (
           medium: priorityCounts.medium,
           low: priorityCounts.low,
         },
-        departmentDistribution: departmentBreakdown
+        departmentDistribution: departmentBreakdown,
       },
     });
   }
@@ -626,13 +626,17 @@ const updateTaskChecklist = async (req, res) => {
 
     const now = new Date();
 
+    // Create a copy of dueDate at the end of the day
+    const dueDateEnd = new Date(task.dueDate);
+    dueDateEnd.setHours(23, 59, 59, 999);
+
     if (task.progress === 100) {
-      if (now > task.dueDate) {
+      if (now > dueDateEnd) {
         task.status = "delayed"; // completed, but late
       } else {
         task.status = "completed"; // completed on time
       }
-    } else if (now > task.dueDate) {
+    } else if (now > dueDateEnd) {
       task.status = "pending"; // overdue & not completed
     } else if (task.progress > 0) {
       task.status = "inProgress";
