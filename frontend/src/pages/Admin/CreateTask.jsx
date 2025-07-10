@@ -15,6 +15,8 @@ import { UserContext } from "../../context/userContext";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 
+// TODO: Add  status wise color so user can see which task is completed or not
+
 const CreateTask = () => {
   const { user } = useContext(UserContext);
   const location = useLocation();
@@ -92,7 +94,7 @@ const CreateTask = () => {
         );
 
         return {
-          text: item,
+          item,
           completed: matchedTask ? matchedTask.completed : false,
         };
       });
@@ -177,8 +179,7 @@ const CreateTask = () => {
             ? moment(taskInfo.dueDate).format("YYYY-MM-DD")
             : null,
           assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
-          todoChecklist:
-            taskInfo.todoChecklist?.map((item) => item?.text) || [],
+          todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
         }));
       }
