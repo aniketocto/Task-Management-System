@@ -3,7 +3,7 @@ import { HiOutlineTrash, HiPlus } from "react-icons/hi";
 
 const TodoListInput = ({ todoList = [], setTodoList }) => {
   const [option, setOption] = useState("");
-  console.log(todoList);
+  // console.log(todoList);
 
   //   function to handle adding option
   const handleAddOption = () => {
@@ -33,11 +33,11 @@ const TodoListInput = ({ todoList = [], setTodoList }) => {
     } 
     border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2`}
         >
-          <p className="text-sm text-black">
+          <p className="text-sm text-gray-800">
             <span className="text-sm text-gray-400 font-semibold mr-2">
               {index < 9 ? `0${index + 1}` : index + 1}
             </span>{" "}
-            <span>{item?.text}</span>
+            <span>{item}</span>
           </p>
 
           <button

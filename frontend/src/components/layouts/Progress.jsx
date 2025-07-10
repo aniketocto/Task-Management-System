@@ -4,9 +4,9 @@ const Progress = ({ progress, status }) => {
   const getStatusBadgeColor = () => {
     switch (status) {
       case "inProgress":
-        return "bg-yellow-100 text-yellow-600 border border-yellow-200";
+        return "bg-[#E48E39] text-yellow-600 border border-[#E48E39]";
       case "completed":
-        return "bg-green-100 text-green-500 border border-green-200";
+        return "bg-[#6FE439] text-green-500 border border-[#6FE439]";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }

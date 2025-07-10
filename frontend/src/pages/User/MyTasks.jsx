@@ -102,7 +102,7 @@ const MyTasks = () => {
       <div className="my-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg md:text-xl font-medium">My Tasks</h2>
+            <h2 className="text-lg md:text-xl font-medium text-white">My Tasks</h2>
           </div>
 
           {tabs?.[0]?.count > 0 && (
@@ -116,7 +116,7 @@ const MyTasks = () => {
                   <select
                     value={filterMonth}
                     onChange={(e) => setFilterMonth(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                    className="border rounded px-3 py-2 text-sm text-gray-50 max-h-48 overflow-y-auto"
                   >
                     {/* <option value="">All Months ({allMonthCount})</option> */}
                     {/* <option value="">All Months</option> */}
@@ -126,7 +126,7 @@ const MyTasks = () => {
                       .sort((a, b) => b.value.localeCompare(a.value)) // descending
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
-                        <option key={m.value} value={m.value}>
+                        <option key={m.value} value={m.value} className="text-black">
                           {m.label}
                         </option>
                       ))}
@@ -176,9 +176,9 @@ const MyTasks = () => {
               onPageChange={(e) => setPage(e.selected + 1)}
               containerClassName={"flex gap-2 mt-4 justify-center"}
               pageClassName={"px-3 py-1 border rounded"}
-              activeClassName={"bg-primary text-white"}
-              previousClassName={"px-3 py-1 border rounded"}
-              nextClassName={"px-3 py-1 border rounded"}
+              activeClassName={"bg-[#e43941] text-white"}
+              previousClassName={"px-3 py-1 text-white border rounded"}
+              nextClassName={"px-3 py-1 border text-white rounded"}
               disabledClassName={"opacity-50 cursor-not-allowed"}
             />
           </>

@@ -482,6 +482,7 @@ const updateTask = async (req, res) => {
     if (role === "user") {
       if (req.body.todoChecklist) {
         task.todoChecklist = req.body.todoChecklist;
+        
 
         const updatedTask = await task.save();
         return res.status(200).json({

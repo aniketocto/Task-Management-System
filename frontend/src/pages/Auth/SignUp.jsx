@@ -68,7 +68,6 @@ const SignUp = () => {
 
     // 🚀 proceed with Sign up Api Call
     try {
-      
       // upload profile if present
       if (profilePic) {
         const imgUplaodRes = await uploadImage(profilePic);
@@ -110,8 +109,8 @@ const SignUp = () => {
   return (
     <AuthLayout>
       <div className="lg:w-full h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
-        <h3 className="text-xl font-semibold text-black">Create an Account</h3>
-        <p className="text-sm text-slate-700 mt-[5px] mb-6">
+        <h3 className="text-xl font-semibold text-white">Create an Account</h3>
+        <p className="text-sm text-slate-50 mt-[2px] mb-6">
           Join today by entering your details below and start managing your
           tasks effectively
         </p>
@@ -187,20 +186,23 @@ const SignUp = () => {
             </ul>
           )}
 
-          <button type="submit" className="btn-primary">
+          <button
+            type="submit"
+            className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
+          >
             Sign In
           </button>
-          <p className="text-[13px] text-slate-800 mt-3">
-            Already have an account?
-            <Link to="/login" className="text-primary font-medium underline">
+          <p className="text-[13px] text-slate-50 mt-3">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#E43941] font-medium ">
               Login
             </Link>
           </p>
-          <p className="text-[13px] text-slate-800 mt-3">
-            Admin Sign In?
+          <p className="text-[13px] text-slate-50 mt-3">
+            Admin Sign In?{" "}
             <Link
               to="/sign-up?admin=true"
-              className="text-primary font-medium underline"
+              className="text-[#E43941] font-medium "
             >
               Admin
             </Link>

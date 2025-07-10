@@ -15,11 +15,11 @@ const CustomBarChart = ({ data }) => {
   const getBarColor = (entry) => {
     switch (entry?.priority) {
       case "low":
-        return "#22c55e"; // Green
+        return "#6FE439"; // Green
       case "medium":
-        return "#eab308"; // Yellow
+        return "#E48E39"; // Yellow
       case "high":
-        return "#ef4444"; // Red
+        return "#E43941"; // Red
       default:
         return "#22c55e"; // Default to green
     }
@@ -42,19 +42,20 @@ const CustomBarChart = ({ data }) => {
       );
     }
   };
+  
 
   return (
-    <div className="bg-white mt-6 ">
+    <div className=" mt-6 ">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid stroke="none" />
 
           <XAxis
             dataKey="priority"
-            tick={{ fontSize: 12, fill: "#555" }}
-            stroke="none"
+            tick={{ fontSize: 12, fill: "#fff" }}
+            stroke="#fff"
           />
-          <YAxis tick={{ fontSize: 12, fill: "#555" }} stroke="none" />
+          <YAxis tick={{ fontSize: 12, fill: "#fff" }} stroke="#fff"  />
           <Tooltip content={<CustomTooltip />} />
 
           <Bar

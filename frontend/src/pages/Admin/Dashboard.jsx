@@ -170,13 +170,14 @@ const Dashboard = () => {
                 <select
                   value={filterMonth}
                   onChange={(e) => setFilterMonth(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm text-gray-700"
+                  className="border rounded px-3 py-2 text-sm text-white"
                 >
                   {/* <option value="">All</option> */}
                   {availableMonths
                     .sort((a, b) => b.value.localeCompare(a.value))
                     .map((m) => (
                       <option
+                        className="text-black"
                         key={m.value}
                         value={m.value}
                         disabled={m.total === 0}
@@ -193,7 +194,7 @@ const Dashboard = () => {
                 <select
                   value={filterDepartment}
                   onChange={(e) => setFilterDepartment(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm text-gray-700"
+                  className="border rounded px-3 py-2 text-sm text-white"
                 >
                   <option value="">All</option>
                   {departments
@@ -204,6 +205,7 @@ const Dashboard = () => {
                         departmentTotals[m.value] === 0;
                       return (
                         <option
+                          className="text-black"
                           key={m.value}
                           value={m.value}
                           disabled={isDisabled}

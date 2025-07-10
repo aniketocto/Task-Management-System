@@ -36,12 +36,6 @@ const ManageTask = () => {
 
       let tasks = response.data?.tasks || [];
 
-      // if (tasks.length === 0 && filterStatus !== "All"  ) {
-      //   // fallback to "All" if no tasks for this status+month
-      //   setFilterStatus("All");
-      //   return;
-      // }
-
       if (tasks.length === 0) {
         if (filterStatus !== "All") {
           setFilterStatus("All");
@@ -179,7 +173,7 @@ const ManageTask = () => {
       <div className="my-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg md:text-xl font-medium">My Tasks</h2>
+            <h2 className="text-lg text-white md:text-xl font-medium">My Tasks</h2>
             <button
               onClick={handleDownloadTaskReport}
               className="flex lg:hidden download-btn"
@@ -200,11 +194,11 @@ const ManageTask = () => {
                   <select
                     value={filterDepartment}
                     onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                    className="border rounded px-3 py-2 text-sm text-white max-h-48 overflow-y-auto"
                   >
                     <option value="">All Departments </option>
                     {departments.map((dept) => (
-                      <option key={dept} value={dept}>
+                      <option key={dept} value={dept} className="text-black">
                         {dept}
                       </option>
                     ))}
@@ -220,7 +214,7 @@ const ManageTask = () => {
                   <select
                     value={filterMonth}
                     onChange={(e) => setFilterMonth(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-gray-700 max-h-48 overflow-y-auto"
+                    className="border rounded px-3 py-2 text-sm text-white max-h-48 overflow-y-auto"
                   >
                     {/* <option value="">All Months ({allMonthCount})</option> */}
                     {/* <option value="">All Months</option> */}
@@ -230,7 +224,7 @@ const ManageTask = () => {
                       .sort((a, b) => b.value.localeCompare(a.value)) // descending
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
-                        <option key={m.value} value={m.value}>
+                        <option key={m.value} value={m.value} className="text-black">
                           {m.label}
                         </option>
                       ))}
@@ -246,10 +240,10 @@ const ManageTask = () => {
               /> */}
 
               {/* download button */}
-              <button className="hidden md:flex download-btn">
+              {/* <button className="hidden md:flex download-btn">
                 <LuFileSpreadsheet className="text-gray-400 text-lg" />
                 Download Report
-              </button>
+              </button> */}
             </div>
           )}
         </div>
@@ -292,8 +286,8 @@ const ManageTask = () => {
               containerClassName={"flex gap-2 mt-4 justify-center"}
               pageClassName={"px-3 py-1 border rounded"}
               activeClassName={"bg-primary text-white"}
-              previousClassName={"px-3 py-1 border rounded"}
-              nextClassName={"px-3 py-1 border rounded"}
+              previousClassName={"px-3 py-1 border text-white rounded"}
+              nextClassName={"px-3 py-1 border text-white rounded"}
               disabledClassName={"opacity-50 cursor-not-allowed"}
             />
           </>

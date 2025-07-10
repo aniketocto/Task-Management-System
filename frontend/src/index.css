@@ -14,13 +14,13 @@
   }
 
   body {
-    background-color: #fcfbfc;
+    background-color: #06090e;
     overflow-x: hidden;
   }
 }
 
 .input-box {
-  @apply w-full flex justify-between gap-3 text-black bg-slate-100/50 rounded px-4 py-3 mb-4 mt-3 border border-slate-200 outline-none;
+  @apply w-full flex justify-between gap-3 text-black bg-slate-50 rounded px-4 py-3 mb-4 mt-1.5 border border-slate-200 outline-none;
 }
 
 .btn-primary {
@@ -28,16 +28,16 @@
 }
 
 .card {
-  @apply bg-white p-6 rounded-2xl shadow-md shadow-gray-100 border border-gray-200/50;
+  @apply bg-gray-950 shadow-lg shadow-black/50 border border-gray-200 text-white p-6 rounded-2xl ;
 }
 .card-btn {
-  @apply flex items-center gap-3 text-[12px] font-medium text-gray-700 hover:text-primary bg-gray-50 hover:bg-blue-50 px-4 py-1.5 rounded-lg border border-gray-200/50 cursor-pointer;
+  @apply flex items-center gap-3 text-[12px] font-medium text-gray-700 hover:text-red-500 bg-gray-50 hover:bg-red-50 px-4 py-1.5 rounded-lg border border-red-200/50 cursor-pointer;
 }
 .card-btn-fill {
   @apply items-center flex gap-3 text-[12px] font-medium text-white hover:text-primary bg-primary hover:bg-blue-50 px-4 py-1.5 rounded-lg border border-primary cursor-pointer;
 }
 .form-card {
-  @apply bg-white p-6 rounded-lg shadow-md shadow-gray-100 border border-gray-200/50;
+  @apply bg-gray-950 p-6 rounded-lg shadow-md shadow-black/50 border border-gray-200/50;
 }
 
 .form-input {
@@ -45,12 +45,12 @@
 }
 
 .add-btn {
-  @apply w-full flex items-center justify-center gap-1.5 text-sm font-medium text-primary whitespace-nowrap bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 cursor-pointer;
+  @apply w-full flex items-center justify-center gap-1.5 text-sm font-medium text-[#E43941] whitespace-nowrap bg-red-50 border border-red-100 rounded-lg px-4 py-2 cursor-pointer;
 }
 
 .download-btn {
   @apply items-center gap-3 text-sm md:text-[13px] text-lime-900 bg-lime-100 px-2 md:px-3 py-2 rounded-lg border border-lime-200 cursor-pointer hover:border-lime-400;
 }
 .user-card {
-  @apply bg-white rounded-xl shadow-md shadow-gray-100 border border-gray-200/50
+  @apply bg-white rounded-xl shadow-md shadow-gray-100 border border-gray-200/50;
 }

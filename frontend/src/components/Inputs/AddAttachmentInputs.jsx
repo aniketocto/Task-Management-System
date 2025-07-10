@@ -25,7 +25,7 @@ const AddAttachmentInputs = ({ attachments = [], setAttachments }) => {
       {attachments.map((item, index) => (
         <div
           key={index}
-          className="flex justify-between bg-gray-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2"
+          className="flex justify-between bg-blue-50 border border-blue-100 px-3 py-2 rounded-md mb-3 mt-2"
         >
           <div className="flex-1 flex items-center gap-3">
             <LuPaperclip className="text-gray-400" />
@@ -41,7 +41,7 @@ const AddAttachmentInputs = ({ attachments = [], setAttachments }) => {
       ))}
 
       <div className="flex items-center gap-5 mt-4">
-        <div className="flex-1 flex items-center gap-3 border border-gray-100 rounded-md px-3">
+        <div className="flex-1 flex items-center gap-3 bg-gray-50  border border-gray-100 rounded-md px-3">
           <LuPaperclip className="text-gray-400" />
 
           <input

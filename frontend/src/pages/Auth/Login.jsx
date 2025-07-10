@@ -73,8 +73,8 @@ const Login = () => {
   return (
     <AuthLayout>
       <div className="lg:w-[70%] h-3/4 md:h-screen flex flex-col justify-center">
-        <h3 className="text-xl font-semibold text-black">Welcome Back</h3>
-        <p className="text-sm text-slate-700">
+        <h3 className="text-xl font-semibold text-white">Welcome Back</h3>
+        <p className="text-sm text-slate-200">
           Please Enter your details to login
         </p>
 
@@ -102,12 +102,12 @@ const Login = () => {
             </ul>
           )}
 
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer ">
             Login
           </button>
-          <p className="text-[13px] text-slate-800 mt-3">
-            Don't have an account?
-            <Link to="/sign-up" className="text-primary font-medium underline">
+          <p className="text-[13px] text-slate-50 mt-3">
+            Don't have an account? {" "}
+            <Link to="/sign-up" className="text-[#E43941] font-medium">
               Sign Up
             </Link>
           </p>

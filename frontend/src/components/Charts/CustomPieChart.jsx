@@ -12,11 +12,11 @@ import CustomLegend from "./CustomLegend";
 
 // status → color map
 const STATUS_COLORS = {
-  new: "#1368EC",
-  inProgress: "#f0b100",
-  completed: "#00C950",
-  delayed: "#fb2c36",
-  pending: "#00B8DB",
+  new: "#3956E4",
+  inProgress: "#E48E39",
+  completed: "#6FE439",
+  delayed: "#E43941",
+  pending: "#39C5E4",
 };
 
 const CustomPieChart = ({ data }) => {

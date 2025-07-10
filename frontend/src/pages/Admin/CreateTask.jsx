@@ -94,7 +94,7 @@ const CreateTask = () => {
         );
 
         return {
-          item,
+          text: item.text,
           completed: matchedTask ? matchedTask.completed : false,
         };
       });
@@ -219,7 +219,7 @@ const CreateTask = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 mt-4">
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl md:text-2xl font-medium">
+              <h2 className="text-xl md:text-2xl text-white font-medium">
                 {taskId ? "Update Task" : "Create Task"}
               </h2>
               {taskId && (
@@ -280,7 +280,7 @@ const CreateTask = () => {
                 />
               </div>
               {/* Due Date */}
-              <div className="col-span-12 md:col-span-4 ">
+              <div className="col-span-12 md:col-span-4 cursor-pointer">
                 <label className="text-xs font-medium text-slate-600">
                   Due Date
                 </label>
@@ -294,6 +294,7 @@ const CreateTask = () => {
                     handleValueChange("dueDate", target.value);
                   }}
                   onClick={(e) => e.stopPropagation()}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               {/* Assigned To */}

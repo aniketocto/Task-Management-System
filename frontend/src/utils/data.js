@@ -74,12 +74,12 @@ export const STATUS_OPTIONS = [
 ];
 
 export const infoCard = [
-  { label: "New Tasks", key: "new", color: "bg-primary" },
-  { label: "InProgress Tasks", key: "inProgress", color: "bg-yellow-500" },
-  { label: "Completed Tasks", key: "completed", color: "bg-green-500" },
-  { label: "Pending Tasks", key: "pending", color: "bg-cyan-500" },
-  { label: "Delayed Tasks", key: "delayed", color: "bg-red-500" },
-  { label: "Total Tasks", key: "All", color: "bg-purple-500" },
+  { label: "New Tasks", key: "new", color: "bg-[#3956E4]" },
+  { label: "InProgress Tasks", key: "inProgress", color: "bg-[#E48E39]" },
+  { label: "Completed Tasks", key: "completed", color: "bg-[#6FE439]" },
+  { label: "Pending Tasks", key: "pending", color: "bg-[#39C5E4]" },
+  { label: "Delayed Tasks", key: "delayed", color: "bg-[#E43941]" },
+  { label: "Total Tasks", key: "All", color: "bg-[#B439E4]" },
 ];
 
 export const officeQuotes = {

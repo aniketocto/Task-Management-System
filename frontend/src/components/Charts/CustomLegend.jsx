@@ -9,7 +9,7 @@ const CustomLegend = ({ payload }) => {
             className=" w-2.5 h-2.5 rounded-full"
             style={{ backgroundColor: entry.color }}
           ></div>
-          <span className="text-xs text-gray-700 fontme'">{entry.value}</span>
+          <span className="text-xs text-white font-medium capitalize">{entry.value}</span>
         </div>
       ))}
     </div>
