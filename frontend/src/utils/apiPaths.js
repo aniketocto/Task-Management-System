@@ -39,4 +39,10 @@ export const API_PATHS = {
     GET_NOTIFICATIONS: "/api/notify",
     MARK_NOTIFICATION_AS_READ: "/api/notify/mark-all-read",
   },
+  DUE_DATE: {
+    REQUEST_DUE_DATE_CHANGE: (task_id) =>
+      `/api/tasks/${task_id}/due-date-request`,
+    REVIEW_DUE_DATE_CHANGE: (task_id) =>
+      `/api/tasks/${task_id}/due-date-approval`,
+  },
 };

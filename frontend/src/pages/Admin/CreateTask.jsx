@@ -14,6 +14,7 @@ import moment from "moment";
 import { UserContext } from "../../context/userContext";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
+import TaskDueDateField from "../../components/Inputs/TaskDueDateField";
 
 const CreateTask = () => {
   const { user } = useContext(UserContext);
@@ -68,7 +69,7 @@ const CreateTask = () => {
         todoChecklist: todoList,
       });
 
-      if (response.status === 200 ) {
+      if (response.status === 200) {
         toast.success("Task created successfully");
         clearData();
         navigate("/admin/tasks");
@@ -278,23 +279,12 @@ const CreateTask = () => {
                 />
               </div>
               {/* Due Date */}
-              <div className="col-span-12 md:col-span-4 cursor-pointer">
-                <label className="text-xs font-medium text-slate-600">
-                  Due Date
-                </label>
 
-                <input
-                  type="date"
-                  disabled={taskId && user?.role !== "superAdmin"}
-                  className="form-input"
-                  value={taskData.dueDate ?? ""}
-                  onChange={({ target }) => {
-                    handleValueChange("dueDate", target.value);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
+              <TaskDueDateField
+                taskId={taskId}
+                taskData={taskData}
+                handleValueChange={handleValueChange}
+              />
               {/* Assigned To */}
               <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-600">

@@ -1,5 +1,6 @@
 const Notification = require("../models/Notification");
 const Task = require("../models/Task");
+const User = require("../models/User");
 
 const getTasks = async (req, res) => {
   try {
@@ -1033,6 +1034,7 @@ const getUserDashboardData = async (req, res) => {
 
 const requestDueDateChange = async (req, res) => {
   try {
+   
     const { pendingDueDate } = req.body;
     if (!pendingDueDate) {
       return res.status(400).json({ message: "Pending Due date is required" });
@@ -1061,7 +1063,7 @@ const requestDueDateChange = async (req, res) => {
     await task.save();
 
     // Notify the superAdmin
-    const superAdmins = await User.findOne({ role: "superAdmin" });
+    const superAdmins = await User.find({ role: "superAdmin" });
     const notifications = await Promise.all(
       superAdmins.map((sa) =>
         Notification.create({
@@ -1074,7 +1076,6 @@ const requestDueDateChange = async (req, res) => {
         })
       )
     );
-
     // Emit via socket
     const io = req.app.get("io");
     notifications.forEach((notification) => {
