@@ -51,6 +51,12 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
     return () => {};
   }, [selectedUsers]);
 
+  useEffect(() => {
+  if (isModalOpen) {
+    setTempSelectedUsers(selectedUsers);
+  }
+}, [isModalOpen, selectedUsers]);
+
   return (
     <div className="space-y-4 mt-2">
       {selectedUserAvatars.length === 0 && (
