@@ -37,7 +37,6 @@ export const API_PATHS = {
   },
   NOTIFICATION: {
     GET_NOTIFICATIONS: "/api/notify",
-    MARK_NOTIFICATION_AS_READ: (notificationId) =>
-      `/api/notify/${notificationId}`,
+    MARK_NOTIFICATION_AS_READ: "/api/notify/mark-all-read",
   },
 };

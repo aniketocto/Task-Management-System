@@ -1,8 +1,8 @@
-const Notifcation = require("../models/Notification");
+const Notification = require("../models/Notification");
 
 const getUserNotifications = async (req, res) => {
   try {
-    const notifications = await Notifcation.find({ user: req.user._id })
+    const notifications = await Notification.find({ user: req.user._id })
       .sort({ createdAt: -1 })
       .limit(50);
 
