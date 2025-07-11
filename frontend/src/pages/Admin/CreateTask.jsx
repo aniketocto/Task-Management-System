@@ -15,8 +15,6 @@ import { UserContext } from "../../context/userContext";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 
-// TODO: Add  status wise color so user can see which task is completed or not
-
 const CreateTask = () => {
   const { user } = useContext(UserContext);
   const location = useLocation();
@@ -70,7 +68,7 @@ const CreateTask = () => {
         todoChecklist: todoList,
       });
 
-      if (response.status === 201) {
+      if (response.status === 200 ) {
         toast.success("Task created successfully");
         clearData();
         navigate("/admin/tasks");
@@ -319,6 +317,7 @@ const CreateTask = () => {
               </label>
 
               <TodoListInput
+                taskId={taskId}
                 todoList={taskData?.todoChecklist}
                 setTodoList={(value) => {
                   if (!Array.isArray(value)) {

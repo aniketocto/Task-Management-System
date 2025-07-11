@@ -10,6 +10,7 @@ const {
   updateTaskStatus,
   getDashboardData,
   getUserDashboardData,
+  getAdminTasks,
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.get("/user-dashboard-data", protect, getUserDashboardData); // Data Daskb
 // Task Management Route
 
 router.get("/", protect, getTasks); // Get All Tasks (Superadmin, Admin: all, User: only their tasks)
+router.get("/admin-tasks", protect, getAdminTasks); // Get All Tasks (Superadmin, Admin: all, User: only their tasks)
 
 router.get("/:id", protect, getTask); // Get a specific task
 

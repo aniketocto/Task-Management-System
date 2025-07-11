@@ -7,7 +7,7 @@ const Task = require("../models/Task");
 
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: "user" }).select("-password");
+    const users = await User.find({ role: { $in: ["user", "admin"] } }).select("-password");
 
     // Add tasks count to each user
     const usersWithTaskCount = await Promise.all(

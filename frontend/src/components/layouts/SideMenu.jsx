@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
-import React, {useContext, useEffect, useState } from "react";
-import { SIDE_MENU_DATA, SIDE_MENU_USER_DATA } from "../../utils/data";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  SIDE_MENU_ADMIN_DATA,
+  SIDE_MENU_SUPER_ADMIN_DATA,
+  SIDE_MENU_USER_DATA,
+} from "../../utils/data";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser } = useContext(UserContext);
@@ -27,8 +31,10 @@ const SideMenu = ({ activeMenu }) => {
   useEffect(() => {
     if (user) {
       setSideMenuData(
-        user?.role === "admin" || user?.role === "superAdmin"
-          ? SIDE_MENU_DATA
+        user?.role === "admin"
+          ? SIDE_MENU_ADMIN_DATA
+          : user?.role === "superAdmin"
+          ? SIDE_MENU_SUPER_ADMIN_DATA
           : SIDE_MENU_USER_DATA
       );
     }
@@ -51,9 +57,7 @@ const SideMenu = ({ activeMenu }) => {
           </div>
         )}
 
-        <h5 className="text-white font-medium leading-6 mt-3">
-          {user?.name}
-        </h5>
+        <h5 className="text-white font-medium leading-6 mt-3">{user?.name}</h5>
         <p className="text-[12px] text-gray-500"> {user?.department || ""} </p>
         <p className="text-[12px] text-gray-500 mb-5"> {user?.email || ""} </p>
 
@@ -67,7 +71,11 @@ const SideMenu = ({ activeMenu }) => {
             } py-3 px-6 mb-3 cursor-pointer`}
             onClick={() => handleClick(item.path)}
           >
-            <item.icon className={`text-xl ${activeMenu == item.label && "text-[#E43941]"}`} />
+            <item.icon
+              className={`text-xl ${
+                activeMenu == item.label && "text-[#E43941]"
+              }`}
+            />
             {item.label}
           </button>
         ))}

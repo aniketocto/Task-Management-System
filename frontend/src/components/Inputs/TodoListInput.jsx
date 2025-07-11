@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HiOutlineTrash, HiPlus } from "react-icons/hi";
 
-const TodoListInput = ({ todoList = [], setTodoList }) => {
+const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
   const [option, setOption] = useState("");
   // console.log(todoList);
 
@@ -37,7 +37,7 @@ const TodoListInput = ({ todoList = [], setTodoList }) => {
             <span className="text-sm text-gray-400 font-semibold mr-2">
               {index < 9 ? `0${index + 1}` : index + 1}
             </span>{" "}
-            <span>{item}</span>
+            <span>{taskId ? item?.text : item}</span>
           </p>
 
           <button

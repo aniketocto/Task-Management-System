@@ -132,6 +132,137 @@ const getTasks = async (req, res) => {
   }
 };
 
+const getAdminTasks = async (req, res) => {
+  try {
+    const { department, status, month, page = 1, limit = 12 } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    let filter = {};
+
+    if (status) filter.status = status;
+
+    if (month) {
+      const [year, monthNum] = month.split("-");
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+
+    const isPrivileged = ["superAdmin"].includes(req.user.role);
+
+    // Base filter for user access control
+    let baseFilter = {};
+    if (!isPrivileged) {
+      baseFilter.assignedTo = { $in: [req.user._id] };
+    }
+
+    // Department filter
+    if (department) {
+      const usersInDept = await User.find({ department }).select("_id");
+      const userIds = usersInDept.map((u) => u._id);
+
+      if (!isPrivileged) {
+        // For non-privileged users, check if they belong to the requested department
+        if (userIds.some((id) => id.toString() === req.user._id.toString())) {
+          filter.assignedTo = { $in: [req.user._id] };
+        } else {
+          // User doesn't belong to requested department, return empty results
+          return res.status(200).json({
+            tasks: [],
+            totalCount: 0,
+            statusSummary: {
+              all: 0,
+              newTasks: 0,
+              pendingTasks: 0,
+              inProgressTasks: 0,
+              completedTasks: 0,
+              delayedTasks: 0,
+            },
+            monthlyData: { monthsData: [], allTimeTotal: 0 },
+            departmentBreakdown: {},
+            userBreakdown: {},
+          });
+        }
+      } else {
+        filter.assignedTo = { $in: userIds };
+      }
+    } else {
+      // Apply base filter when no department specified
+      filter = { ...filter, ...baseFilter };
+    }
+
+    // Fetch paginated tasks
+    let tasks = await Task.find(filter)
+      .populate("assignedTo", "name email profileImageUrl department")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Attach completed todo count
+    tasks = await Promise.all(
+      tasks.map((task) => {
+        const completedTodoCount = task.todoChecklist.filter(
+          (item) => item.completed
+        ).length;
+
+        return {
+          ...task._doc,
+          completedTodoCount,
+        };
+      })
+    );
+
+    // Total count for pagination
+    const totalCount = await Task.countDocuments(filter);
+
+    // Status summary
+    const countWith = (status) => Task.countDocuments({ ...filter, status });
+
+    const [
+      allTasks,
+      newTasks,
+      pendingTasks,
+      inProgressTasks,
+      completedTasks,
+      delayedTasks,
+    ] = await Promise.all([
+      Task.countDocuments(filter),
+      countWith("new"),
+      countWith("pending"),
+      countWith("inProgress"),
+      countWith("completed"),
+      countWith("delayed"),
+    ]);
+
+    // Get enhanced monthly data with department and user breakdown
+    const monthlyData = await getEnhancedMonthlyTaskData(
+      isPrivileged ? {} : { assignedTo: { $in: [req.user._id] } },
+      department
+    );
+
+    res.status(200).json({
+      tasks,
+      totalCount,
+      statusSummary: {
+        all: allTasks,
+        newTasks,
+        pendingTasks,
+        inProgressTasks,
+        completedTasks,
+        delayedTasks,
+      },
+      monthlyData,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Enhanced helper function to get monthly task data with department and user breakdown
 const getEnhancedMonthlyTaskData = async (
   baseFilter,
@@ -849,6 +980,7 @@ const getUserDashboardData = async (req, res) => {
 
 module.exports = {
   getTasks,
+  getAdminTasks,
   getTask,
   createTask,
   updateTask,

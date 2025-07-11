@@ -22,7 +22,7 @@ const MyTasks = () => {
 
   const getAllTasks = async (currentPage = 1) => {
     try {
-      const response = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
+      const response = await axiosInstance.get(API_PATHS.TASKS.GET_ADMIN_TASKS, {
         params: {
           status: filterStatus === "All" ? "" : filterStatus,
           month: filterMonth || undefined,
@@ -65,8 +65,6 @@ const MyTasks = () => {
 
       setAvailableMonths(monthsData?.filter((m) => m.count > 0) || []);
 
-      
-
       const totalCount = response.data?.statusSummary?.all || 0;
       setTotalPages(Math.ceil(totalCount / tasksPerPage));
     } catch (error) {
@@ -92,7 +90,7 @@ const MyTasks = () => {
   }, [availableMonths]);
 
   const handleClick = (taskId) => {
-    navigate(`/user/task-detail/${ taskId}`);
+    navigate(`/user/task-detail/${taskId}`);
   };
 
   return (
@@ -100,7 +98,9 @@ const MyTasks = () => {
       <div className="my-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg md:text-xl font-medium text-white">View Tasks</h2>
+            <h2 className="text-lg md:text-xl font-medium text-white">
+              View Tasks
+            </h2>
           </div>
 
           {tabs?.[0]?.count > 0 && (
@@ -124,15 +124,17 @@ const MyTasks = () => {
                       .sort((a, b) => b.value.localeCompare(a.value)) // descending
                       .slice(0, 12) // only the most recent 12
                       .map((m) => (
-                        <option key={m.value} value={m.value} className="text-black">
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          className="text-black"
+                        >
                           {m.label}
                         </option>
                       ))}
                   </select>
                 </>
               )}
-
-             
             </div>
           )}
         </div>
