@@ -638,12 +638,13 @@ const updateTask = async (req, res) => {
     }
 
     const role = req.user.role;
+    // Grab the old array before you mutate it:
+    const oldAssigned = task.assignedTo.map((id) => id.toString());
 
     // --- User can only update todoChecklist ---
     if (role === "user") {
       if (req.body.todoChecklist) {
         task.todoChecklist = req.body.todoChecklist;
-
         const updatedTask = await task.save();
         return res.status(200).json({
           message: "Task updated successfully (todo checklist only)",
@@ -657,9 +658,9 @@ const updateTask = async (req, res) => {
 
     // --- Admin can update all except dueDate ---
     if (role === "admin") {
-      task.title = req.body.title || task.title;
+      task.title       = req.body.title       || task.title;
       task.description = req.body.description || task.description;
-      task.priority = req.body.priority || task.priority;
+      task.priority    = req.body.priority    || task.priority;
       task.attachments = req.body.attachments || task.attachments;
 
       if (req.body.assignedTo) {
@@ -680,11 +681,11 @@ const updateTask = async (req, res) => {
 
     // --- SuperAdmin can update everything ---
     if (role === "superAdmin") {
-      task.title = req.body.title || task.title;
-      task.description = req.body.description || task.description;
-      task.dueDate = req.body.dueDate || task.dueDate;
-      task.priority = req.body.priority || task.priority;
-      task.attachments = req.body.attachments || task.attachments;
+      task.title         = req.body.title         || task.title;
+      task.description   = req.body.description   || task.description;
+      task.dueDate       = req.body.dueDate       || task.dueDate;
+      task.priority      = req.body.priority      || task.priority;
+      task.attachments   = req.body.attachments   || task.attachments;
       task.todoChecklist = req.body.todoChecklist || task.todoChecklist;
 
       if (req.body.assignedTo) {
@@ -697,14 +698,47 @@ const updateTask = async (req, res) => {
       }
     }
 
+    // Now you’ve updated task.assignedTo in-memory—time to save
     const updatedTask = await task.save();
-    res
+
+    // If assignedTo was part of the request, figure out which users are newly added
+    if (req.body.assignedTo) {
+      const newAssigned = updatedTask.assignedTo.map((id) => id.toString());
+      // users in newAssigned but not in oldAssigned
+      const addedUsers = newAssigned.filter((id) => !oldAssigned.includes(id));
+
+      if (addedUsers.length > 0) {
+        // grab your io instance
+        const io = req.app.get("io");
+
+        // create + emit a notification for each newly assigned user
+        const notifications = await Promise.all(
+          addedUsers.map((userId) =>
+            Notification.create({
+              user: userId,
+              message: `You have been newly assigned to task: ${updatedTask.title}`,
+              task: updatedTask._id,
+              type: "task",
+            })
+          )
+        );
+
+        // emit each one to the correct socket room
+        notifications.forEach((notif) => {
+          io.to(notif.user.toString()).emit("new-notification", notif);
+        });
+      }
+    }
+
+    return res
       .status(200)
       .json({ message: "Task updated successfully", task: updatedTask });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("❌ updateTask error:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 const deleteTask = async (req, res) => {
   try {
