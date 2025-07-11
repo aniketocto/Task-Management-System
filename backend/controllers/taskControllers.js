@@ -595,32 +595,37 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    // grap socket io server from app
+    console.log("✅ Task created:", task);
+
+    // grab socket io server
     const io = req.app.get("io");
 
     // create notifications
     const notifications = await Promise.all(
-      assignedTo.map((userId) =>
-        Notification.create({
+      assignedTo.map(async (userId) => {
+        const n = await Notification.create({
           user: userId,
           message: `You have been assigned a new task: ${task.title}`,
           task: task._id,
           type: "task",
-        })
-      )
+        });
+        console.log(`✅ Notification created for user ${userId}:`, n);
+        return n;
+      })
     );
 
-    // Emit each one
+    // emit notifications
     notifications.forEach((notification) => {
-      io.to(notification.user.toString()).emit(
-        "new-notification",
-        notification
-      );
+      const room = notification.user.toString();
+      console.log(`📢 Emitting notification to room: ${room}`);
+      io.to(room).emit("new-notification", notification);
     });
+
+    console.log("🎯 Notifications emitted to all assigned users.");
 
     res.json({ message: "Task & notifications created successfully", task });
   } catch (error) {
-    console.error("createTask error:", error);
+    console.error("❌ createTask error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

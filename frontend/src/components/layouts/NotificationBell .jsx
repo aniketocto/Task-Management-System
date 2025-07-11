@@ -5,15 +5,14 @@ import axiosInstance from "../../utils/axiosInstance";
 import { IoMdNotifications } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 
-const SOCKET_URL = import.meta.env.REACT_APP_SOCKET_URL;
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(false);
-  const [open, setOpen]                   = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const containerRef = useRef(null);
-  const socketRef = useRef(null)
+  const socketRef = useRef(null);
 
   // fetch notifications
   const fetchNotifications = async () => {
@@ -33,19 +32,24 @@ const NotificationBell = () => {
   // connect socket once
   useEffect(() => {
     const token = localStorage.getItem("taskManagerToken");
-    const socket = io(SOCKET_URL, {auth: {token}});
+
+    const socket = io(import.meta.env.VITE_SOCKET_URL, {
+      auth: { token },
+    });
+
     socketRef.current = socket;
 
-    socket.on("connect", () => console.log("Socket.io connected"));
-    socket.on("connect_error", (err) => console.error("Socket Error: ",err));
-    socket.on("new -notification", (notify) => {
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket connection error:", err);
+    });
+    socket.on("new-notification", (notify) => {
       setNotifications((prev) => [notify, ...prev]);
     });
 
     return () => {
       socket.disconnect();
-    }
-  }, [])
+    };
+  }, []);
 
   // mark & delete on server
   const markAllAsReadAndDelete = async () => {
@@ -89,12 +93,9 @@ const NotificationBell = () => {
     if (!open) return;
 
     const handleClickOutside = (e) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
         setOpen(false);
-        markAllAsReadAndDelete();  // optional: delete on outside close too
+        markAllAsReadAndDelete(); // optional: delete on outside close too
       }
     };
 
