@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import { IoMdNotifications } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+
+const SOCKET_URL = import.meta.env.REACT_APP_SOCKET_URL;
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -10,6 +13,7 @@ const NotificationBell = () => {
   const [open, setOpen]                   = useState(false);
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  const socketRef = useRef(null)
 
   // fetch notifications
   const fetchNotifications = async () => {
@@ -25,6 +29,23 @@ const NotificationBell = () => {
       setLoading(false);
     }
   };
+
+  // connect socket once
+  useEffect(() => {
+    const token = localStorage.getItem("taskManagerToken");
+    const socket = io(SOCKET_URL, {auth: {token}});
+    socketRef.current = socket;
+
+    socket.on("connect", () => console.log("Socket.io connected"));
+    socket.on("connect_error", (err) => console.error("Socket Error: ",err));
+    socket.on("new -notification", (notify) => {
+      setNotifications((prev) => [notify, ...prev]);
+    });
+
+    return () => {
+      socket.disconnect();
+    }
+  }, [])
 
   // mark & delete on server
   const markAllAsReadAndDelete = async () => {
