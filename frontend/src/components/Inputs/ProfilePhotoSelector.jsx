@@ -38,10 +38,10 @@ const ProfilePhotoSelector = ({ image, setImage }) => {
 
       {!image ? (
         <div className="w-20 h-20 flex items-center justify-center relative rounded-full bg-blue-100/50 cursor-pointer">
-          <LuUser className="text-4xl text-primary" />
+          <LuUser className="text-4xl text-[#fff]" />
 
           <button
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white absolute -bottom-1 -right-1 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#E43941] text-white absolute -bottom-1 -right-1 cursor-pointer"
             onClick={() => onChooseFile()}
             type="button"
           >

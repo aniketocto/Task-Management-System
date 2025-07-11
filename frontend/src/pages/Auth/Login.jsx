@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
@@ -6,12 +6,16 @@ import { validateEmail, validatePassword } from "../../utils/helper";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
+import { UserContext } from "../../context/userContext";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState([]);
   
   const navigate = useNavigate();
+
+  const { updateUser } = useContext(UserContext);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -47,12 +51,15 @@ const Login = () => {
 
       if (token) {
         localStorage.setItem("taskManagerToken", token);
+        updateUser(response.data);
 
-        if (role === "admin") {
+        if (role === "admin" || role === "superAdmin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/user/dashboard");
         }
+      } else {
+        setError(["Something went wrong"]);
       }
     } catch (error) {
       if (error.response && error.response.data) {
@@ -66,8 +73,8 @@ const Login = () => {
   return (
     <AuthLayout>
       <div className="lg:w-[70%] h-3/4 md:h-screen flex flex-col justify-center">
-        <h3 className="text-xl font-semibold text-black">Welcome Back</h3>
-        <p className="text-sm text-slate-700">
+        <h3 className="text-xl font-semibold text-white">Welcome Back</h3>
+        <p className="text-sm text-slate-200">
           Please Enter your details to login
         </p>
 
@@ -95,12 +102,12 @@ const Login = () => {
             </ul>
           )}
 
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer ">
             Login
           </button>
-          <p className="text-[13px] text-slate-800 mt-3">
-            Don't have an account?
-            <Link to="/sign-up" className="text-primary font-medium underline">
+          <p className="text-[13px] text-slate-50 mt-3">
+            Don't have an account? {" "}
+            <Link to="/sign-up" className="text-[#E43941] font-medium">
               Sign Up
             </Link>
           </p>

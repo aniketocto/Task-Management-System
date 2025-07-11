@@ -7,36 +7,39 @@ const Task = require("../models/Task");
 
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: "user" }).select("-password");
-    
+    const users = await User.find({ role: { $in: ["user", "admin"] } }).select("-password");
+
     // Add tasks count to each user
     const usersWithTaskCount = await Promise.all(
       users.map(async (user) => {
-        const newTask = await Task.countDocuments({
-          assignedTo: user._id,
-          status: "new",
-        });
-        const pendingTask = await Task.countDocuments({
-          assignedTo: user._id,
-          status: "pending",
-        });
-        const inProgressTask = await Task.countDocuments({
-          assignedTo: user._id,
-          status: "inProgress",
-        });
-        const completedTask = await Task.countDocuments({
-          assignedTo: user._id,
-          status: "completed",
-        });
+        const [
+          newTask,
+          pendingTask,
+          inProgressTask,
+          completedTask,
+          delayedTask,
+          totalTask,
+        ] = await Promise.all([
+          Task.countDocuments({ assignedTo: user._id, status: "new" }),
+          Task.countDocuments({ assignedTo: user._id, status: "pending" }),
+          Task.countDocuments({ assignedTo: user._id, status: "inProgress" }),
+          Task.countDocuments({ assignedTo: user._id, status: "completed" }),
+          Task.countDocuments({ assignedTo: user._id, status: "delayed" }),
+          Task.countDocuments({ assignedTo: user._id }), // 👈 total without status filter
+        ]);
+
         return {
           ...user._doc,
           newTask,
           pendingTask,
           inProgressTask,
           completedTask,
+          delayedTask,
+          totalTask,
         };
       })
     );
+
     res.json(usersWithTaskCount);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

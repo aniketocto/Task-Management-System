@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const connectDB = require("./config/db");
 
@@ -8,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const reportsRoutes = require("./routes/reportRoutes");
+const notifyRoutes = require("./routes/notifyRoutes");
 
 const app = express();
 
@@ -23,13 +25,15 @@ connectDB();
 
 app.use(express.json()); // ✅ MUST come before routes
 
-
 // Routes
-app.use("/api/auth", authRoutes);  
-app.use("/api/users", userRoutes)
-app.use("/api/tasks", taskRoutes)
-app.use("/api/reports", reportsRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/reports", reportsRoutes);
+app.use("/api/notify", notifyRoutes);
 
+// Server upload folder
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Start Server
 const PORT = process.env.PORT || 5000;
