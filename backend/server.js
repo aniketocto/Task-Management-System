@@ -49,13 +49,10 @@ const io = new Server(server, {
 app.set("io", io);
 
 io.on("connection", (socket) => {
-  console.log(
-    "🎯 New client connected. handshake.auth:",
-    socket.handshake.auth
-  );
+
 
   const token = socket.handshake.auth?.token;
-  console.log("Received token:", token);
+  // console.log("Received token:", token);
 
   if (!token) {
     console.error("❌ No token provided by client.");
@@ -65,10 +62,10 @@ io.on("connection", (socket) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("✅ JWT verified:", decoded);
+    // console.log("✅ JWT verified:", decoded);
     const userId = decoded.id?.toString();
     socket.join(userId);
-    console.log(`👥 Socket joined room: ${userId}`);
+    // console.log(`👥 Socket joined room: ${userId}`);
   } catch (err) {
     console.error("❌ JWT verification failed:", err.message);
     socket.emit("connect_error", { message: "Authentication error" });
