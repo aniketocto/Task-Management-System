@@ -53,19 +53,15 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
         {user?.role === "admin" && (
           <button
             type="button"
+            disabled={taskData.dueDateStatus === "pending"}
             onClick={() => setIsModalOpen(true)}
-            className="mt-1 px-3 py-1 bg-red-300 text-white cursor-pointer rounded"
+            className={`mt-1 px-3 py-1 text-sm  text-white rounded ${taskData.dueDateStatus === "pending" ? "bg-gray-400 cursor-not-allowed" : "bg-red-300 cursor-pointer"}`}
           >
-            Request Change
+            {taskData.dueDateStatus === "pending" ? " Awaiting approval…" : "Request Change"}
           </button>
         )}
 
-        {/* 2) If there’s a pending request, hint at it */}
-        {taskData.dueDateStatus === "pending" && (
-          <p className="text-sm text-orange-400 mt-1">
-            Awaiting superAdmin approval…
-          </p>
-        )}
+       
       </div>
 
       {/* 3) Modal for admins to pick & confirm the new date */}

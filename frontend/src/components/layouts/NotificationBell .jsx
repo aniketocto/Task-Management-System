@@ -11,6 +11,28 @@ const NotificationBell = () => {
   const containerRef = useRef(null);
   const socketRef = useRef(null);
 
+  const deleteTimeoutRef = useRef(null);
+
+  // Helper: schedule a deletion 20 minutes from now
+  const scheduleDelete = () => {
+    // clear any existing timer
+    if (deleteTimeoutRef.current) {
+      clearTimeout(deleteTimeoutRef.current);
+    }
+    deleteTimeoutRef.current = setTimeout(() => {
+      markAllAsReadAndDelete();
+      deleteTimeoutRef.current = null;
+    }, 20 * 60 * 1000); // 20 minutes
+  };
+
+  // Helper: cancel a pending deletion
+  const cancelScheduledDelete = () => {
+    if (deleteTimeoutRef.current) {
+      clearTimeout(deleteTimeoutRef.current);
+      deleteTimeoutRef.current = null;
+    }
+  };
+
   // fetch notifications
   const fetchNotifications = async () => {
     setLoading(true);
@@ -25,6 +47,10 @@ const NotificationBell = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   // connect socket once
   useEffect(() => {
@@ -69,34 +95,34 @@ const NotificationBell = () => {
   // toggle dropdown; if closing, then delete
   const handleBellClick = () => {
     if (open) {
-      markAllAsReadAndDelete();
+      // we’re closing it → schedule a deletion
+      scheduleDelete();
+    } else {
+      // we’re opening it → cancel any pending deletion
+      cancelScheduledDelete();
     }
     setOpen((prev) => !prev);
   };
 
- 
-
-  // initial fetch
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  // close dropdown on outside click
+  // Close on outside click, but only “close” (scheduling happens in handleBellClick)
   useEffect(() => {
     if (!open) return;
 
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
+        // close dropdown
         setOpen(false);
-        markAllAsReadAndDelete(); // optional: delete on outside close too
+        // and schedule deletion
+        scheduleDelete();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
+
+  // Cleanup on unmount
+  useEffect(() => () => cancelScheduledDelete(), []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -115,14 +141,14 @@ const NotificationBell = () => {
 
       {/* dropdown */}
       {open && (
-        <div className="absolute right-0 mt-2 w-64 border border-gray-50 bg-gray-950 shadow-lg rounded-lg overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-64 h-80 border border-gray-50 bg-gray-950 shadow-lg rounded-lg  hide-scrollbar overflow-y-scroll z-50">
           {loading ? (
             <div className="p-2 text-white">Loading…</div>
           ) : notifications.length === 0 ? (
             <div className="p-2 text-white">No notifications yet.</div>
           ) : (
             <ul>
-              {notifications.slice(0, 5).map((n, i) => (
+              {notifications.map((n, i) => (
                 <li
                   key={n._id}
                   className={`px-3 py-2 text-sm hover:bg-gray-800 ${
@@ -130,11 +156,7 @@ const NotificationBell = () => {
                   }`}
                 >
                   <span className="mr-1">{i + 1}.</span>
-                  <span
-                    className="cursor-pointer"
-                  >
-                    {n.message}
-                  </span>
+                  <span className="cursor-pointer">{n.message}</span>
                 </li>
               ))}
             </ul>

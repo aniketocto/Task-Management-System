@@ -561,7 +561,7 @@ const getTask = async (req, res) => {
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    res.status(200).json(task);
+    +res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -1034,7 +1034,6 @@ const getUserDashboardData = async (req, res) => {
 
 const requestDueDateChange = async (req, res) => {
   try {
-   
     const { pendingDueDate } = req.body;
     if (!pendingDueDate) {
       return res.status(400).json({ message: "Pending Due date is required" });

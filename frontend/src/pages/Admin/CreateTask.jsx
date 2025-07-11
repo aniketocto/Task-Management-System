@@ -26,6 +26,8 @@ const CreateTask = () => {
     description: "",
     priority: "low",
     dueDate: null,
+    dueDateStatus: "",
+    pendingDueDate: null,
     assignedTo: [],
     todoChecklist: [],
     attachments: [],
@@ -47,6 +49,8 @@ const CreateTask = () => {
       description: "",
       priority: "low",
       dueDate: null,
+      dueDateStatus,
+      pendingDueDate,
       assignedTo: [],
       todoChecklist: [],
       attachments: [],
@@ -166,8 +170,8 @@ const CreateTask = () => {
       );
 
       if (response.data) {
-        const taskInfo = response.data;
-        setCurrentTask(taskInfo);
+        const taskInfo = response.data?.task;
+        setCurrentTask({ taskInfo });
 
         setTaskData((prevData) => ({
           ...prevData,
@@ -177,6 +181,8 @@ const CreateTask = () => {
           dueDate: taskInfo.dueDate
             ? moment(taskInfo.dueDate).format("YYYY-MM-DD")
             : null,
+          dueDateStatus: taskInfo.dueDateStatus,
+          pendingDueDate: taskInfo.pendingDueDate,
           assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
           todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
