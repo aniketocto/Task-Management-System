@@ -11,25 +11,30 @@ const getUserNotifications = async (req, res) => {
     console.error("Error fetching notifications:", error);
   }
 };
-const markNotificationAsRead = async (req, res) => {
+const markAllAsReadAndDelete = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { isRead: true },
-      { new: true }
+    // Step 1 — Mark all unread as read
+    const result = await Notification.updateMany(
+      { user: req.user._id, isRead: false },
+      { isRead: true }
     );
 
-    if (!notification) {
-      return res.status(404).json({ message: "Notification not found" });
-    }
+    // Step 2 — Delete all already-read notifications
+    const deleted = await Notification.deleteMany({
+      user: req.user._id,
+      isRead: true,
+    });
 
-    res.json({ message: "Notification marked as read", notification });
+    res.json({
+      message: `${result.modifiedCount} notifications marked as read, ${deleted.deletedCount} read notifications deleted`,
+    });
   } catch (error) {
-    console.error("Error reading and marking notifications:", error);
+    console.error("Error marking notifications as read and deleting:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 module.exports = {
   getUserNotifications,
-  markNotificationAsRead,
+  markAllAsReadAndDelete,
 };

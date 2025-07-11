@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 import SideMenu from "./SideMenu";
-import { IoMdNotifications } from "react-icons/io";
+import NotificationBell from "./NotificationBell ";
 
 const Navbar = ({ activeMenu }) => {
   const [openSideMenu, setOpenSideMenu] = useState(false);
@@ -22,7 +22,8 @@ const Navbar = ({ activeMenu }) => {
       </button>
 
       <h2 className="text-lg font-medium text-white">Task Tracker</h2>
-      <IoMdNotifications className="text-2xl text-white"/>
+
+      <NotificationBell />
 
       {openSideMenu && (
         <div className="fixed top-[61px] -ml-4 bg-white">
