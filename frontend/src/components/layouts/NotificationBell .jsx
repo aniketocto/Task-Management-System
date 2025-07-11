@@ -3,14 +3,11 @@ import { io } from "socket.io-client";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import { IoMdNotifications } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
-
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   const containerRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -77,11 +74,7 @@ const NotificationBell = () => {
     setOpen((prev) => !prev);
   };
 
-  // navigate to task
-  const handleNavigate = (taskId) => {
-    setOpen(false);
-    navigate(`/user/task-detail/${taskId}`);
-  };
+ 
 
   // initial fetch
   useEffect(() => {
@@ -138,7 +131,6 @@ const NotificationBell = () => {
                 >
                   <span className="mr-1">{i + 1}.</span>
                   <span
-                    onClick={() => handleNavigate(n.taskId)}
                     className="cursor-pointer"
                   >
                     {n.message}
