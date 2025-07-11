@@ -22,7 +22,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["info", "task", "alert"],
+      enum: ["info", "task", "alert",],
       default: "task",
     },
   },

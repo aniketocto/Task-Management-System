@@ -11,6 +11,8 @@ const {
   getDashboardData,
   getUserDashboardData,
   getAdminTasks,
+  requestDueDateChange,
+  reviewDueDateChange,
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
@@ -46,5 +48,21 @@ router.delete("/:id", protect, roleCheck("admin", "superAdmin"), deleteTask); //
 router.put("/:id/status", protect, updateTaskStatus); // Update task status
 
 router.put("/:id/todo", protect, updateTaskChecklist);
+
+// Due date aprroval apis for admin
+router.post(
+  "/:id/due-date-request",
+  protect,
+  roleCheck("admin"),
+  requestDueDateChange
+);
+
+// super admin approves or reject due date
+router.patch(
+  "/:id/due-date-approval",
+  protect,
+  roleCheck("superAdmin"),
+  reviewDueDateChange
+)
 
 module.exports = router;

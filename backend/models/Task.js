@@ -23,6 +23,25 @@ const taskSchema = new mongoose.Schema(
       default: "new",
     },
     dueDate: { type: Date, required: true },
+
+    // --- New Approval Workflow Fields ---
+    pendingDueDate: { type: Date },
+    dueDateStatus: {
+      type: String,
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
+    },
+    dueDateRequestedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    dueDateReviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    dueDateReviewedAt: { type: Date },
+    // ---------------------------------------
+
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     attachments: [{ type: String }],

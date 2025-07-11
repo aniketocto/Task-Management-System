@@ -658,9 +658,9 @@ const updateTask = async (req, res) => {
 
     // --- Admin can update all except dueDate ---
     if (role === "admin") {
-      task.title       = req.body.title       || task.title;
+      task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
-      task.priority    = req.body.priority    || task.priority;
+      task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
 
       if (req.body.assignedTo) {
@@ -681,11 +681,11 @@ const updateTask = async (req, res) => {
 
     // --- SuperAdmin can update everything ---
     if (role === "superAdmin") {
-      task.title         = req.body.title         || task.title;
-      task.description   = req.body.description   || task.description;
-      task.dueDate       = req.body.dueDate       || task.dueDate;
-      task.priority      = req.body.priority      || task.priority;
-      task.attachments   = req.body.attachments   || task.attachments;
+      task.title = req.body.title || task.title;
+      task.description = req.body.description || task.description;
+      task.dueDate = req.body.dueDate || task.dueDate;
+      task.priority = req.body.priority || task.priority;
+      task.attachments = req.body.attachments || task.attachments;
       task.todoChecklist = req.body.todoChecklist || task.todoChecklist;
 
       if (req.body.assignedTo) {
@@ -735,10 +735,11 @@ const updateTask = async (req, res) => {
       .json({ message: "Task updated successfully", task: updatedTask });
   } catch (error) {
     console.error("❌ updateTask error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
-
 
 const deleteTask = async (req, res) => {
   try {
@@ -1030,6 +1031,138 @@ const getUserDashboardData = async (req, res) => {
   }
 };
 
+const requestDueDateChange = async (req, res) => {
+  try {
+    const { pendingDueDate } = req.body;
+    if (!pendingDueDate) {
+      return res.status(400).json({ message: "Pending Due date is required" });
+    }
+
+    const date = new Date(pendingDueDate);
+    if (isNaN(date)) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+    if (date < new Date()) {
+      return res
+        .status(400)
+        .json({ message: "pendingDueDate must be in the future" });
+    }
+
+    // Finding the task
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Updating the task
+    task.pendingDueDate = pendingDueDate;
+    task.dueDateStatus = "pending";
+    task.dueDateRequestedBy = req.user._id;
+    await task.save();
+
+    // Notify the superAdmin
+    const superAdmins = await User.findOne({ role: "superAdmin" });
+    const notifications = await Promise.all(
+      superAdmins.map((sa) =>
+        Notification.create({
+          user: sa._id,
+          message: `Admin ${req.user.name} has requested to move task "${
+            task.title
+          }", due date to ${date.toLocaleDateString()}`,
+          task: task._id,
+          type: "info",
+        })
+      )
+    );
+
+    // Emit via socket
+    const io = req.app.get("io");
+    notifications.forEach((notification) => {
+      io.to(notification.user.toString()).emit(
+        "new-notification",
+        notification
+      );
+    });
+
+    return res.status(200).json({
+      message: "Due date change request sent successfully",
+      pendingDueDate: date,
+      dueDateStatus: "pending",
+    });
+  } catch (error) {
+    console.error("Error requesting due date change:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const reviewDueDateChange = async (req, res) => {
+  try {
+    const { approve } = req.body;
+    if (typeof approve !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "approve must be a boolean in body" });
+    }
+
+    // Finding the task
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    if (task.dueDateStatus !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "No pending due-date request to review" });
+    }
+
+    task.dueDateReviewedBy = req.user._id;
+    task.dueDateReviewedAt = new Date();
+
+    let notificationMsg;
+    if (approve) {
+      task.dueDateStatus = "approved";
+      task.dueDate = task.pendingDueDate;
+      notificationMsg = `${req.user.name} has approved task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
+    } else {
+      task.dueDateStatus = "rejected";
+      notificationMsg = `${req.user.name} has rejected task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
+    }
+
+    task.pendingDueDate = undefined;
+
+    // save the updated task
+    await task.save();
+
+    // notify the admin who requested it
+    const requesterId = task.dueDateRequestedBy;
+    const notif = await Notification.create({
+      user: requesterId,
+      message: notificationMessage,
+      task: task._id,
+      type: "dueDateReview",
+    });
+
+    // emit in real time
+    const io = req.app.get("io");
+    io.to(requesterId.toString()).emit("new-notification", notif);
+
+    return res.status(200).json({
+      message: `Due-date request ${approve ? "approved" : "rejected"}`,
+      dueDate: task.dueDate,
+      dueDateStatus: task.dueDateStatus,
+    });
+  } catch (error) {
+    console.error("reviewDueDateChange error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
 module.exports = {
   getTasks,
   getAdminTasks,
@@ -1041,4 +1174,6 @@ module.exports = {
   updateTaskChecklist,
   getDashboardData,
   getUserDashboardData,
+  requestDueDateChange,
+  reviewDueDateChange,
 };
