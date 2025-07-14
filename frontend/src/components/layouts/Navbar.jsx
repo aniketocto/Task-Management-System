@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 import SideMenu from "./SideMenu";
 import NotificationBell from "./NotificationBell ";
+import LOGO from "../../assets/logo-png.png";
 
 const Navbar = ({ activeMenu }) => {
   const [openSideMenu, setOpenSideMenu] = useState(false);
@@ -21,7 +22,7 @@ const Navbar = ({ activeMenu }) => {
         )}
       </button>
 
-      <h2 className="text-lg font-medium text-white">Task Tracker</h2>
+      <img src={LOGO} alt="Unstoppable" className="w-40" />
 
       <NotificationBell />
 
