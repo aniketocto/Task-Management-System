@@ -37,7 +37,7 @@ const ViewTaskDetails = () => {
         API_PATHS.TASKS.GET_TASK_BY_ID(id)
       );
       if (response.data) {
-        const taskInfo = response.data;
+        const taskInfo = response.data?.task;
         setTask(taskInfo);
       }
     } catch (error) {
@@ -84,6 +84,7 @@ const ViewTaskDetails = () => {
     }
     return () => {};
   }, [id]);
+
 
   return (
     // This line Shows the left side dashboard on the Task-details page

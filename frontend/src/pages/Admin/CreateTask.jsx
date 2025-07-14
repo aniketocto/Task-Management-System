@@ -38,6 +38,7 @@ const CreateTask = () => {
   const [loading, setLoading] = useState(false);
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+  const [openDateApprovalAlert, setOpenDateApprovalAlert] = useState(false);
 
   const handleValueChange = (key, value) => {
     setTaskData((prevData) => ({ ...prevData, [key]: value }));
@@ -49,8 +50,8 @@ const CreateTask = () => {
       description: "",
       priority: "low",
       dueDate: null,
-      dueDateStatus,
-      pendingDueDate,
+      dueDateStatus: "",
+      pendingDueDate: null,
       assignedTo: [],
       todoChecklist: [],
       attachments: [],
@@ -210,6 +211,10 @@ const CreateTask = () => {
       console.error("Error deleting task:", error);
     }
   };
+
+  const updateDueDatestatus = () => {
+    
+  }
 
   useEffect(() => {
     if (taskId) {
@@ -383,6 +388,10 @@ const CreateTask = () => {
           onDelete={() => deleteTask()}
         />
       </Modal>
+
+      {user?.role === "superAdmin" && taskData.dueDateStatus === "pending" && (
+        <p>Task is due date pending</p>
+      )}
     </DashboardLayout>
   );
 };
