@@ -271,7 +271,7 @@ const CreateTask = () => {
 
             {/* Title */}
             <div className="mt-4">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-slate-200">
                 Task Title
               </label>
 
@@ -287,7 +287,7 @@ const CreateTask = () => {
 
             {/* Descrption */}
             <div className="mt-3">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-slate-200">
                 Description
               </label>
 
@@ -305,7 +305,7 @@ const CreateTask = () => {
             {/* Priority DueDate AssignTo */}
             <div className="grid grid-cols-12 gap-4 mt-2">
               <div className="col-span-12 md:col-span-4">
-                <label className="text-xs font-medium text-slate-600">
+                <label className="text-xs font-medium text-slate-200">
                   Priority
                 </label>
 
@@ -325,7 +325,7 @@ const CreateTask = () => {
               />
               {/* Assigned To */}
               <div className="col-span-12 md:col-span-4">
-                <label className="text-xs font-medium text-slate-600">
+                <label className="text-xs font-medium text-slate-200">
                   Assign To
                 </label>
 
@@ -364,7 +364,7 @@ const CreateTask = () => {
 
             {/* Checklist */}
             <div className="mt-3">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-slate-200">
                 Checklist
               </label>
 
@@ -388,7 +388,7 @@ const CreateTask = () => {
 
             {/* Attachments */}
             <div className="mt-3">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-slate-200">
                 Attachments
               </label>
 

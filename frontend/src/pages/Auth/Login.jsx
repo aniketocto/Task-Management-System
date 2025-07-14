@@ -12,7 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState([]);
-  
+
   const navigate = useNavigate();
 
   const { updateUser } = useContext(UserContext);
@@ -102,11 +102,14 @@ const Login = () => {
             </ul>
           )}
 
-          <button type="submit" className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer ">
+          <button
+            type="submit"
+            className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
+          >
             Login
           </button>
           <p className="text-[13px] text-slate-50 mt-3">
-            Don't have an account? {" "}
+            Don't have an account?{" "}
             <Link to="/sign-up" className="text-[#E43941] font-medium">
               Sign Up
             </Link>
