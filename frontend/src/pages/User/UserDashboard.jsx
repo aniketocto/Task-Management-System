@@ -123,7 +123,7 @@ const UserDashboard = () => {
   }, [filterMonth, dashboardData, availableMonths]);
 
   const onSeeMore = () => {
-    navigate("/admin/tasks");
+    navigate("/user/tasks");
   };
 
   const chartsToUse =
