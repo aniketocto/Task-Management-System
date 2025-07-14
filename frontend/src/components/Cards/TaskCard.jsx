@@ -74,7 +74,7 @@ const TaskCard = ({
             : status === "completed"
             ? "border-[#6FE439]"
             : status === "new"
-            ? "border-[#39C5E4]"
+            ? "border-[#3956E4]"
             : status === "delayed"
             ? "border-[#E43941]"
             : status === "pending"
