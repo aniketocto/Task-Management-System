@@ -147,7 +147,7 @@ const UserDashboard = () => {
               <p className="text-sm md:text-[13px] text-gray-400 mt-1.5">
                 {moment().format("dddd Do MMM YYYY")}
               </p>
-              <p className="text-sm text-gray-500 mt-1 italic">{dailyQuote}</p>
+              <p className="text-sm text-gray-200 font-semibold mt-1 italic">{dailyQuote}</p>
             </div>
           </div>
         </div>

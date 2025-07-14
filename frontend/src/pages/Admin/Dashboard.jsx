@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
 import { useUserAuth } from "../../hooks/useUserAuth";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import {
@@ -16,7 +16,17 @@ import { LuArrowRight } from "react-icons/lu";
 import TaskListTable from "../../components/layouts/TaskListTable";
 import CustomPieChart from "../../components/Charts/CustomPieChart";
 import CustomBarChart from "../../components/Charts/CustomBarChart";
-import { infoCard } from "../../utils/data";
+import { infoCard, officeQuotes } from "../../utils/data";
+
+const getDailyQuote = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = Object.keys(officeQuotes);
+
+  const hash =
+    today.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    key.length;
+  return officeQuotes[key[hash]];
+};
 
 const Dashboard = () => {
   useUserAuth();
@@ -33,6 +43,8 @@ const Dashboard = () => {
 
   const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
   const [departments, setDepartments] = useState([]); // available dept list
+
+  const dailyQuote = useMemo(() => getDailyQuote(), []);
 
   // Prepare chart Data
   const prepareChartData = (data) => {
@@ -160,6 +172,9 @@ const Dashboard = () => {
               </h2>
               <p className="text-sm md:text-[13px] text-gray-400 mt-1.5">
                 {moment().format("dddd Do MMM YYYY")}
+              </p>
+              <p className="text-sm text-gray-200 font-semibold mt-1 italic">
+                {dailyQuote}
               </p>
             </div>
             <div className="flex items-center gap-3">

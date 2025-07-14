@@ -40,9 +40,9 @@ const UserCard = ({ userInfo }) => {
           />
 
           <div className="">
-            <p className="text-sm font-medium">{userInfo?.name}</p>
-            <p className="text-xs text-gray-500">{userInfo?.department}</p>
-            <p className="text-xs text-gray-500">{userInfo?.email}</p>
+            <p className="text-sm font-medium text-gray-100">{userInfo?.name}</p>
+            <p className="text-xs text-gray-200">{userInfo?.department}</p>
+            <p className="text-xs text-gray-100">{userInfo?.email}</p>
           </div>
 
           <button
