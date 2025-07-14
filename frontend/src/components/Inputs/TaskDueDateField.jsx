@@ -9,7 +9,6 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
   const { user } = useContext(UserContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newDate, setNewDate] = useState("");
-  const [approvalStatus, setApprovalStatus] = useState("");
 
   //   reset the picker whenever we open
   useEffect(() => {
@@ -49,7 +48,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
         />
 
         {/* 1) If admin, show “Request Change” when the picker is disabled */}
-        {user?.role === "admin" && (
+        {user?.role === "admin" && taskId && (
           <button
             type="button"
             disabled={taskData.dueDateStatus === "pending"}
