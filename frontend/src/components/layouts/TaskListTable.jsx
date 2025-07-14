@@ -1,5 +1,6 @@
 import moment from "moment";
 import React from "react";
+import { TbAlertCircleFilled } from "react-icons/tb";
 
 const TaskListTable = ({ tableData }) => {
   const getStatusBadgeColor = (status) => {
@@ -34,22 +35,46 @@ const TaskListTable = ({ tableData }) => {
     }
   };
 
+  const getDueDateColor = (dueDate) => {
+    if (!dueDate) return "#D3D3D3"; // fallback grey if no due date
+
+    const daysLeft = moment(dueDate).diff(moment(), "days");
+
+    if (daysLeft < 0) return "#A9A9A9"; // ⬅ Past due: gray
+    if (daysLeft <= 2) return "#E43941"; // 🔴 Urgent
+    if (daysLeft <= 4) return "#E48E39"; // 🟠 Approaching
+    return "#6FE439"; // 🟢 Plenty of time
+  };
+
   return (
     <div className="overflow-x-auto p-0 rounded-lg mt-3">
       <table className="min-w-full">
         <thead>
           <tr className="text-left">
-            <th className="py-3 px-4 text-white font-semibold text-[13px]">Title</th>
-            <th className="py-3 px-4 text-white font-semibold text-[13px]">Status</th>
-            <th className="py-3 px-4 text-white font-semibold text-[13px]">Priority</th>
-            <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">Created On</th>
-            <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">Due Date</th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px]">
+              Title
+            </th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px]">
+              Status
+            </th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px]">
+              Priority
+            </th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">
+              Created On
+            </th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">
+              Due Date
+            </th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300"></th>
           </tr>
         </thead>
         <tbody>
           {tableData.map((task) => (
             <tr key={task._id} className="border-t border-gray-200">
-              <td className="my-2 mx-4 text-[13px] line-clamp-1 overflow-hidden">{task.title}</td>
+              <td className="my-2 mx-4 text-[13px] line-clamp-1 overflow-hidden">
+                {task.title}
+              </td>
               <td className="px-4 py-2">
                 <span
                   className={`px-2 py-1 text-sm rounded inline-block ${getStatusBadgeColor(
@@ -77,6 +102,13 @@ const TaskListTable = ({ tableData }) => {
                 {task.dueDate
                   ? moment(task.dueDate).format("Do MMM YYYY")
                   : "N/A"}
+              </td>
+              <td className="px-4 py-2 md:table-cell text-2xl">
+                <TbAlertCircleFilled
+                  style={{
+                    color: getDueDateColor(task.dueDate),
+                  }}
+                />
               </td>
             </tr>
           ))}

@@ -1,33 +1,48 @@
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
 import TaskCard from "../../components/Cards/TaskCard";
 import ReactPaginate from "react-paginate";
+import ManageTasksTable from "../../components/layouts/ManageTasksTable";
+import { UserContext } from "../../context/userContext";
 
 const MyTasks = () => {
+  const { user } = useContext(UserContext);
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([]);
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const tasksPerPage = 12;
+
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
+  const [allMonthCount, setAllMonthCount] = useState(0);
+  const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
+  const [departments, setDepartments] = useState([]); // available dept list
 
   const navigate = useNavigate();
 
+  const [sortOrder, setSortOrder] = useState("desc"); // "desc" or "asc"
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [filterPriority, setFilterPriority] = useState("");
+
   const getAllTasks = async (currentPage = 1) => {
     try {
-      const response = await axiosInstance.get(API_PATHS.TASKS.GET_ADMIN_TASKS, {
+      const response = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
         params: {
           status: filterStatus === "All" ? "" : filterStatus,
           month: filterMonth || undefined,
           page: currentPage,
           limit: tasksPerPage,
+          priority: filterPriority || undefined,
+          sortOrder, // "asc" or "desc"
+          sortBy,
         },
       });
 
@@ -36,21 +51,71 @@ const MyTasks = () => {
       if (tasks.length === 0) {
         if (filterStatus !== "All") {
           setFilterStatus("All");
+        } else if (filterDepartment) {
+          setFilterDepartment("");
         }
         return;
       }
 
-      // sort by createdAt descending (newest first)
-      tasks = tasks.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      const uniqueDepartments = Array.from(
+        new Set(
+          tasks.flatMap((task) =>
+            task.assignedTo?.map((user) => user.department).filter(Boolean)
+          )
+        )
       );
+      setDepartments(uniqueDepartments);
 
-      setAllTasks(tasks);
+      // ✅ Filter by department if any
+      const filteredTasks = tasks.filter((task) => {
+        if (!filterDepartment) return true;
+        return task.assignedTo?.some(
+          (user) => user.department === filterDepartment
+        );
+      });
 
-      let monthsData, statusSummary;
+      setAllTasks(filteredTasks);
 
-      monthsData = response.data.monthlyData.monthsData;
-      statusSummary = response.data.statusSummary;
+      const isDeptFiltered = !!filterDepartment;
+      let statusSummary, monthsData, allTimeTotal;
+
+      if (isDeptFiltered) {
+        // Department-specific summary
+        monthsData = response.data.monthlyData.monthsData
+          .map((month) => {
+            const deptStats = month.departmentBreakdown?.[filterDepartment];
+            if (!deptStats) return null;
+            return {
+              ...month,
+              count: deptStats.total,
+              statusBreakdown: deptStats.statusBreakdown,
+              priorityBreakdown: deptStats.priorityBreakdown,
+            };
+          })
+          .filter(Boolean);
+
+        allTimeTotal = monthsData.reduce((sum, m) => sum + m.count, 0);
+
+        const totalStatuses = monthsData.reduce((acc, m) => {
+          Object.entries(m.statusBreakdown || {}).forEach(([status, count]) => {
+            acc[status] = (acc[status] || 0) + count;
+          });
+          return acc;
+        }, {});
+
+        statusSummary = {
+          all: allTimeTotal,
+          newTasks: totalStatuses.new || 0,
+          pendingTasks: totalStatuses.pending || 0,
+          inProgressTasks: totalStatuses.inProgress || 0,
+          completedTasks: totalStatuses.completed || 0,
+          delayedTasks: totalStatuses.delayed || 0,
+        };
+      } else {
+        monthsData = response.data.monthlyData.monthsData;
+        allTimeTotal = response.data.monthlyData.allTimeTotal;
+        statusSummary = response.data.statusSummary;
+      }
 
       const statusArray = [
         { label: "All", count: statusSummary?.all || 0 },
@@ -60,10 +125,13 @@ const MyTasks = () => {
         { label: "pending", count: statusSummary?.pendingTasks || 0 },
         { label: "delayed", count: statusSummary?.delayedTasks || 0 },
       ];
-
       setTabs(statusArray);
 
-      setAvailableMonths(monthsData?.filter((m) => m.count > 0) || []);
+      // Set available months
+      setAvailableMonths(
+        response.data?.monthlyData?.monthsData?.filter((m) => m.count > 0) || []
+      );
+      setAllMonthCount(response.data?.monthlyData?.allTimeTotal || 0);
 
       const totalCount = response.data?.statusSummary?.all || 0;
       setTotalPages(Math.ceil(totalCount / tasksPerPage));
@@ -72,11 +140,17 @@ const MyTasks = () => {
     }
   };
 
-  // 🔄 Call whenever filterStatus, filterMonth, or page changes
+  // 🔄 Call whenever filterStatus or filterMonth changes
   useEffect(() => {
-    getAllTasks();
-    return () => {};
-  }, [filterStatus, filterMonth, page]);
+    getAllTasks(page); // should re-fetch on sortOrder change
+  }, [
+    filterStatus,
+    filterMonth,
+    page,
+    filterDepartment,
+    filterPriority,
+    sortOrder, // ✅ Must be included
+  ]);
 
   useEffect(() => {
     if (!filterMonth && availableMonths.length > 0) {
@@ -88,10 +162,6 @@ const MyTasks = () => {
       }
     }
   }, [availableMonths]);
-
-  const handleClick = (taskId) => {
-    navigate(`/user/task-detail/${taskId}`);
-  };
 
   return (
     <DashboardLayout activeMenu="View Tasks">
@@ -143,8 +213,8 @@ const MyTasks = () => {
           <p>No tasks found for this status in selected month.</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              {allTasks?.map((item) => (
+            <div className="grid mt-4">
+              {/* {allTasks?.map((item) => (
                 <TaskCard
                   key={item._id}
                   title={item.title}
@@ -162,7 +232,29 @@ const MyTasks = () => {
                   todoChecklist={item.todoChecklist || []}
                   onClick={() => handleClick(item._id)}
                 />
-              ))}
+              ))} */}
+
+              <ManageTasksTable
+                allTasks={allTasks}
+                sortOrder={sortOrder}
+                sortBy={sortBy}
+                onToggleSort={() => {
+                  // toggle only if sorting by dueDate
+                  if (sortBy === "dueDate") {
+                    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                  } else {
+                    setSortBy("dueDate"); // switch to dueDate first
+                    setSortOrder("asc"); // start with ascending
+                  }
+                  setPage(1);
+                }}
+                filterPriority={filterPriority}
+                onPriorityChange={(p) => {
+                  setFilterPriority(p);
+                  setPage(1); // reset back to first page
+                }}
+                userRole={user?.role}
+              />
             </div>
 
             {/* Pagination */}

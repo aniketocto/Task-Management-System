@@ -4,6 +4,7 @@ import moment from "moment";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { FaSort } from "react-icons/fa";
+import { TbAlertCircleFilled } from "react-icons/tb";
 
 const PRIORITY_OPTIONS = [
   { label: "All", value: "" },
@@ -63,6 +64,17 @@ const ManageTasksTable = ({
     }
   };
 
+  const getDueDateColor = (dueDate) => {
+    if (!dueDate) return "#D3D3D3"; // fallback grey if no due date
+
+    const daysLeft = moment(dueDate).diff(moment(), "days");
+
+    if (daysLeft < 0) return "#A9A9A9"; // ⬅ Past due: gray
+    if (daysLeft <= 2) return "#E43941"; // 🔴 Urgent
+    if (daysLeft <= 4) return "#E48E39"; // 🟠 Approaching
+    return "#6FE439"; // 🟢 Plenty of time
+  };
+
   return (
     <div className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg p-4">
       <table className="min-w-full text-left">
@@ -111,6 +123,7 @@ const ManageTasksTable = ({
               )}
             </th>
 
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300"></th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Assigned To
             </th>
@@ -155,6 +168,13 @@ const ManageTasksTable = ({
                 {task.dueDate
                   ? moment(task.dueDate).format("Do MMM YYYY")
                   : "N/A"}
+              </td>
+              <td className="px-4 py-2 md:table-cell text-2xl">
+                <TbAlertCircleFilled
+                  style={{
+                    color: getDueDateColor(task.dueDate),
+                  }}
+                />
               </td>
               <td className="px-4 py-2">
                 <AvatarGroup
