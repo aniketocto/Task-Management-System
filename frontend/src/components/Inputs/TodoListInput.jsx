@@ -24,7 +24,7 @@ const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
     <div>
       {todoList.map((item, index) => (
         <div
-          key={item._id}
+          key={index}
           className={`flex justify-between 
     ${
       item.completed

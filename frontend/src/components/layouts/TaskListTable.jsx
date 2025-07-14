@@ -39,7 +39,7 @@ const TaskListTable = ({ tableData }) => {
       <table className="min-w-full">
         <thead>
           <tr className="text-left">
-            <th className="py-3 px-4 text-white font-semibold text-[13px]">Name</th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px]">Title</th>
             <th className="py-3 px-4 text-white font-semibold text-[13px]">Status</th>
             <th className="py-3 px-4 text-white font-semibold text-[13px]">Priority</th>
             <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">Created On</th>

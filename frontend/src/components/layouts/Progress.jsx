@@ -18,8 +18,7 @@ const Progress = ({ progress, status }) => {
     }
   };
 
-  console.log("progress", progress);
-  console.log("status", status);
+  
 
   return (
     <div className="w-full bg-gray-200 rounded-full h-1.5">
