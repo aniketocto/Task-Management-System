@@ -17,7 +17,6 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
       setNewDate(taskData.dueDate?.split("T")[0] || "");
     }
   }, [isModalOpen, taskData.dueDate]);
-  console.log(newDate);
   const submitRequest = async () => {
     try {
       await axiosInstance.post(
@@ -55,7 +54,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
             type="button"
             disabled={taskData.dueDateStatus === "pending"}
             onClick={() => setIsModalOpen(true)}
-            className={`mt-1 px-3 py-1 text-sm  text-white rounded ${taskData.dueDateStatus === "pending" ? "bg-gray-400 cursor-not-allowed" : "bg-red-300 cursor-pointer"}`}
+            className={`mt-1 px-3 py-1 text-sm  text-white rounded ${taskData.dueDateStatus === "pending" ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 cursor-pointer"}`}
           >
             {taskData.dueDateStatus === "pending" ? " Awaiting approval…" : "Request Change"}
           </button>

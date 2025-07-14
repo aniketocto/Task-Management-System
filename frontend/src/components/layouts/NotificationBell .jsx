@@ -6,34 +6,12 @@ import { IoMdNotifications } from "react-icons/io";
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
-  const socketRef = useRef(null);
+  const [loading, setLoading]             = useState(false);
+  const [open, setOpen]                   = useState(false);
+  const containerRef                      = useRef(null);
+  const socketRef                         = useRef(null);
 
-  const deleteTimeoutRef = useRef(null);
-
-  // Helper: schedule a deletion 20 minutes from now
-  const scheduleDelete = () => {
-    // clear any existing timer
-    if (deleteTimeoutRef.current) {
-      clearTimeout(deleteTimeoutRef.current);
-    }
-    deleteTimeoutRef.current = setTimeout(() => {
-      markAllAsReadAndDelete();
-      deleteTimeoutRef.current = null;
-    }, 20 * 60 * 1000); // 20 minutes
-  };
-
-  // Helper: cancel a pending deletion
-  const cancelScheduledDelete = () => {
-    if (deleteTimeoutRef.current) {
-      clearTimeout(deleteTimeoutRef.current);
-      deleteTimeoutRef.current = null;
-    }
-  };
-
-  // fetch notifications
+  // fetch existing notifications
   const fetchNotifications = async () => {
     setLoading(true);
     try {
@@ -48,33 +26,22 @@ const NotificationBell = () => {
     }
   };
 
+  // real-time socket hookup
   useEffect(() => {
     fetchNotifications();
-  }, []);
-
-  // connect socket once
-  useEffect(() => {
     const token = localStorage.getItem("taskManagerToken");
-
-    const socket = io(import.meta.env.VITE_SOCKET_URL, {
-      auth: { token },
-    });
-
+    const socket = io(import.meta.env.VITE_SOCKET_URL, { auth: { token } });
     socketRef.current = socket;
 
-    socket.on("connect_error", (err) => {
-      console.error("❌ Socket connection error:", err);
-    });
-    socket.on("new-notification", (notify) => {
-      setNotifications((prev) => [notify, ...prev]);
-    });
+    socket.on("connect_error", console.error);
+    socket.on("new-notification", (notify) =>
+      setNotifications((prev) => [notify, ...prev])
+    );
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, []);
 
-  // mark & delete on server
+  // mark all as read & delete immediately
   const markAllAsReadAndDelete = async () => {
     setLoading(true);
     try {
@@ -92,37 +59,26 @@ const NotificationBell = () => {
     }
   };
 
-  // toggle dropdown; if closing, then delete
+  // toggle open/close; if closing, delete immediately
   const handleBellClick = () => {
     if (open) {
-      // we’re closing it → schedule a deletion
-      scheduleDelete();
-    } else {
-      // we’re opening it → cancel any pending deletion
-      cancelScheduledDelete();
+      markAllAsReadAndDelete();
     }
-    setOpen((prev) => !prev);
+    setOpen((o) => !o);
   };
 
-  // Close on outside click, but only “close” (scheduling happens in handleBellClick)
+  // close on outside click & delete immediately
   useEffect(() => {
     if (!open) return;
-
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
-        // close dropdown
         setOpen(false);
-        // and schedule deletion
-        scheduleDelete();
+        markAllAsReadAndDelete();
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
-
-  // Cleanup on unmount
-  useEffect(() => () => cancelScheduledDelete(), []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -132,16 +88,13 @@ const NotificationBell = () => {
         onClick={handleBellClick}
         className="text-2xl text-white cursor-pointer"
       />
-      {/* badge */}
       {!loading && unreadCount > 0 && (
         <span className="absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full px-1.5">
           {unreadCount}
         </span>
       )}
-
-      {/* dropdown */}
       {open && (
-        <div className="absolute right-0 mt-2 w-64 h-80 border border-gray-50 bg-gray-950 shadow-lg rounded-lg  hide-scrollbar overflow-y-scroll z-50">
+        <div className="absolute right-0 mt-2 w-64 h-80 border border-gray-50 bg-gray-950 shadow-lg rounded-lg hide-scrollbar overflow-y-auto z-50">
           {loading ? (
             <div className="p-2 text-white">Loading…</div>
           ) : notifications.length === 0 ? (
@@ -151,12 +104,12 @@ const NotificationBell = () => {
               {notifications.map((n, i) => (
                 <li
                   key={n._id}
-                  className={`px-3 py-2 text-sm hover:bg-gray-800 ${
+                  className={`px-3 py-2 text-sm hover:bg-gray-800 cursor-pointer ${
                     !n.isRead ? "font-medium text-white" : "text-gray-400"
                   }`}
                 >
                   <span className="mr-1">{i + 1}.</span>
-                  <span className="cursor-pointer">{n.message}</span>
+                  {n.message}
                 </li>
               ))}
             </ul>

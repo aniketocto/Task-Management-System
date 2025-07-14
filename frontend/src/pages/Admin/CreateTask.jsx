@@ -38,7 +38,7 @@ const CreateTask = () => {
   const [loading, setLoading] = useState(false);
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
-  const [openDateApprovalAlert, setOpenDateApprovalAlert] = useState(false);
+  const [openReviewModal, setOpenReviewModal] = useState(false);
 
   const handleValueChange = (key, value) => {
     setTaskData((prevData) => ({ ...prevData, [key]: value }));
@@ -212,9 +212,36 @@ const CreateTask = () => {
     }
   };
 
-  const updateDueDatestatus = () => {
-    
-  }
+  const handleReview = async (approve) => {
+    setLoading(true);
+    try {
+      await axiosInstance.patch(
+        API_PATHS.DUE_DATE.REVIEW_DUE_DATE_CHANGE(taskId),
+        {
+          approve,
+        }
+      );
+
+      toast.success(
+        approve
+          ? "Due date approved successfully"
+          : "Due date rejected successfully"
+      );
+
+      // update task duedate status
+      setCurrentTask((prevTask) => ({
+        ...prevTask,
+        dueDateStatus: approve ? "approved" : "rejected",
+        pendingDueDate: null,
+      }));
+      window.location.reload();
+    } catch (error) {
+      console.error("Review failed:", error.response?.data);
+      toast.error(error.response?.data?.message || "Server error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (taskId) {
@@ -311,6 +338,30 @@ const CreateTask = () => {
               </div>
             </div>
 
+            {user?.role === "superAdmin" &&
+              taskData.dueDateStatus === "pending" && (
+                <div className="mt-4 flex items-center space-x-4">
+                  <span className="text-yellow-400 text-sm">
+                    Pending Due Date change to:{" "}
+                    {moment(taskData.pendingDueDate).format("YYYY-MM-DD")}
+                  </span>
+                  <button
+                    onClick={() => handleReview(true)}
+                    disabled={loading}
+                    className="cursor-pointer px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReview(false)}
+                    disabled={loading}
+                    className="cursor-pointer px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+
             {/* Checklist */}
             <div className="mt-3">
               <label className="text-xs font-medium text-slate-600">
@@ -388,10 +439,6 @@ const CreateTask = () => {
           onDelete={() => deleteTask()}
         />
       </Modal>
-
-      {user?.role === "superAdmin" && taskData.dueDateStatus === "pending" && (
-        <p>Task is due date pending</p>
-      )}
     </DashboardLayout>
   );
 };

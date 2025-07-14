@@ -1095,6 +1095,7 @@ const requestDueDateChange = async (req, res) => {
   }
 };
 
+
 const reviewDueDateChange = async (req, res) => {
   try {
     const { approve } = req.body;
@@ -1106,6 +1107,7 @@ const reviewDueDateChange = async (req, res) => {
 
     // Finding the task
     const task = await Task.findById(req.params.id);
+    
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
@@ -1141,9 +1143,9 @@ const reviewDueDateChange = async (req, res) => {
     const requesterId = task.dueDateRequestedBy;
     const notif = await Notification.create({
       user: requesterId,
-      message: notificationMessage,
+      message: notificationMsg,
       task: task._id,
-      type: "dueDateReview",
+      type: "info",
     });
 
     // emit in real time
@@ -1159,7 +1161,7 @@ const reviewDueDateChange = async (req, res) => {
     console.error("reviewDueDateChange error:", error);
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json({ message: "Server error", error: error.message });
   }
 };
 
