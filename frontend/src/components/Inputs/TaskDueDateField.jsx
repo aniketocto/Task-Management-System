@@ -88,7 +88,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="px-4 py-2 bg-[#eb4d4b] text-white rounded"
             onClick={submitRequest}
             disabled={!newDate}
           >

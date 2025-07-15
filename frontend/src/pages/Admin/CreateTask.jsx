@@ -123,7 +123,7 @@ const CreateTask = () => {
       if (response.status === 200) {
         toast.success("Task updating successfully");
         clearData();
-        // navigate("/admin/tasks");
+        navigate("/admin/tasks");
       }
     } catch (error) {
       toast.error("Error updating task. Task not updated");

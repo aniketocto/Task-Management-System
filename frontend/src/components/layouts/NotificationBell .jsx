@@ -67,7 +67,7 @@ const NotificationBell = () => {
   // toggle open/close; if closing, delete immediately
   const handleBellClick = () => {
     if (open) {
-      markAllAsReadAndDelete();
+      // markAllAsReadAndDelete();
     }
     setOpen((o) => !o);
   };
@@ -82,7 +82,7 @@ const NotificationBell = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    // return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -120,7 +120,7 @@ const NotificationBell = () => {
                   className={`px-3 py-2 text-sm hover:bg-gray-800 cursor-pointer ${
                     !n.isRead ? "font-medium text-white" : "text-gray-400"
                   }`}
-                  onClick={() => handleClick(n._id)}
+                  onClick={() => handleClick(n?.taskId)}
                 >
                   <span className="mr-1">{i + 1}.</span>
                   {n.message}

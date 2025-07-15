@@ -1071,6 +1071,8 @@ const requestDueDateChange = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    const taskId = ((task._id)).toString();
+
     // Updating the task
     task.pendingDueDate = pendingDueDate;
     task.dueDateStatus = "pending";
@@ -1083,10 +1085,10 @@ const requestDueDateChange = async (req, res) => {
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `Admin ${req.user.name} has requested to move task "${
+          message: `${req.user.name} shifted the deadline for "${
             task.title
-          }", due date to ${date.toLocaleDateString()}`,
-          task: task._id,
+          }" to ${date.toLocaleDateString()}.`,
+          taskId: taskId,
           type: "info",
         })
       )
@@ -1154,12 +1156,14 @@ const reviewDueDateChange = async (req, res) => {
     // save the updated task
     await task.save();
 
+     const taskId = ((task._id)).toString();
+
     // notify the admin who requested it
     const requesterId = task.dueDateRequestedBy;
     const notif = await Notification.create({
       user: requesterId,
       message: notificationMsg,
-      task: task._id,
+      taskId: taskId,
       type: "info",
     });
 
