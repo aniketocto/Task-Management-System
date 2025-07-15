@@ -197,24 +197,6 @@ const CreateTask = () => {
     }
   };
 
-  // Delete Task
-  const deleteTask = async () => {
-    try {
-      const response = await axiosInstance.delete(
-        API_PATHS.TASKS.DELETE_TASK_BY_ID(taskId)
-      );
-
-      if (response) {
-        setOpenDeleteAlert(false);
-        toast.success("Task deleted successfully");
-        navigate("/admin/tasks");
-      }
-    } catch (error) {
-      toast.error("Error deleting task. Task not deleted");
-      console.error("Error deleting task:", error);
-    }
-  };
-
   const handleReview = async (approve) => {
     setLoading(true);
     try {
@@ -232,17 +214,41 @@ const CreateTask = () => {
       );
 
       // update task duedate status
-      setCurrentTask((prevTask) => ({
-        ...prevTask,
+      setCurrentTask((prev) => ({
+        ...prev,
         dueDateStatus: approve ? "approved" : "rejected",
         pendingDueDate: null,
       }));
-      window.location.reload();
+      setTaskData((prev) => ({
+        ...prev,
+        dueDateStatus: approve ? "approved" : "rejected",
+        pendingDueDate: null,
+      }));
+
+      await getTaskById();
     } catch (error) {
       console.error("Review failed:", error.response?.data);
       toast.error(error.response?.data?.message || "Server error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Delete Task
+  const deleteTask = async () => {
+    try {
+      const response = await axiosInstance.delete(
+        API_PATHS.TASKS.DELETE_TASK_BY_ID(taskId)
+      );
+
+      if (response) {
+        setOpenDeleteAlert(false);
+        toast.success("Task deleted successfully");
+        navigate("/admin/tasks");
+      }
+    } catch (error) {
+      toast.error("Error deleting task. Task not deleted");
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -263,6 +269,7 @@ const CreateTask = () => {
               <h2 className="text-xl md:text-2xl text-white font-medium">
                 {taskId ? "Update Task" : "Create Task"}
               </h2>
+
               {taskId && (
                 <button
                   className="flex items-center gap-1.5 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
@@ -346,7 +353,7 @@ const CreateTask = () => {
               taskData.dueDateStatus === "pending" && (
                 <div className="mt-4 flex items-center space-x-4">
                   <span className="text-yellow-400 text-sm">
-                    Pending Due Date change to:{" "}
+                    Deadline shift to:{" "}
                     {moment(taskData.pendingDueDate).format("YYYY-MM-DD")}
                   </span>
                   <button
