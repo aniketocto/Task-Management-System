@@ -187,7 +187,7 @@ const Dashboard = () => {
                   onChange={(e) => setFilterMonth(e.target.value)}
                   className="border rounded px-3 py-2 text-sm text-white"
                 >
-                  {/* <option value="">All</option> */}
+                  <option value="">All</option>
                   {availableMonths
                     .sort((a, b) => b.value.localeCompare(a.value))
                     .map((m) => (
