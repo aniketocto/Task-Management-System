@@ -1,15 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import { IoMdNotifications } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../../context/userContext";
 
 const NotificationBell = () => {
+  const {user} = useContext(UserContext);
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(false);
-  const [open, setOpen]                   = useState(false);
-  const containerRef                      = useRef(null);
-  const socketRef                         = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  const socketRef = useRef(null);
+
+  const navigate = useNavigate();
 
   // fetch existing notifications
   const fetchNotifications = async () => {
@@ -82,6 +87,14 @@ const NotificationBell = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+  const handleClick = (taskData) => {
+    if (user?.role === "user") {
+      navigate(`/user/task-detail/${taskData}`);
+    } else {
+      navigate("/admin/create-task", { state: { taskId: taskData } });
+    }
+  };
+
   return (
     <div ref={containerRef} className="relative">
       <IoMdNotifications
@@ -103,10 +116,11 @@ const NotificationBell = () => {
             <ul>
               {notifications.map((n, i) => (
                 <li
-                  key={n._id}
+                  key={i}
                   className={`px-3 py-2 text-sm hover:bg-gray-800 cursor-pointer ${
                     !n.isRead ? "font-medium text-white" : "text-gray-400"
                   }`}
+                  onClick={() => handleClick(n._id)}
                 >
                   <span className="mr-1">{i + 1}.</span>
                   {n.message}

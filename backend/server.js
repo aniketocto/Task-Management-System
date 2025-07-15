@@ -18,11 +18,16 @@ const server = http.createServer(app);
 //  CORS on Express
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin: [
+      "http://localhost:5173", // 🔧 Vite dev server
+      "https://unstoppablecrm.vercel.app"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // ✅ allow cookies or auth headers if needed
   })
 );
+
 app.use(express.json()); // ✅ MUST come before routes
 
 // Connect to DB
@@ -49,8 +54,6 @@ const io = new Server(server, {
 app.set("io", io);
 
 io.on("connection", (socket) => {
-
-
   const token = socket.handshake.auth?.token;
   // console.log("Received token:", token);
 

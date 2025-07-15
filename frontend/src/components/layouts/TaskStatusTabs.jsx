@@ -7,11 +7,11 @@ const TaskStatusTabs = ({ tabs, activeTab, setActiveTab }) => {
       <select
         value={activeTab}
         onChange={(e) => setActiveTab(e.target.value)}
-        className="px-3 py-2 text-sm border rounded-md text-gray-700"
+        className="px-3 py-2 text-sm border capitalize rounded-md text-gray-50"
       >
         {tabs.map((tab, index) => (
-          <option key={index} value={tab.label} disabled={tab.count === 0}>
-            {tab.label} 
+          <option key={index} value={tab.label} disabled={tab.count === 0} className={`${tab.count === 0 ? "text-gray-200" : "text-gray-600"}`}>
+            {tab.label}
           </option>
         ))}
       </select>

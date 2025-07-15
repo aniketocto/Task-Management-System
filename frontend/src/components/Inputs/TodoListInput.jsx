@@ -3,14 +3,13 @@ import { HiOutlineTrash, HiPlus } from "react-icons/hi";
 
 const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
   const [option, setOption] = useState("");
-  // console.log(todoList);
 
-  //   function to handle adding option
+  //   function to handle adding an option
   const handleAddOption = () => {
     if (option.trim()) {
-      const updatedList = [...todoList, option];
+      const updatedList = [...todoList, { text: option, completed: false }];
       setTodoList(updatedList);
-      setOption(""); // clear input
+      setOption("");
     }
   };
 
@@ -24,7 +23,7 @@ const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
     <div>
       {todoList.map((item, index) => (
         <div
-          key={item._id}
+          key={index}
           className={`flex justify-between 
     ${
       item.completed
@@ -36,8 +35,8 @@ const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
           <p className="text-sm text-gray-800">
             <span className="text-sm text-gray-400 font-semibold mr-2">
               {index < 9 ? `0${index + 1}` : index + 1}
-            </span>{" "}
-            <span>{taskId ? item?.text : item}</span>
+            </span>
+            <span>{item?.text}</span>
           </p>
 
           <button

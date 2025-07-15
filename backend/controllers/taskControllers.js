@@ -4,7 +4,16 @@ const User = require("../models/User");
 
 const getTasks = async (req, res) => {
   try {
-    const { department, status, month, page = 1, limit = 12 } = req.query;
+    const {
+      department,
+      status,
+      month,
+      page = 1,
+      limit = 12,
+      sortOrder = "desc",
+      sortBy = "createdAt",
+      priority,
+    } = req.query;
 
     const skip = (page - 1) * limit;
 
@@ -66,10 +75,17 @@ const getTasks = async (req, res) => {
       filter = { ...filter, ...baseFilter };
     }
 
+    const sortConfig =
+      sortBy === "dueDate"
+        ? { dueDate: sortOrder === "asc" ? 1 : -1, createdAt: -1 }
+        : { createdAt: -1 };
+
+    if (priority) filter.priority = priority;
+
     // Fetch paginated tasks
     let tasks = await Task.find(filter)
       .populate("assignedTo", "name email profileImageUrl department")
-      .sort({ createdAt: -1 })
+      .sort(sortConfig)
       .skip(skip)
       .limit(Number(limit));
 
@@ -1095,7 +1111,6 @@ const requestDueDateChange = async (req, res) => {
   }
 };
 
-
 const reviewDueDateChange = async (req, res) => {
   try {
     const { approve } = req.body;
@@ -1107,7 +1122,7 @@ const reviewDueDateChange = async (req, res) => {
 
     // Finding the task
     const task = await Task.findById(req.params.id);
-    
+
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }

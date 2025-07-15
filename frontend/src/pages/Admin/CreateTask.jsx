@@ -61,6 +61,7 @@ const CreateTask = () => {
   // Create Tasks
   const createTask = async () => {
     setLoading(true);
+    clearData();
 
     try {
       const todoList = taskData.todoChecklist?.map((item) => ({
@@ -77,7 +78,7 @@ const CreateTask = () => {
       if (response.status === 200) {
         toast.success("Task created successfully");
         clearData();
-        navigate("/admin/tasks");
+        // navigate("/admin/tasks");
       }
     } catch (error) {
       console.error("Error creating task:", error);
@@ -91,17 +92,19 @@ const CreateTask = () => {
     setLoading(true);
 
     try {
-      const todoList = taskData.todoChecklist?.map((item) => {
-        const prevTodoCheckList = currentTask?.todoChecklist || [];
-        const matchedTask = prevTodoCheckList.find(
-          (task) => task.text === item
-        );
+      const todoList = taskData.todoChecklist
+        ?.filter((item) => item?.text?.trim())
+        .map((item) => {
+          const prevTodoCheckList = currentTask?.todoChecklist || [];
+          const matchedTask = prevTodoCheckList.find(
+            (task) => task.text === item.text
+          );
 
-        return {
-          text: item.text,
-          completed: matchedTask ? matchedTask.completed : false,
-        };
-      });
+          return {
+            text: item.text,
+            completed: matchedTask ? matchedTask.completed : false,
+          };
+        });
 
       const payload = {
         ...taskData,
@@ -120,7 +123,7 @@ const CreateTask = () => {
       if (response.status === 200) {
         toast.success("Task updating successfully");
         clearData();
-        navigate("/admin/tasks");
+        // navigate("/admin/tasks");
       }
     } catch (error) {
       toast.error("Error updating task. Task not updated");
@@ -244,6 +247,7 @@ const CreateTask = () => {
   };
 
   useEffect(() => {
+    clearData();
     if (taskId) {
       getTaskById();
     }
