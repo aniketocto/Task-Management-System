@@ -1,184 +1,157 @@
+// src/pages/admin/ManageTask.jsx
+
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
-import { LuFileSpreadsheet } from "react-icons/lu";
 import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
-import TaskCard from "../../components/Cards/TaskCard";
-import ReactPaginate from "react-paginate";
 import ManageTasksTable from "../../components/layouts/ManageTasksTable";
+import ReactPaginate from "react-paginate";
 
 const ManageTask = () => {
-  const [allTasks, setAllTasks] = useState([]);
-  const [tabs, setTabs] = useState([]);
-
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const tasksPerPage = 12;
-
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [filterMonth, setFilterMonth] = useState("");
-  const [availableMonths, setAvailableMonths] = useState([]);
-  const [allMonthCount, setAllMonthCount] = useState(0);
-  const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
-  const [departments, setDepartments] = useState([]); // available dept list
-
   const navigate = useNavigate();
 
-  const [sortOrder, setSortOrder] = useState("desc"); // default: latest
-  const [sortBy, setSortBy] = useState("createdAt"); // default: createdAt
-
+  // --- filters & pagination ---
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
 
-  const getAllTasks = async (currentPage = 1) => {
+  const [page, setPage] = useState(1);
+  const tasksPerPage = 12;
+  const [totalPages, setTotalPages] = useState(1);
+
+  // --- data containers ---
+  const [allTasks, setAllTasks] = useState([]);
+  const [tabs, setTabs] = useState([]);
+  const [departments, setDepartments] = useState([]);
+
+  // ** new ** months dropdown
+  const [availableMonths, setAvailableMonths] = useState([]);
+
+  // --- sorting ---
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useState("createdAt");
+
+  // Fetch only the list of months for the dropdown
+  const fetchAvailableMonths = useCallback(async () => {
     try {
-      const response = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
+      const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
         params: {
-          status: filterStatus === "All" ? "" : filterStatus,
-          month: filterMonth || undefined,
-          page: currentPage,
-          limit: tasksPerPage,
-          priority: filterPriority || undefined,
-          sortOrder, // "asc" or "desc"
-          sortBy, // dynamic now
+          department: filterDepartment || undefined,
+          fields: "availableMonths",
         },
       });
+      setAvailableMonths(resp.data.availableMonths || []);
+    } catch (err) {
+      console.error("Failed to load months:", err);
+    }
+  }, [filterDepartment, filterMonth]);
 
-      let tasks = response.data?.tasks || [];
+  // Fetch tasks + status summary
+  const getAllTasks = useCallback(
+    async (currentPage = 1) => {
+      try {
+        const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
+          params: {
+            status: filterStatus === "All" ? "" : filterStatus,
+            month: filterMonth || undefined,
+            department: filterDepartment || undefined,
+            priority: filterPriority || undefined,
+            page: currentPage,
+            limit: tasksPerPage,
+            sortOrder,
+            sortBy,
+            // we don't request monthlyData here any more
+            fields: "tasks,statusSummary",
+          },
+        });
 
-      if (tasks.length === 0) {
-        if (filterStatus !== "All") {
-          setFilterStatus("All");
-        } else if (filterDepartment) {
-          setFilterDepartment("");
-        }
-        return;
-      }
+        const tasks = resp.data.tasks || [];
+        setAllTasks(tasks);
 
-      const uniqueDepartments = Array.from(
-        new Set(
-          tasks.flatMap((task) =>
-            task.assignedTo?.map((user) => user.department).filter(Boolean)
+        // derive departments list from tasks
+        const uniqDepts = Array.from(
+          new Set(
+            tasks.flatMap((t) =>
+              t.assignedTo?.map((u) => u.department).filter(Boolean)
+            )
           )
-        )
-      );
-      setDepartments(uniqueDepartments);
-
-      // ✅ Filter by department if any
-      const filteredTasks = tasks.filter((task) => {
-        if (!filterDepartment) return true;
-        return task.assignedTo?.some(
-          (user) => user.department === filterDepartment
         );
-      });
+        setDepartments(uniqDepts);
 
-      setAllTasks(filteredTasks);
+        // statusSummary → tabs
+        const s = resp.data.statusSummary || {};
+        setTabs([
+          { label: "All", count: s.all || 0 },
+          { label: "new", count: s.newTasks || 0 },
+          { label: "inProgress", count: s.inProgressTasks || 0 },
+          { label: "completed", count: s.completedTasks || 0 },
+          { label: "pending", count: s.pendingTasks || 0 },
+          { label: "delayed", count: s.delayedTasks || 0 },
+        ]);
 
-      const isDeptFiltered = !!filterDepartment;
-      let statusSummary, monthsData, allTimeTotal;
-
-      if (isDeptFiltered) {
-        // Department-specific summary
-        monthsData = response.data.monthlyData.monthsData
-          .map((month) => {
-            const deptStats = month.departmentBreakdown?.[filterDepartment];
-            if (!deptStats) return null;
-            return {
-              ...month,
-              count: deptStats.total,
-              statusBreakdown: deptStats.statusBreakdown,
-              priorityBreakdown: deptStats.priorityBreakdown,
-            };
-          })
-          .filter(Boolean);
-
-        allTimeTotal = monthsData.reduce((sum, m) => sum + m.count, 0);
-
-        const totalStatuses = monthsData.reduce((acc, m) => {
-          Object.entries(m.statusBreakdown || {}).forEach(([status, count]) => {
-            acc[status] = (acc[status] || 0) + count;
-          });
-          return acc;
-        }, {});
-
-        statusSummary = {
-          all: allTimeTotal,
-          newTasks: totalStatuses.new || 0,
-          pendingTasks: totalStatuses.pending || 0,
-          inProgressTasks: totalStatuses.inProgress || 0,
-          completedTasks: totalStatuses.completed || 0,
-          delayedTasks: totalStatuses.delayed || 0,
-        };
-      } else {
-        monthsData = response.data.monthlyData.monthsData;
-        allTimeTotal = response.data.monthlyData.allTimeTotal;
-        statusSummary = response.data.statusSummary;
+        // pagination
+        setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
       }
+    },
+    [
+      filterStatus,
+      filterMonth,
+      filterDepartment,
+      filterPriority,
+      page,
+      sortOrder,
+      sortBy,
+    ]
+  );
 
-      const statusArray = [
-        { label: "All", count: statusSummary?.all || 0 },
-        { label: "new", count: statusSummary?.newTasks || 0 },
-        { label: "inProgress", count: statusSummary?.inProgressTasks || 0 },
-        { label: "completed", count: statusSummary?.completedTasks || 0 },
-        { label: "pending", count: statusSummary?.pendingTasks || 0 },
-        { label: "delayed", count: statusSummary?.delayedTasks || 0 },
-      ];
-      setTabs(statusArray);
+  // On mount, and whenever department filter changes, reload month dropdown
+  useEffect(() => {
+    fetchAvailableMonths();
+  }, [fetchAvailableMonths]);
 
-      // Set available months
-      setAvailableMonths(
-        response.data?.monthlyData?.monthsData?.filter((m) => m.count > 0) || []
+  // Whenever any filter/sort/page changes, reload tasks
+  useEffect(() => {
+    getAllTasks(page);
+  }, [getAllTasks, page]);
+
+  useEffect(() => {
+    if (availableMonths.length > 0 && !filterMonth) {
+      // sort descending so the “latest” is first
+      const sorted = [...availableMonths].sort((a, b) =>
+        b.value.localeCompare(a.value)
       );
-      setAllMonthCount(response.data?.monthlyData?.allTimeTotal || 0);
 
-      const totalCount = response.data?.statusSummary?.all || 0;
-      setTotalPages(Math.ceil(totalCount / tasksPerPage));
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
+      const curr = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+      const hasCurrent = sorted.some((m) => m.value === curr);
+
+      // pick real current month if present, otherwise pick latest
+      setFilterMonth(hasCurrent ? curr : sorted[0].value);
+      setPage(1);
     }
-  };
+  }, [availableMonths, filterMonth]); 
 
-  // 🔄 Call whenever filterStatus or filterMonth changes
-  useEffect(() => {
-    getAllTasks(page); // should re-fetch on sortOrder change
-  }, [
-    filterStatus,
-    filterMonth,
-    page,
-    filterDepartment,
-    filterPriority,
-    sortOrder, // ✅ Must be included
-  ]);
-
-  useEffect(() => {
-    if (!filterMonth && availableMonths.length > 0) {
-      const currentMonth = new Date().toISOString().slice(0, 7); // e.g. '2025-07'
-
-      const match = availableMonths.find((m) => m.value === currentMonth);
-      if (match) {
-        setFilterMonth(currentMonth);
-      }
-    }
-  }, [availableMonths]);
-
-  const handleClick = (taskData) => {
-    navigate("/admin/create-task", { state: { taskId: taskData } });
+  // Navigate to edit on row click
+  const handleRowClick = (taskId) => {
+    navigate("/admin/create-task", { state: { taskId } });
   };
 
   return (
     <DashboardLayout activeMenu="Manage Tasks">
       <div className="my-5">
+        {/* header + filters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg text-white md:text-xl font-medium">
-              My Tasks
-            </h2>
-          </div>
+          <h2 className="text-lg text-white md:text-xl font-medium">
+            My Tasks
+          </h2>
 
-          {tabs?.[0]?.count > 0 && (
-            <div className="flex flex-wrap items-center gap-3">
-              {/* department filter */}
+          {tabs[0]?.count > 0 && (
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Department */}
               {departments.length > 0 && (
                 <>
                   <label className="text-sm font-medium text-gray-600">
@@ -186,19 +159,23 @@ const ManageTask = () => {
                   </label>
                   <select
                     value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-white max-h-48 overflow-y-auto"
+                    onChange={(e) => {
+                      setFilterDepartment(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    <option value="">All Departments </option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept} className="text-black">
-                        {dept}
+                    <option value="">All Departments</option>
+                    {departments.map((d) => (
+                      <option key={d} value={d} className="text-black">
+                        {d}
                       </option>
                     ))}
                   </select>
                 </>
               )}
-              {/* month filter */}
+
+              {/* Month */}
               {availableMonths.length > 0 && (
                 <>
                   <label className="text-sm font-medium text-gray-600">
@@ -206,16 +183,16 @@ const ManageTask = () => {
                   </label>
                   <select
                     value={filterMonth}
-                    onChange={(e) => setFilterMonth(e.target.value)}
-                    className="border rounded px-3 py-2 text-sm text-white max-h-48 overflow-y-auto"
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    {/* <option value="">All Months ({allMonthCount})</option> */}
                     {/* <option value="">All Months</option> */}
-
-                    {/* render in reverse order so latest comes first */}
-                    {[...availableMonths]
-                      .sort((a, b) => b.value.localeCompare(a.value)) // descending
-                      .slice(0, 12) // only the most recent 12
+                    {availableMonths
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .slice(0, 12)
                       .map((m) => (
                         <option
                           key={m.value}
@@ -229,64 +206,51 @@ const ManageTask = () => {
                 </>
               )}
 
-              {/* status tabs */}
+              {/* Status Tabs */}
               <TaskStatusTabs
                 tabs={tabs}
                 activeTab={filterStatus}
-                setActiveTab={setFilterStatus}
+                setActiveTab={(newStatus) => {
+                  setFilterStatus(newStatus);
+                  setPage(1);
+                }}
               />
             </div>
           )}
         </div>
 
+        {/* no tasks */}
         {allTasks.length === 0 ? (
-          <p>No tasks found for this status in selected month.</p>
+          <p className="mt-6 text-center text-white">
+            No tasks found for this filter.
+          </p>
         ) : (
           <>
-            <div className="grid  mt-4">
-              {/* {allTasks?.map((item) => (
-                <TaskCard
-                  key={item._id}
-                  title={item.title}
-                  desc={item.description}
-                  priority={item.priority}
-                  status={item.status}
-                  progress={item.progress}
-                  createdAt={item.createdAt}
-                  dueDate={item.dueDate}
-                  assignedTo={item.assignedTo?.map(
-                    (item) => item.profileImageUrl
-                  )}
-                  attachmentsCount={item.attachments?.length || 0}
-                  completedTodoCount={item.completedTodoCount || 0}
-                  todoChecklist={item.todoChecklist || []}
-                  onClick={() => handleClick(item._id)}
-                />
-              ))} */}
-
+            {/* table */}
+            <div className="mt-4">
               <ManageTasksTable
                 allTasks={allTasks}
                 sortOrder={sortOrder}
                 sortBy={sortBy}
                 onToggleSort={() => {
-                  // toggle only if sorting by dueDate
                   if (sortBy === "dueDate") {
-                    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                    setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
                   } else {
-                    setSortBy("dueDate"); // switch to dueDate first
-                    setSortOrder("asc"); // start with ascending
+                    setSortBy("dueDate");
+                    setSortOrder("asc");
                   }
                   setPage(1);
                 }}
                 filterPriority={filterPriority}
                 onPriorityChange={(p) => {
                   setFilterPriority(p);
-                  setPage(1); // reset back to first page
+                  setPage(1);
                 }}
+                onRowClick={handleRowClick}
               />
             </div>
 
-            {/* Pagination */}
+            {/* pagination */}
             <ReactPaginate
               previousLabel={"← Prev"}
               nextLabel={"Next →"}
@@ -296,7 +260,7 @@ const ManageTask = () => {
               marginPagesDisplayed={2}
               pageRangeDisplayed={3}
               onPageChange={(e) => setPage(e.selected + 1)}
-              containerClassName={"flex gap-2 mt-4 justify-center"}
+              containerClassName={"flex gap-2 mt-6 justify-center"}
               pageClassName={"px-3 py-1 border rounded"}
               activeClassName={"bg-primary text-white"}
               previousClassName={
