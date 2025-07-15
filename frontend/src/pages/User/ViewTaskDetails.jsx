@@ -10,6 +10,7 @@ import { LuSquareArrowOutUpRight } from "react-icons/lu";
 const ViewTaskDetails = () => {
   const { id } = useParams();
   const [task, setTask] = useState(null);
+  const [createdBy, setCreatedBy] = useState(false);
 
   const getStatusTagColor = (status) => {
     switch (status) {
@@ -39,11 +40,25 @@ const ViewTaskDetails = () => {
       if (response.data) {
         const taskInfo = response.data?.task;
         setTask(taskInfo);
+        getUserbyId(taskInfo?.createdBy);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
+
+  const getUserbyId = async (userId) => {
+    try {
+      const response = await axiosInstance.get(
+        API_PATHS.USERS.GET_USER_BY_ID(userId)
+      );
+      const user = response.data;
+      setCreatedBy(user?.name);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
   // handle todo check
   const updateTodoChecklist = async (index) => {
     const todoChecklist = [...(task?.todoChecklist || [])];
@@ -85,7 +100,6 @@ const ViewTaskDetails = () => {
     return () => {};
   }, [id]);
 
-
   return (
     // This line Shows the left side dashboard on the Task-details page
     <DashboardLayout activeMenu="My Tasks">
@@ -93,10 +107,14 @@ const ViewTaskDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 mt-4">
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-base md:text-2xl text-slate-50 font-medium">
-                {task?.title}
-              </h2>
-
+              <div>
+                <h2 className="text-base md:text-2xl text-slate-50 font-medium">
+                  {task?.title}
+                </h2>
+                <p className="text-white text-xs font-regular">
+                  Created By: {createdBy}
+                </p>
+              </div>
               <div
                 className={`text-[11px] md:text-[13px] font-medium ${getStatusTagColor(
                   task?.status

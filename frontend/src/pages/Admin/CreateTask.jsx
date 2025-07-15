@@ -284,9 +284,8 @@ const CreateTask = () => {
                 <h2 className="text-xl md:text-2xl text-white font-medium">
                   {taskId ? "Update Task" : "Create Task"}
                 </h2>
-
                 {taskId && (
-                  <p className="text-white text-sm font-regular">
+                  <p className="text-white text-xs font-regular">
                     Created By: {createdBy}
                   </p>
                 )}
