@@ -233,11 +233,11 @@ const ManageTask = () => {
               )}
 
               {/* status tabs */}
-              {/* <TaskStatusTabs
+              <TaskStatusTabs
                 tabs={tabs}
                 activeTab={filterStatus}
                 setActiveTab={setFilterStatus}
-              /> */}
+              />
 
               {/* download button */}
               {/* <button className="hidden md:flex download-btn">
