@@ -2,15 +2,18 @@
 
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
 import ManageTasksTable from "../../components/layouts/ManageTasksTable";
 import ReactPaginate from "react-paginate";
+import { UserContext } from "../../context/userContext";
 
 const ManageTask = () => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
+  const userRole = user?.role;
 
   // --- filters & pagination ---
   const [filterStatus, setFilterStatus] = useState("All");
@@ -133,7 +136,7 @@ const ManageTask = () => {
       setFilterMonth(hasCurrent ? curr : sorted[0].value);
       setPage(1);
     }
-  }, [availableMonths, filterMonth]); 
+  }, [availableMonths, filterMonth]);
 
   // Navigate to edit on row click
   const handleRowClick = (taskId) => {
@@ -246,7 +249,7 @@ const ManageTask = () => {
                   setFilterPriority(p);
                   setPage(1);
                 }}
-                onRowClick={handleRowClick}
+                userRole={userRole}
               />
             </div>
 

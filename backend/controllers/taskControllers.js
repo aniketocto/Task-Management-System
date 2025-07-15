@@ -465,134 +465,132 @@ const getTask = async (req, res) => {
 
 const getAdminTasks = async (req, res) => {
   try {
-    const { department, status, month, page = 1, limit = 12 } = req.query;
+    const {
+      status,
+      month,       // e.g. "2025-06"
+      page = 1,
+      limit = 12,
+      sortOrder = "desc",
+      sortBy = "createdAt",
+      priority,
+      fields,      // e.g. "tasks,statusSummary,monthlyData,availableMonths"
+    } = req.query;
 
+    // Which sections to return:
+    const allSections = [
+      "tasks",
+      "statusSummary",
+      "monthlyData",
+      "availableMonths",
+    ];
+    const include = fields
+      ? fields.split(",").map((f) => f.trim())
+      : allSections;
+
+    // Base filter: only tasks assigned to this admin
     const skip = (page - 1) * limit;
+    let filter = { assignedTo: req.user._id };
 
-    let filter = {};
-
-    if (status) filter.status = status;
-
+    // Apply optional filters:
+    if (status)   filter.status   = status;
+    if (priority) filter.priority = priority;
     if (month) {
-      const [year, monthNum] = month.split("-");
-      const startDate = new Date(year, monthNum - 1, 1);
-      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
-
+      const [y, m] = month.split("-");
       filter.createdAt = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: new Date(y, m - 1, 1),
+        $lte: new Date(y, m,  0, 23, 59, 59, 999),
       };
     }
 
-    const isPrivileged = ["superAdmin"].includes(req.user.role);
+    const result = {};
 
-    // Base filter for user access control
-    let baseFilter = {};
-    if (!isPrivileged) {
-      baseFilter.assignedTo = { $in: [req.user._id] };
+    // 1) tasks + pagination
+    if (include.includes("tasks")) {
+      const tasks = await Task.find(filter)
+        .populate("assignedTo", "name email profileImageUrl department")
+        .sort(
+          sortBy === "dueDate"
+            ? { dueDate: sortOrder === "asc" ? 1 : -1, createdAt: -1 }
+            : { createdAt: sortOrder === "asc" ? 1 : -1 }
+        )
+        .skip(skip)
+        .limit(Number(limit));
+
+      // add completedTodoCount
+      result.tasks = tasks.map((t) => ({
+        ...t._doc,
+        completedTodoCount: t.todoChecklist.filter((c) => c.completed).length,
+      }));
+      result.totalCount = await Task.countDocuments(filter);
     }
 
-    // Department filter
-    if (department) {
-      const usersInDept = await User.find({ department }).select("_id");
-      const userIds = usersInDept.map((u) => u._id);
+    // 2) status summary
+    if (include.includes("statusSummary")) {
+      const countWith = (s) => Task.countDocuments({ ...filter, status: s });
+      const [
+        allTasks,
+        newTasks,
+        pendingTasks,
+        inProgressTasks,
+        completedTasks,
+        delayedTasks,
+      ] = await Promise.all([
+        Task.countDocuments(filter),
+        countWith("new"),
+        countWith("pending"),
+        countWith("inProgress"),
+        countWith("completed"),
+        countWith("delayed"),
+      ]);
 
-      if (!isPrivileged) {
-        // For non-privileged users, check if they belong to the requested department
-        if (userIds.some((id) => id.toString() === req.user._id.toString())) {
-          filter.assignedTo = { $in: [req.user._id] };
-        } else {
-          // User doesn't belong to requested department, return empty results
-          return res.status(200).json({
-            tasks: [],
-            totalCount: 0,
-            statusSummary: {
-              all: 0,
-              newTasks: 0,
-              pendingTasks: 0,
-              inProgressTasks: 0,
-              completedTasks: 0,
-              delayedTasks: 0,
-            },
-            monthlyData: { monthsData: [], allTimeTotal: 0 },
-            departmentBreakdown: {},
-            userBreakdown: {},
-          });
-        }
-      } else {
-        filter.assignedTo = { $in: userIds };
-      }
-    } else {
-      // Apply base filter when no department specified
-      filter = { ...filter, ...baseFilter };
-    }
-
-    // Fetch paginated tasks
-    let tasks = await Task.find(filter)
-      .populate("assignedTo", "name email profileImageUrl department")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    // Attach completed todo count
-    tasks = await Promise.all(
-      tasks.map((task) => {
-        const completedTodoCount = task.todoChecklist.filter(
-          (item) => item.completed
-        ).length;
-
-        return {
-          ...task._doc,
-          completedTodoCount,
-        };
-      })
-    );
-
-    // Total count for pagination
-    const totalCount = await Task.countDocuments(filter);
-
-    // Status summary
-    const countWith = (status) => Task.countDocuments({ ...filter, status });
-
-    const [
-      allTasks,
-      newTasks,
-      pendingTasks,
-      inProgressTasks,
-      completedTasks,
-      delayedTasks,
-    ] = await Promise.all([
-      Task.countDocuments(filter),
-      countWith("new"),
-      countWith("pending"),
-      countWith("inProgress"),
-      countWith("completed"),
-      countWith("delayed"),
-    ]);
-
-    // Get enhanced monthly data with department and user breakdown
-    const monthlyData = await getEnhancedMonthlyTaskData(
-      isPrivileged ? {} : { assignedTo: { $in: [req.user._id] } },
-      department
-    );
-
-    res.status(200).json({
-      tasks,
-      totalCount,
-      statusSummary: {
+      result.statusSummary = {
         all: allTasks,
         newTasks,
         pendingTasks,
         inProgressTasks,
         completedTasks,
         delayedTasks,
-      },
-      monthlyData,
-    });
+      };
+    }
+
+    // 3) monthlyData & 4) availableMonths
+    let fullMonthlyData;
+    if (
+      include.includes("monthlyData") ||
+      include.includes("availableMonths")
+    ) {
+      fullMonthlyData = await getEnhancedMonthlyTaskData(
+        { assignedTo: req.user._id },
+        /* department = */ null
+      );
+    }
+
+    if (include.includes("availableMonths")) {
+      result.availableMonths = fullMonthlyData.monthsData.map((m) => ({
+        label: m.label,
+        value: m.value,
+      }));
+    }
+
+    if (include.includes("monthlyData")) {
+      if (month) {
+        const only = fullMonthlyData.monthsData.filter((m) => m.value === month);
+        const totalForMonth = only.reduce((sum, m) => sum + m.count, 0);
+        result.monthlyData = {
+          monthsData: only,
+          allTimeTotal: totalForMonth,
+        };
+      } else {
+        result.monthlyData = fullMonthlyData;
+      }
+    }
+
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
+
 
 const createTask = async (req, res) => {
   try {

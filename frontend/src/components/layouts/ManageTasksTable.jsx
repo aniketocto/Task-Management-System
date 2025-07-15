@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import moment from "moment";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
@@ -23,12 +23,18 @@ const ManageTasksTable = ({
   userRole,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClick = (taskData) => {
     if (userRole === "user") {
       navigate(`/user/task-detail/${taskData}`);
-    } else {
-      navigate("/admin/create-task", { state: { taskId: taskData } });
+    }
+    if (userRole === "admin") {
+      if (location.pathname === "/admin/tasks") {
+        navigate("/admin/create-task", { state: { taskId: taskData } });
+      } else {
+        navigate(`/user/task-detail/${taskData}`);
+      }
     }
   };
 
