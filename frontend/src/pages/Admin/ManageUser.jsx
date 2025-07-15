@@ -6,10 +6,16 @@ import UserCard from "../../components/Cards/UserCard";
 
 const ManageUser = () => {
   const [allUsers, setAllUsers] = useState([]);
+  const [filterMonth, setFilterMonth] = useState("");
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   const getAllUsers = async () => {
     try {
-      const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
+      const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS, {
+        params: {
+          month: filterMonth || undefined,
+        },
+      });
 
       if (response.data?.length > 0) {
         setAllUsers(response.data);
@@ -19,25 +25,56 @@ const ManageUser = () => {
     }
   };
 
+  const getAvailableMonths = async () => {
+    try {
+      const { data } = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
+        params: { page: 1, limit: 1 },
+      });
+      setAvailableMonths(data?.monthlyData?.monthsData || []);
+    } catch (error) {
+      console.error("Error fetching monts:", error);
+    }
+  };
+
   // const handleUserDownloadReports = async () => {};
 
   useEffect(() => {
     getAllUsers();
-    return () => {};
+    getAvailableMonths();
   }, []);
+
+  useEffect(() => {
+    getAllUsers();
+  }, [filterMonth]);
 
   return (
     <DashboardLayout activeMenu="Team Members">
       <div className="mt-5 mb-10">
         <div className="flex md:flex-row md:items-center justify-between">
-          <h2 className="text-2xl md:text-xl font-medium text-gray-50">Team Members</h2>
+          <h2 className="text-2xl md:text-xl font-medium text-gray-50">
+            Team Members
+          </h2>
 
-          {/* <button
-            className="flex download-btn"
-            onClick={handleUserDownloadReports}
-          >
-            Download Report
-          </button> */}
+          {/* Month filter */}
+          {availableMonths.length > 0 && (
+            <div className="mb-4 flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-50">Month:</label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="border rounded px-3 py-1 text-sm text-gray-50"
+              >
+                <option value="">All Months</option>
+                {[...availableMonths]
+                  .sort((a, b) => b.value.localeCompare(a.value)) // latest first
+                  .map((m) => (
+                    <option key={m.value} value={m.value} className="text-gray-600">
+                      {m.label}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="mt-4 space-y-6">
@@ -62,8 +99,6 @@ const ManageUser = () => {
                   <UserCard key={user._id} userInfo={user} />
                 ))}
               </div>
-
-              
             </div>
           ))}
         </div>

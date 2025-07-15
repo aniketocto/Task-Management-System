@@ -7,6 +7,14 @@ const Task = require("../models/Task");
 
 const getUsers = async (req, res) => {
   try {
+    const { month } = req.query;
+    let dateFilter = {};
+    if (month) {
+      const [year, monthNum] = month.split("-")
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+      dateFilter = { createdAt: { $gte: startDate, $lte: endDate } };
+    }
     const users = await User.find({ role: { $in: ["user", "admin"] } }).select(
       "-password"
     );
@@ -14,6 +22,7 @@ const getUsers = async (req, res) => {
     // Add tasks count to each user
     const usersWithTaskCount = await Promise.all(
       users.map(async (user) => {
+        const baseQuery = { assignedTo: user._id, ...dateFilter };
         const [
           newTask,
           pendingTask,
@@ -22,15 +31,14 @@ const getUsers = async (req, res) => {
           delayedTask,
           totalTask,
         ] = await Promise.all([
-          Task.countDocuments({ assignedTo: user._id, status: "new" }),
-          Task.countDocuments({ assignedTo: user._id, status: "pending" }),
-          Task.countDocuments({ assignedTo: user._id, status: "inProgress" }),
-          Task.countDocuments({ assignedTo: user._id, status: "completed" }),
-          Task.countDocuments({ assignedTo: user._id, status: "delayed" }),
-          Task.countDocuments({ assignedTo: user._id }), // 👈 total without status filter
+          Task.countDocuments({ ...baseQuery, status: "new" }),
+          Task.countDocuments({ ...baseQuery, status: "pending" }),
+          Task.countDocuments({ ...baseQuery, status: "inProgress" }),
+          Task.countDocuments({ ...baseQuery, status: "completed" }),
+          Task.countDocuments({ ...baseQuery, status: "delayed" }),
+          Task.countDocuments({ ...baseQuery }), // 👈 total without status filter
         ]);
 
-      
         return {
           ...user._doc,
           newTask,
