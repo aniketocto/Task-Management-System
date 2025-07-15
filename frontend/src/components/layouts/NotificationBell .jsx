@@ -110,9 +110,9 @@ const NotificationBell = () => {
       {open && (
         <div className="absolute right-0 mt-2 w-64 h-80 border border-gray-50 bg-gray-950 shadow-lg rounded-lg hide-scrollbar overflow-y-auto z-50">
           {loading ? (
-            <div className="p-2 text-white">Loading…</div>
+            <div className="p-2 text-white">Loading.…</div>
           ) : notifications.length === 0 ? (
-            <div className="p-2 text-white">No sdfbvgsdfbsrdgfwrhg yet.</div>
+            <div className="p-2 text-white">No notifications yet.</div>
           ) : (
             <ul>
               {notifications.map((n, i) => (
