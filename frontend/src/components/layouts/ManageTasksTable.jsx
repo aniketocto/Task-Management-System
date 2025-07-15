@@ -29,7 +29,7 @@ const ManageTasksTable = ({
     if (userRole === "user") {
       navigate(`/user/task-detail/${taskData}`);
     }
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "superAdmin") {
       if (location.pathname === "/admin/tasks") {
         navigate("/admin/create-task", { state: { taskId: taskData } });
       } else {
