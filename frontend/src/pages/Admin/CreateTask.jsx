@@ -38,7 +38,7 @@ const CreateTask = () => {
   const [loading, setLoading] = useState(false);
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
-  const [openReviewModal, setOpenReviewModal] = useState(false);
+  const [createdBy, setCreatedBy] = useState(false);
 
   const handleValueChange = (key, value) => {
     setTaskData((prevData) => ({ ...prevData, [key]: value }));
@@ -191,9 +191,23 @@ const CreateTask = () => {
           todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
         }));
+
+        getUserbyId(taskInfo.createdBy);
       }
     } catch (error) {
       console.error("Error fetching task:", error);
+    }
+  };
+
+  const getUserbyId = async (userId) => {
+    try {
+      const response = await axiosInstance.get(
+        API_PATHS.USERS.GET_USER_BY_ID(userId)
+      );
+      const user = response.data;
+      setCreatedBy(user?.name);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
   };
 
@@ -266,9 +280,17 @@ const CreateTask = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 mt-4">
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl md:text-2xl text-white font-medium">
-                {taskId ? "Update Task" : "Create Task"}
-              </h2>
+              <div>
+                <h2 className="text-xl md:text-2xl text-white font-medium">
+                  {taskId ? "Update Task" : "Create Task"}
+                </h2>
+
+                {taskId && (
+                  <p className="text-white text-sm font-regular">
+                    Created By: {createdBy}
+                  </p>
+                )}
+              </div>
 
               {taskId && (
                 <button

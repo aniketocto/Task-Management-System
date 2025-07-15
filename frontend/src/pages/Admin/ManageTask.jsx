@@ -9,6 +9,8 @@ import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
 import ManageTasksTable from "../../components/layouts/ManageTasksTable";
 import ReactPaginate from "react-paginate";
 import { UserContext } from "../../context/userContext";
+import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
+import TaskCard from "../../components/Cards/TaskCard";
 
 const ManageTask = () => {
   const navigate = useNavigate();
@@ -36,6 +38,8 @@ const ManageTask = () => {
   // --- sorting ---
   const [sortOrder, setSortOrder] = useState("desc");
   const [sortBy, setSortBy] = useState("createdAt");
+
+  const [viewType, setViewType] = useState("table");
 
   // Fetch only the list of months for the dropdown
   const fetchAvailableMonths = useCallback(async () => {
@@ -148,9 +152,33 @@ const ManageTask = () => {
       <div className="my-5">
         {/* header + filters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-          <h2 className="text-lg text-white md:text-xl font-medium">
-            My Tasks
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg text-white md:text-xl font-medium">
+              My Tasks
+            </h2>
+            <div className="flex items-center border rounded overflow-hidden">
+              <button
+                onClick={() => setViewType("table")}
+                className={`p-2 ${
+                  viewType === "table"
+                    ? "bg-primary text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                <LuFileSpreadsheet size={20} />
+              </button>
+              <button
+                onClick={() => setViewType("grid")}
+                className={`p-2 ${
+                  viewType === "grid"
+                    ? "bg-primary text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                <LuLayoutGrid size={20} />
+              </button>
+            </div>
+          </div>
 
           {tabs[0]?.count > 0 && (
             <div className="flex flex-wrap items-center gap-4">
@@ -222,60 +250,77 @@ const ManageTask = () => {
           )}
         </div>
 
-        {/* no tasks */}
-        {allTasks.length === 0 ? (
-          <p className="mt-6 text-center text-white">
-            No tasks found for this filter.
-          </p>
-        ) : (
-          <>
-            {/* table */}
-            <div className="mt-4">
-              <ManageTasksTable
-                allTasks={allTasks}
-                sortOrder={sortOrder}
-                sortBy={sortBy}
-                onToggleSort={() => {
-                  if (sortBy === "dueDate") {
-                    setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
-                  } else {
-                    setSortBy("dueDate");
-                    setSortOrder("asc");
-                  }
-                  setPage(1);
-                }}
-                filterPriority={filterPriority}
-                onPriorityChange={(p) => {
-                  setFilterPriority(p);
-                  setPage(1);
-                }}
-                userRole={userRole}
-              />
-            </div>
-
-            {/* pagination */}
-            <ReactPaginate
-              previousLabel={"← Prev"}
-              nextLabel={"Next →"}
-              breakLabel={"..."}
-              pageCount={totalPages}
-              forcePage={page - 1}
-              marginPagesDisplayed={2}
-              pageRangeDisplayed={3}
-              onPageChange={(e) => setPage(e.selected + 1)}
-              containerClassName={"flex gap-2 mt-6 justify-center"}
-              pageClassName={"px-3 py-1 border rounded"}
-              activeClassName={"bg-primary text-white"}
-              previousClassName={
-                "px-3 py-1 cursor-pointer border text-white rounded"
-              }
-              nextClassName={
-                "px-3 py-1 border cursor-pointer text-white rounded"
-              }
-              disabledClassName={"opacity-50 cursor-not-allowed"}
+        {viewType === "table" ? (
+          <div className="mt-4">
+            {/* Always render the table (it will render only the <thead> if no rows) */}
+            <ManageTasksTable
+              userRole={userRole}
+              allTasks={allTasks}
+              sortOrder={sortOrder}
+              sortBy={sortBy}
+              onToggleSort={() => {
+                if (sortBy === "dueDate") {
+                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                } else {
+                  setSortBy("dueDate");
+                  setSortOrder("asc");
+                }
+                setPage(1);
+              }}
+              filterPriority={filterPriority}
+              onPriorityChange={(p) => {
+                setFilterPriority(p);
+                setPage(1);
+              }}
             />
-          </>
+
+            {/* If there were no tasks, show a “no data” message below the header */}
+            {allTasks.length === 0 && (
+              <p className="mt-2 text-center text-white">
+                No tasks found for this filter.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+            {allTasks.map((item) => (
+              <TaskCard
+                key={item._id}
+                title={item.title}
+                desc={item.description}
+                priority={item.priority}
+                status={item.status}
+                progress={item.progress}
+                createdAt={item.createdAt}
+                dueDate={item.dueDate}
+                assignedTo={item.assignedTo?.map((u) => u.profileImageUrl)}
+                attachmentsCount={item.attachments?.length || 0}
+                completedTodoCount={item.completedTodoCount || 0}
+                todoChecklist={item.todoChecklist || []}
+                onClick={() => handleRowClick(item._id)}
+              />
+            ))}
+          </div>
         )}
+
+        <ReactPaginate
+          previousLabel={"← Prev"}
+          nextLabel={"Next →"}
+          breakLabel={"..."}
+          pageCount={totalPages}
+          forcePage={page - 1}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={3}
+          onPageChange={(e) => setPage(e.selected + 1)}
+          containerClassName={"flex gap-2 mt-4 justify-center"}
+          pageClassName={"px-3 py-1 border rounded"}
+          activeClassName={"bg-primary text-white"}
+          previousClassName={
+            "px-3 py-1 cursor-pointer border text-white rounded"
+          }
+          nextClassName={"px-3 py-1 border cursor-pointer text-white rounded"}
+          disabledClassName={"opacity-50 cursor-not-allowed"}
+        />
       </div>
     </DashboardLayout>
   );
