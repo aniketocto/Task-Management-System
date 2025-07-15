@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 
 const NotificationBell = () => {
-  const {user} = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -67,7 +67,7 @@ const NotificationBell = () => {
   // toggle open/close; if closing, delete immediately
   const handleBellClick = () => {
     if (open) {
-      // markAllAsReadAndDelete();
+      markAllAsReadAndDelete();
     }
     setOpen((o) => !o);
   };
@@ -78,7 +78,6 @@ const NotificationBell = () => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setOpen(false);
-        markAllAsReadAndDelete();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -90,8 +89,10 @@ const NotificationBell = () => {
   const handleClick = (taskData) => {
     if (user?.role === "user") {
       navigate(`/user/task-detail/${taskData}`);
+      markAllAsReadAndDelete();
     } else {
       navigate("/admin/create-task", { state: { taskId: taskData } });
+      markAllAsReadAndDelete();
     }
   };
 
