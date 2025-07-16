@@ -6,6 +6,7 @@ import {
   SIDE_MENU_SUPER_ADMIN_DATA,
   SIDE_MENU_USER_DATA,
 } from "../../utils/data";
+import AnalogClock from "./AnalogClock";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser } = useContext(UserContext);
@@ -80,6 +81,8 @@ const SideMenu = ({ activeMenu }) => {
           </button>
         ))}
       </div>
+
+      <AnalogClock />
     </div>
   );
 };
