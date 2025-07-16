@@ -11,6 +11,9 @@ import AnalogClock from "./AnalogClock";
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser } = useContext(UserContext);
   const [sideMenuData, setSideMenuData] = useState([]);
+  const [profileImg, setProfileImg] = useState("");
+
+ 
 
   const navigate = useNavigate();
 
@@ -39,6 +42,7 @@ const SideMenu = ({ activeMenu }) => {
           : SIDE_MENU_USER_DATA
       );
     }
+    setProfileImg(user?.profileImageUrl);
     return () => {};
   }, [user]);
 
@@ -47,13 +51,13 @@ const SideMenu = ({ activeMenu }) => {
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="">
           <img
-            src={user?.profileImageUrl || ""}
+            src={profileImg}
             alt="profile Image"
             className="w-20 h-20 border border-gray-500/40 rounded-full object-contain"
           />
         </div>
         {(user?.role === "admin" || user?.role === "superAdmin") && (
-          <div className="text-[10px] font-medium text-white bg-primary px-3 py-0.5 rounded mt-1">
+          <div className="text-[10px] font-medium text-white bg-[#E43941] px-3 py-0.5 rounded mt-1">
             {user.role === "admin" ? "Admin" : "SuperAdmin"}
           </div>
         )}

@@ -1,15 +1,13 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 //Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
-
-// @desc Registe a new user
-// @route POST /api/auth/register
-// @access Public
 
 const registerUser = async (req, res) => {
   try {
@@ -22,7 +20,7 @@ const registerUser = async (req, res) => {
       adminInviteToken,
     } = req.body;
 
-    // Check if user already existsx` 
+    // Check if user already existsx`
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -71,9 +69,6 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-// @desc Login user
-// @route POST /api/auth/login
-// @access Public
 
 const loginUser = async (req, res) => {
   try {
@@ -106,10 +101,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc User profile
-// @route GET /api/auth/profile
-// @access Private (Requires jwt)
-
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -121,10 +112,6 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-// @desc Update user profile
-// @route PUT /api/auth/profile
-// @access Private (Requires jwt)
 
 const updateUserProfile = async (req, res) => {
   try {
@@ -161,4 +148,61 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile };
+const googleAuth = async (req, res) => {
+  try {
+    const { idToken, adminInviteToken, department } = req.body;
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { email_verified, email, name, picture } = ticket.getPayload();
+    if (!email_verified) {
+      return res.status(401).json({ message: "Email not verified by Google" });
+    }
+
+    let role = "user";
+    if (adminInviteToken === process.env.SUPER_ADMIN_INVITE_TOKEN) {
+      role = "superAdmin";
+    } else if (adminInviteToken === process.env.ADMIN_INVITE_TOKEN) {
+      role = "admin";
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      const randomPassword = bcrypt.hashSync(
+        Math.random().toString(36).slice(-8),
+        10
+      );
+      user = await User.create({
+        name,
+        email,
+        password: randomPassword,
+        profileImageUrl: picture,
+        role, // ← carry over the role
+        department, // ← save the department too
+      });
+    }
+
+    const token = generateToken(user._id);
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profileImageUrl: user.profileImageUrl,
+      role: user.role,
+      department: user.department, 
+      token,
+    });
+  } catch (error) {
+    console.error("❌ googleAuth error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  googleAuth,
+};

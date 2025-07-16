@@ -5,6 +5,7 @@ const {
   loginUser,
   getUserProfile,
   updateUserProfile,
+  googleAuth
 } = require("../controllers/authControllers");
 const upload = require("../middlewares/uploadMiddleware");
 
@@ -14,6 +15,8 @@ const router = express.Router();
 // Auth Routes;
 router.post("/register", registerUser); //Reguster User
 router.post("/login", loginUser); // Login User
+router.post("/google", googleAuth)
+
 router.get("/profile", protect, getUserProfile); // Get User Profile
 router.put("/profile", protect, updateUserProfile); // Update User Profile
 

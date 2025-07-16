@@ -7,6 +7,7 @@ export const API_PATHS = {
     GET_PROFILE: "/api/auth/profile",
     UPDATE_PROFILE: "/api/auth/profile",
     UPLOAD_IMAGE: "/api/auth/upload-image",
+    GOOGLE_AUTH: "/api/auth/google",
   },
   USERS: {
     GET_ALL_USERS: "/api/users", //get all user

@@ -9,8 +9,8 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
-const reportsRoutes = require("./routes/reportRoutes");
 const notifyRoutes = require("./routes/notifyRoutes");
+const leadRoutes = require("./routes/leadRoutes")
 
 const app = express();
 const server = http.createServer(app);
@@ -37,11 +37,12 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
-app.use("/api/reports", reportsRoutes);
 app.use("/api/notify", notifyRoutes);
+app.use("/api/leads", leadRoutes)
 
 // Static Server upload folder
 const path = require("path");
+const Leads = require("./models/Leads");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Socket IO Setup

@@ -457,7 +457,7 @@ const getTask = async (req, res) => {
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    +res.status(200).json({ task });
+    res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -621,8 +621,6 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    console.log("✅ Task created:", task);
-
     // grab socket io server
     const io = req.app.get("io");
 
@@ -635,7 +633,6 @@ const createTask = async (req, res) => {
           task: task._id,
           type: "task",
         });
-        console.log(`✅ Notification created for user ${userId}:`, n);
         return n;
       })
     );
@@ -646,8 +643,6 @@ const createTask = async (req, res) => {
       console.log(`📢 Emitting notification to room: ${room}`);
       io.to(room).emit("new-notification", notification);
     });
-
-    console.log("🎯 Notifications emitted to all assigned users.");
 
     res.json({ message: "Task & notifications created successfully", task });
   } catch (error) {

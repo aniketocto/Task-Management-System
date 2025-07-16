@@ -38,13 +38,22 @@ const superAdminOnly = (req, res, next) => {
   return res.status(403).json({ message: "Access Denied, Super Admin only" });
 };
 
-const roleCheck = (...allowedRoles) => {
+const allowRoleOrDept = (allowedRoles = [], allowedDepts = []) => {
   return (req, res, next) => {
-    if (req.user && allowedRoles.includes(req.user.role)) {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+      allowedRoles.includes(user.role) ||
+      allowedDepts.includes(user.department)
+    ) {
       return next();
     }
+
     return res.status(403).json({ message: "Access Denied" });
   };
 };
 
-module.exports = { protect, adminOnly, superAdminOnly, roleCheck };
+module.exports = { protect, adminOnly, superAdminOnly, allowRoleOrDept };
