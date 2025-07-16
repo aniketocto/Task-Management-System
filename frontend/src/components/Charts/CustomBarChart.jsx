@@ -55,7 +55,7 @@ const CustomBarChart = ({ data }) => {
             tick={{ fontSize: 12, fill: "#fff" }}
             stroke="#fff"
           />
-          <YAxis tick={{ fontSize: 12, fill: "#fff" }} stroke="#fff"  />
+          {/* <YAxis tick={{ fontSize: 12, fill: "#fff" }} stroke="#fff"  /> */}
           <Tooltip content={<CustomTooltip />} />
 
           <Bar
