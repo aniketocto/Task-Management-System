@@ -1,11 +1,12 @@
 import UI_IMG from "../../assets/auth-img-1.png";
 import AUTH_IMG from "../../assets/bg-img.png";
+import LOGO from "../../assets/logo-png.png";
 
 const AuthLayout = ({ children }) => {
   return (
     <div className="flex">
       <div className="w-screen h-screen md:w-[60vw] px-12 pt-8 pb-12">
-        <h2 className="text-lg font-medium text-[#E43941]">Task Manager</h2>
+         <img src={LOGO} alt="Unstoppable" className="w-40" />
         {children}
       </div>
       <div
