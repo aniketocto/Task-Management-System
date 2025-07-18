@@ -65,7 +65,7 @@ const CreateTask = () => {
 
     try {
       const todoList = taskData.todoChecklist?.map((item) => ({
-        text: item,
+        text: item.text,
         completed: false,
       }));
 

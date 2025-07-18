@@ -11,6 +11,7 @@ const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const notifyRoutes = require("./routes/notifyRoutes");
 const leadRoutes = require("./routes/leadRoutes")
+const categoryRoutes = require("./routes/categoryRoutes")
 
 const app = express();
 const server = http.createServer(app);
@@ -38,7 +39,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notify", notifyRoutes);
-app.use("/api/leads", leadRoutes)
+app.use("/api/leads", leadRoutes);
+app.use("/api/category", categoryRoutes)
+
 
 // Static Server upload folder
 const path = require("path");
