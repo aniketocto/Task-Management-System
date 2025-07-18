@@ -15,7 +15,7 @@
 
   body {
     background-color: #06090e;
-    overflow-x: hidden;
+    overflow: hidden;
   }
 }
 
@@ -25,6 +25,11 @@
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;             /* Chrome, Safari, Opera */
+}
+
+.ant-table-cell-fix-left {
+  background-color: #1f2937 !important; /* match bg-gray-800 */
+  z-index: 2 !important;
 }
 
 .input-box {
@@ -50,6 +55,9 @@
 
 .form-input {
   @apply w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md mt-2 placeholder:text-gray-500;
+}
+.form-input-date {
+  @apply w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md placeholder:text-gray-500;
 }
 
 .add-btn {

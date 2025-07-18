@@ -26,6 +26,9 @@ import UserProvider from "./context/userProvider";
 import { useContext } from "react";
 import { UserContext } from "./context/userContext";
 import { Toaster } from "react-hot-toast";
+import LeadDashboard from "./pages/Lead/LeadDashboard";
+import CreateLead from "./pages/Lead/CreateLead";
+import ManageLead from "./pages/Lead/ManageLead";
 
 function App() {
   return (
@@ -33,11 +36,14 @@ function App() {
       <div>
         <Router>
           <Routes>
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/sign-up" element={<SignUp />} />
 
             {/* Admin Routes */}
-            <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+            <Route
+              element={<PrivateRoute allowedRoles={["admin", "superAdmin"]} />}
+            >
               <Route path="/admin/dashboard" element={<Dashboard />} />
               <Route path="/admin/tasks" element={<ManageTask />} />
               <Route path="/admin/my-tasks" element={<MyTask />} />
@@ -54,6 +60,21 @@ function App() {
                 element={<ViewTaskDetails />}
               />
             </Route>
+
+            {/* Lead Routes */}
+            <Route
+              element={
+                <PrivateRoute
+                  allowedRoles={["admin", "superAdmin"]}
+                  allowedDepts={["BusinessDevelopment"]}
+                />
+              }
+            >
+              <Route path="/leads" element={<LeadDashboard />} />
+              <Route path="/leads-create" element={<CreateLead />} />
+              <Route path="/manage-lead" element={<ManageLead />} />
+            </Route>
+
             {/* Deafult Routes */}
             <Route path="/" element={<Root />} />
           </Routes>

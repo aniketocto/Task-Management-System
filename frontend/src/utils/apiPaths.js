@@ -7,6 +7,7 @@ export const API_PATHS = {
     GET_PROFILE: "/api/auth/profile",
     UPDATE_PROFILE: "/api/auth/profile",
     UPLOAD_IMAGE: "/api/auth/upload-image",
+    GOOGLE_AUTH: "/api/auth/google",
   },
   USERS: {
     GET_ALL_USERS: "/api/users", //get all user
@@ -45,4 +46,14 @@ export const API_PATHS = {
     REVIEW_DUE_DATE_CHANGE: (task_id) =>
       `/api/tasks/${task_id}/due-date-approval`,
   },
+  CATEGORY: {
+    GET_CATEGORIES: "/api/category"
+  },
+  LEADS: {
+    CREATE_LEAD: "api/leads/create-lead",
+    GET_LEADS: "/api/leads",
+    GET_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
+    UPDATE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
+    DELETE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
+  }
 };

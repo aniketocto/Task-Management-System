@@ -71,14 +71,16 @@ const ManageTasksTable = ({
   };
 
   const getDueDateColor = (dueDate) => {
-    if (!dueDate) return "#D3D3D3"; // fallback grey if no due date
+    if (!dueDate) return "#D3D3D3";
+    // ── ➊ normalize both to start of day so we compare full calendar days
+    const daysLeft = moment(dueDate)
+      .startOf("day")
+      .diff(moment().startOf("day"), "days");
 
-    const daysLeft = moment(dueDate).diff(moment(), "days");
-
-    if (daysLeft < 0) return "#A9A9A9"; // ⬅ Past due: gray
-    if (daysLeft <= 2) return "#E43941"; // 🔴 Urgent
-    if (daysLeft <= 4) return "#E48E39"; // 🟠 Approaching
-    return "#6FE439"; // 🟢 Plenty of time
+    if (daysLeft < 0) return "#A9A9A9"; // past due
+    if (daysLeft <= 2) return "#E43941"; // 🔴 urgent (0–2 days)
+    if (daysLeft <= 4) return "#E48E39"; // 🟠 approaching (3–4 days)
+    return "#6FE439"; // 🟢 plenty of time
   };
 
   return (

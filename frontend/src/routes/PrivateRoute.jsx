@@ -1,9 +1,20 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from "react-router-dom";
+import { UserContext } from "../context/userContext";
+import { useContext } from "react";
 
-// eslint-disable-next-line no-unused-vars
-const PrivateRoute = ({allowedRoles}) => {
-  return <Outlet allowedRoles={allowedRoles} />
-}
+const PrivateRoute = ({ allowedRoles = [], allowedDepts = [] }) => {
+  const { user, loading } = useContext(UserContext);
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
 
-export default PrivateRoute
+  const roleOk = allowedRoles.includes(user.role);
+  const deptOk = allowedDepts.includes(user.department);
+
+  if (roleOk || deptOk) {
+    return <Outlet />;
+  }
+
+  return <Navigate to="/login" />;
+};
+
+export default PrivateRoute;

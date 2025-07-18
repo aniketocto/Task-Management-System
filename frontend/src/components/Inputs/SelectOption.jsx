@@ -12,12 +12,12 @@ const SelectOption = ({ options, value, onChange, placeholder }) => {
     <div className="relative w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md mt-2 flex justify-between items-center cursor-pointer"
+        className="w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md  flex justify-between items-center cursor-pointer"
       >
         {value
           ? options.find((opt) => opt.value === value)?.label
           : placeholder}
-        <span className="">{isOpen ? <LuChevronDown /> : <LuChevronUp />}</span>
+        <span className="">{isOpen ? <LuChevronUp /> : <LuChevronDown />}</span>
       </button>
 
       {/* Dropdown Menu */}

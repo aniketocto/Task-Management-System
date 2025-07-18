@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect, roleCheck } = require("../middlewares/authMiddleware");
+const { protect, allowRoleOrDept } = require("../middlewares/authMiddleware");
 const {
   getTasks,
   getTask,
@@ -21,7 +21,7 @@ const router = express.Router();
 router.get(
   "/dashboard-data",
   protect,
-  roleCheck("admin", "superAdmin"),
+  allowRoleOrDept(["admin", "superAdmin"], []),
   getDashboardData
 ); // All data dashboard for admin
 
@@ -37,13 +37,18 @@ router.get("/:id", protect, getTask); // Get a specific task
 router.post(
   "/create-task",
   protect,
-  roleCheck("admin", "superAdmin"),
+  allowRoleOrDept(["admin", "superAdmin"], []),
   createTask
 ); // Create a new task (Admin only)
 
 router.put("/:id", protect, updateTask); // Update a task
 
-router.delete("/:id", protect, roleCheck("admin", "superAdmin"), deleteTask); // Delete a task (Super Admin only)
+router.delete(
+  "/:id",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], []),
+  deleteTask
+); // Delete a task (Super Admin only)
 
 router.put("/:id/status", protect, updateTaskStatus); // Update task status
 
@@ -53,7 +58,7 @@ router.put("/:id/todo", protect, updateTaskChecklist);
 router.post(
   "/:id/due-date-request",
   protect,
-  roleCheck("admin"),
+  allowRoleOrDept(["admin"], []),
   requestDueDateChange
 );
 
@@ -61,8 +66,8 @@ router.post(
 router.patch(
   "/:id/due-date-approval",
   protect,
-  roleCheck("superAdmin"),
+  allowRoleOrDept(["superAdmin"], []),
   reviewDueDateChange
-)
+);
 
 module.exports = router;

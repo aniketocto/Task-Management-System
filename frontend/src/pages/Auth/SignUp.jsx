@@ -9,6 +9,7 @@ import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
 import uploadImage from "../../utils/uploadImage";
+import { GoogleLogin } from "@react-oauth/google";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -106,6 +107,34 @@ const SignUp = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const { credential: idToken } = credentialResponse;
+      const payload = {
+        idToken, // Google auth token
+        adminInviteToken, // from state
+        department, // from state
+      };
+      const { data } = await axiosInstance.post(
+        API_PATHS.AUTH.GOOGLE_AUTH,
+        payload
+      );
+      if (data.token) {
+        localStorage.setItem("taskManagerToken", data.token);
+        updateUser(data);
+        if (data.role === "admin" || data.role === "superAdmin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/user/dashboard");
+        }
+      } else {
+        setError(["Something went wrong"]);
+      }
+    } catch (error) {
+      console.log("Google Login Error", error);
+    }
+  };
+
   return (
     <AuthLayout>
       <div className="lg:w-full h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
@@ -186,9 +215,14 @@ const SignUp = () => {
             </ul>
           )}
 
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => console.log("Google login failed")}
+          />
+
           <button
             type="submit"
-            className="w-full bg-[#E43941]  hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
+            className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >
             Sign In
           </button>
