@@ -5,6 +5,9 @@ import {
   LuSquare,
 } from "react-icons/lu";
 
+import { MdOutlineLeaderboard } from "react-icons/md";
+import { RiTeamLine } from "react-icons/ri";
+
 export const SIDE_MENU_ADMIN_DATA = [
   {
     id: "01",
@@ -47,21 +50,72 @@ export const SIDE_MENU_SUPER_ADMIN_DATA = [
   },
   {
     id: "02",
+    label: "Lead Dashboard",
+    icon: MdOutlineLeaderboard,
+    path: "/leads",
+  },
+  {
+    id: "03",
     label: "Manage Tasks",
     icon: LuClipboardCheck,
     path: "/admin/tasks",
   },
   {
-    id: "03",
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
+  {
+    id: "04",
     label: "Create Task",
     icon: LuSquare,
     path: "/admin/create-task",
   },
   {
-    id: "04",
+    id: "05",
+    label: "Create Leads",
+    icon: LuSquare,
+    path: "/leads-create",
+  },
+  {
+    id: "06",
     label: "Team Members",
-    icon: LuClipboardCheck,
+    icon: RiTeamLine,
     path: "/admin/users",
+  },
+  {
+    id: "07",
+    label: "Logout",
+    icon: LuLogOut,
+    path: "logout",
+  },
+];
+
+export const SIDE_MENU_BE_USER_DATA = [
+  {
+    id: "01",
+    label: "Dashboard",
+    icon: LuLayoutDashboard,
+    path: "/user/dashboard",
+  },
+  {
+    id: "03",
+    label: "Lead Dashboard",
+    icon: MdOutlineLeaderboard,
+    path: "/leads",
+  },
+  {
+    id: "02",
+    label: "View Tasks",
+    icon: LuClipboardCheck,
+    path: "/user/tasks",
+  },
+  {
+    id: "04",
+    label: "Create Leads",
+    icon: LuClipboardCheck,
+    path: "/leads-create",
   },
   {
     id: "05",
@@ -217,3 +271,17 @@ export const officeQuotes = {
   99: "Smiles are contagious. Pass them on.",
   100: "Great things take effort.",
 };
+
+export const OPPO_STATUS = [
+  { value: "followUp", label: "Follow Up" },
+  { value: "dead", label: "Dead" },
+  { value: "onboarded", label: "Onboarded" },
+  { value: "negotiation", label: "Negotiation" },
+  { value: "argument", label: "Argument" },
+  { value: "pitch", label: "Pitch" },
+];
+
+export const OPPO_Type = [
+  { value: "retainer", label: "Retainer" },
+  { value: "project", label: "Project" },
+]

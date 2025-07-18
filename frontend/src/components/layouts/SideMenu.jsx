@@ -3,10 +3,12 @@ import { UserContext } from "../../context/userContext";
 import React, { useContext, useEffect, useState } from "react";
 import {
   SIDE_MENU_ADMIN_DATA,
+  SIDE_MENU_BE_USER_DATA,
   SIDE_MENU_SUPER_ADMIN_DATA,
   SIDE_MENU_USER_DATA,
 } from "../../utils/data";
 import AnalogClock from "./AnalogClock";
+import USER_IMG from "../../assets/user_fallback.svg";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser } = useContext(UserContext);
@@ -39,6 +41,8 @@ const SideMenu = ({ activeMenu }) => {
           ? SIDE_MENU_ADMIN_DATA
           : user?.role === "superAdmin"
           ? SIDE_MENU_SUPER_ADMIN_DATA
+          : user?.department === "BusinessDevelopment"
+          ? SIDE_MENU_BE_USER_DATA
           : SIDE_MENU_USER_DATA
       );
     }
@@ -51,7 +55,7 @@ const SideMenu = ({ activeMenu }) => {
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="">
           <img
-            src={profileImg}
+            src={ USER_IMG}
             alt="profile Image"
             className="w-20 h-20 border border-gray-500/40 rounded-full object-contain"
           />
@@ -86,7 +90,7 @@ const SideMenu = ({ activeMenu }) => {
         ))}
       </div>
 
-      <AnalogClock />
+      {/* <AnalogClock /> */}
     </div>
   );
 };

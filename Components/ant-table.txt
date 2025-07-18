@@ -1,0 +1,187 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import moment from "moment";
+import { API_PATHS } from "../../utils/apiPaths";
+import axiosInstance from "../../utils/axiosInstance";
+import { Table } from "antd";
+import { Switch, Button } from "antd";
+
+const ManageLeadTable = () => {
+  const [leads, setLeads] = useState([]);
+  const [leadId, setLeadId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const navigate = useNavigate();
+
+  const fetchLeads = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
+        params: { page: pageNumber, limit: 10 },
+      });
+      setLeads(data.leads || []);
+      setPage(data.page || 1);
+      setPages(data.pages || 1);
+    } catch (err) {
+      console.error("Error fetching leads:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleFollowUp = async (
+    LuAlignVerticalDistributeEnd,
+    attemptKey,
+    currVal
+  ) => {
+    try {
+      const payload = { followUp: { [attemptKey]: !currVal } };
+      const { data } = await axiosInstance.put(
+        API_PATHS.LEADS.UPDATE_LEAD_BY_ID,
+        {
+          leadId,
+          payload,
+        }
+      );
+      setLeads((prev) => prev.map((l) => (l._id === leadId ? data.lead : l)));
+    } catch (err) {
+      console.error("Failed to update followUp:", err);
+    }
+  };
+
+  const columns = [
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      fixed: "left",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+    {
+      title: "Company",
+      dataIndex: "companyName",
+      key: "companyName",
+      width: 200,
+    },
+
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 200,
+    },
+  ];
+
+  useEffect(() => {
+    fetchLeads();
+  }, [page]);
+
+  if (loading) {
+    return <div className="p-4 text-center text-gray-400">Loading leads…</div>;
+  }
+
+  return (
+    <div className="bg-gray-900 rounded-lg shadow-lg p-4 w-full overflow-x-auto">
+      <Table
+        className="min-w-[1800px]"
+        dataSource={leads}
+        columns={columns}
+        rowKey="_id"
+        size="middle"
+        pagination={{
+          current: page,
+          total: pages * 10,
+          onChange: fetchLeads,
+        }}
+        components={{
+          header: {
+            wrapper: (props) => <thead {...props} className="bg-gray-800 border-b border-gray-700" />,
+            cell: (props) => (
+              <th
+                {...props}
+                className="px-6 py-3 text-left text-gray-100 font-semibold"
+              />
+            ),
+          },
+          body: {
+            row: (props) => (
+              <tr {...props} className="border-b border-gray-700 bg-gray-800" />
+            ),
+            cell: (props) => (
+              <td {...props} className="px-6 py-4 text-gray-200" />
+            ),
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+export default ManageLeadTable;

@@ -1,13 +1,11 @@
 const express = require("express");
-const {
-  protect,
-  allowRoleOrDept,
-} = require("../middlewares/authMiddleware");
+const { protect, allowRoleOrDept } = require("../middlewares/authMiddleware");
 const {
   createLead,
   updateLead,
   getLeads,
   getLead,
+  deleteLead,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
@@ -26,6 +24,8 @@ router.get(
   getLeads
 );
 
+
+
 router.get(
   "/:id",
   protect,
@@ -39,5 +39,14 @@ router.put(
   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   updateLead
 );
+
+router.delete(
+  "/:id",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  deleteLead
+);
+
+
 
 module.exports = router;

@@ -1,15 +1,17 @@
+const categoryModel = require("../models/categoryModel");
 const Leads = require("../models/Leads");
 
 const createLead = async (req, res) => {
   try {
     const {
-      name,
+      cName,
       email,
       jobProfile,
       companyName,
       status,
       type,
       category,
+      leadCameDate,
       credentialDeckDate,
       discoveryCallDate,
       pitchDate,
@@ -19,13 +21,14 @@ const createLead = async (req, res) => {
     } = req.body;
 
     const lead = await Leads.create({
-      name,
+      cName,
       email,
       jobProfile,
       companyName,
       status,
       type,
       category,
+      leadCameDate,
       credentialDeckDate,
       discoveryCallDate,
       pitchDate,
@@ -44,7 +47,7 @@ const createLead = async (req, res) => {
 
 const getLeads = async (req, res) => {
   try {
-    const { status, type, category, page = 1, limit = 20 } = req.query;
+    const { status, type, category, page = 1, limit = 10 } = req.query;
 
     const filter = {};
 
@@ -94,21 +97,35 @@ const getLead = async (req, res) => {
 
 const updateLead = async (req, res) => {
   try {
-    const lead = await Leads.findById(req.params.id);
+    const updateFields = {
+      cName: req.body.cName,
+      jobProfile: req.body.jobProfile,
+      companyName: req.body.companyName,
+      status: req.body.status,
+      type: req.body.type,
+      category: req.body.category,
+      leadCameDate: req.body.leadCameDate,
+      credentialDeckDate: req.body.credentialDeckDate,
+      discoveryCallDate: req.body.discoveryCallDate,
+      pitchDate: req.body.pitchDate,
+      attachments: req.body.attachments,
+      remark: req.body.remark,
+    };
+
+    if (req.body.followUp) {
+      updateFields.followUp = req.body.followUp;
+    }
+
+    const lead = await Leads.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true }
+    );
+
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
-    lead.name = req.body.name || lead.name;
-    lead.status = req.body.status || lead.status;
-    lead.type = req.body.type || lead.type;
-    lead.category = req.body.category || lead.category;
-    lead.credentialDeckDate = req.body.credentialDeckDate || lead.credentialDeckDate;
-    lead.discoveryCallDate = req.body.discoveryCallDate || lead.discoveryCallDate;
-    lead.pitchDate = req.body.pitchDate || lead.pitchDate;
-    lead.attachments = req.body.attachments || lead.attachments;
-    lead.remark = req.body.remark || lead.remark;
-    lead.followUp = req.body.followUp || lead.followUp;
-    await lead.save();
+
     return res.json({ message: "Lead updated successfully", lead });
   } catch (error) {
     console.error("Error updating lead:", error);
@@ -116,4 +133,24 @@ const updateLead = async (req, res) => {
   }
 };
 
-module.exports = { createLead, updateLead, getLeads, getLead };
+const deleteLead = async (req, res) => {
+  try {
+    const lead = await Leads.findById(req.params.id);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    await lead.deleteOne();
+    return res.json({ message: "Lead deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting lead:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = {
+  createLead,
+  updateLead,
+  getLeads,
+  getLead,
+  deleteLead,
+};

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const leadSchema = new mongoose.Schema(
   {
     // ——— Basic lead info ———
-    name: {
+    cName: {
       type: String,
       required: true,
       trim: true,
@@ -49,14 +49,16 @@ const leadSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["other", "inventory"], // typo fixed
-      default: "other",
       required: true,
+      trim: true,
     },
 
     // ——— Key milestone dates ———
+    leadCameDate: {
+      type: Date,
+    },
     credentialDeckDate: {
-      type: Date, // pass the fn, not its result
+      type: Date,
     },
     discoveryCallDate: {
       type: Date,
@@ -71,6 +73,7 @@ const leadSchema = new mongoose.Schema(
       presentationUrl: { type: String, trim: true },
       agreementUrl: { type: String, trim: true },
       invoiceUrl: { type: String, trim: true },
+      websiteUrl: { type: String, trim: true },
     },
 
     remark: {

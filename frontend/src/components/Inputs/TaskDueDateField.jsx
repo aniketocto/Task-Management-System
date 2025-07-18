@@ -41,7 +41,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
         <input
           type="date"
           disabled={taskId && user?.role !== "superAdmin"}
-          className="form-input"
+          className="form-input-date"
           value={taskData.dueDate?.split("T")[0] ?? ""}
           onChange={({ target }) => handleValueChange("dueDate", target.value)}
           min={new Date().toISOString().split("T")[0]}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HiOutlineTrash, HiPlus } from "react-icons/hi";
 
-const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
+const TodoListInput = ({ todoList = [], setTodoList }) => {
   const [option, setOption] = useState("");
 
   //   function to handle adding an option
@@ -49,7 +49,7 @@ const TodoListInput = ({ todoList = [], setTodoList, taskId }) => {
         </div>
       ))}
 
-      <div className="flex items-center gap-5 mt-4">
+      <div className="flex items-center gap-5">
         <input
           type="text"
           placeholder="Enter Task"

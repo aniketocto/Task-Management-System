@@ -105,15 +105,7 @@ const ManageTask = () => {
         console.error("Error fetching tasks:", err);
       }
     },
-    [
-      filterStatus,
-      filterMonth,
-      filterDepartment,
-      filterPriority,
-      page,
-      sortOrder,
-      sortBy,
-    ]
+    [filterStatus, filterMonth, filterDepartment, filterPriority, sortOrder, sortBy]
   );
 
   // On mount, and whenever department filter changes, reload month dropdown
