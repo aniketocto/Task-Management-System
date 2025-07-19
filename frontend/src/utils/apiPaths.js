@@ -55,5 +55,6 @@ export const API_PATHS = {
     GET_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     UPDATE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     DELETE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
+    GET_DASHBOARD_DATA: "/api/leads/dashboard-data",
   }
 };

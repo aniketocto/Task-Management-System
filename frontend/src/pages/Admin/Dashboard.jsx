@@ -265,7 +265,7 @@ const Dashboard = () => {
               <h5 className="font-medium">Task Priority Level</h5>
             </div>
 
-            <CustomBarChart data={barChartData} />
+            <CustomBarChart data={barChartData} dataKey="priority" />
           </div>
         </div>
       </div>

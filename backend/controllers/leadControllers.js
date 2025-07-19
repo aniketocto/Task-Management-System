@@ -156,8 +156,9 @@ const getLeadDashboardData = async (req, res) => {
     const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
     const argumentLeads = await Leads.countDocuments({ status: "argument" });
     const pitchLeads = await Leads.countDocuments({ status: "pitch" });
+    const negotiationLeads = await Leads.countDocuments({ status: "negotiation" });
 
-    const leadStatuses = ["followUp", "dead", "onboarded", "argument", "pitch"];
+    const leadStatuses = ["followUp", "dead", "onboarded", "argument", "pitch", "negotiation" ];
 
     const leadDistributionRaw = await Leads.aggregate([
       {
@@ -174,6 +175,7 @@ const getLeadDashboardData = async (req, res) => {
         leadDistributionRaw.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
+    
 
     const recentLeads = await Leads.find()
       .sort({ createdAt: -1 })
@@ -190,6 +192,7 @@ const getLeadDashboardData = async (req, res) => {
         onboardedLeads,
         argumentLeads,
         pitchLeads,
+        negotiationLeads
       },
       charts: {
         leadDistribution,
