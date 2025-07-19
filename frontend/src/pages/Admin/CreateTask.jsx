@@ -78,7 +78,7 @@ const CreateTask = () => {
       if (response.status === 200) {
         toast.success("Task created successfully");
         clearData();
-        // navigate("/admin/tasks");
+        navigate("/admin/tasks");
       }
     } catch (error) {
       console.error("Error creating task:", error);
