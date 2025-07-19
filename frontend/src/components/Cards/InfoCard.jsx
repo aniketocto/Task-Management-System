@@ -1,9 +1,5 @@
 const InfoCard = ({ label, value, color }) => {
-  
-  const formattedValue = String(label).replace(
-    /([a-z])([A-Z])/g,
-    "$1-$2"
-  );
+  const formattedValue = String(label).replace(/([a-z])([A-Z])/g, "$1-$2");
 
   return (
     <div className="flex items-center gap-3">

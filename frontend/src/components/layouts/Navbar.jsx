@@ -8,7 +8,7 @@ const Navbar = ({ activeMenu }) => {
   const [openSideMenu, setOpenSideMenu] = useState(false);
 
   return (
-    <div className="flex gap-5 items-center justify-between bg-[#06090E] border-b-2 border-gray-200 backdrop-blur-[2px] py-4 px-7 sticky top-0 z-30">
+    <div className="flex gap-5 items-center justify-between bg-[#06090E] border-b-2 border-gray-200 backdrop-blur-[2px] py-4 px-7 sticky top-0 z-50">
       <button
         className="block lg:hidden text-white"
         onClick={() => {
