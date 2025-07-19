@@ -27,7 +27,6 @@ const ManageLeadTable = () => {
     }
   };
 
-  const getLeadById = async () => {};
 
   const toggleFollowUp = async (id, attemptKey, currVal) => {
     try {
