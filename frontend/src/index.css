@@ -16,21 +16,38 @@
   body {
     background-color: #06090e;
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
+  -ms-overflow-style: none;  
+  scrollbar-width: none;   
+  }
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;             /* Chrome, Safari, Opera */
+  display: none;           
 }
 
-.ant-table-cell-fix-left {
-  background-color: #1f2937 !important; /* match bg-gray-800 */
-  z-index: 2 !important;
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;           
 }
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #374151;         
+  border-radius: 4px;          
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #6B7280;       
+  border-radius: 4px;
+  border: 2px solid #374151;   
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;                 
+  scrollbar-color: #6B7280 #374151;      
+}
+
 
 .input-box {
   @apply w-full flex justify-between gap-3 text-black bg-slate-50 rounded px-4 py-3 mb-4 mt-1.5 border border-slate-200 outline-none;

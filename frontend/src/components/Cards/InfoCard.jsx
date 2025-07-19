@@ -1,5 +1,5 @@
 const InfoCard = ({ label, value, color }) => {
-  // Turn "inProgress" → "in-Progress", "allTasks" → "all-Tasks", etc.
+  
   const formattedValue = String(label).replace(
     /([a-z])([A-Z])/g,
     "$1-$2"

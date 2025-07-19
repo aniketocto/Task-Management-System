@@ -169,6 +169,16 @@ export const infoCard = [
   { label: "Total Tasks", key: "All", color: "bg-[#B439E4]" },
 ];
 
+export const leadStats = [
+  { label: "Onboarded Leads", key: "onboardedLeads", color: "bg-green-500" },
+  { label: "Follow-Up Leads", key: "followUpLeads", color: "bg-yellow-500" },
+  { label: "Argument Leads", key: "argumentLeads", color: "bg-blue-500" },
+  { label: "Pitch Leads", key: "pitchLeads", color: "bg-purple-500" },
+  { label: "Negotiation Leads", key: "negotiationLeads", color: "bg-indigo-500" },
+  { label: "Dead Leads", key: "deadLeads", color: "bg-red-500" },
+  { label: "Total Leads", key: "totalLeads", color: "bg-indigo-500" },
+];
+
 export const officeQuotes = {
   1: "Teamwork makes the dream work.",
   2: "Stay positive, work hard, make it happen.",
@@ -284,4 +294,12 @@ export const OPPO_STATUS = [
 export const OPPO_Type = [
   { value: "retainer", label: "Retainer" },
   { value: "project", label: "Project" },
-]
+];
+
+export const statsColors = [
+  "#6366F1", // indigo for Total
+  "#FBBF24", // amber for Follow-Up
+  "#EF4444", // red for Dead
+  "#10B981", // green for Onboarded
+  "#8B5CF6", // purple for Pitch
+];
