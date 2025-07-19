@@ -6,9 +6,17 @@ const {
   getLeads,
   getLead,
   deleteLead,
+  getLeadDashboardData,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
+
+router.get(
+  "/dashboard-data",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  getLeadDashboardData
+)
 
 router.post(
   "/create-lead",
