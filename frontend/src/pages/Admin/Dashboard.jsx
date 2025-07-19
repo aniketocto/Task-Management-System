@@ -161,6 +161,15 @@ const Dashboard = () => {
       setFilterDepartment,
     }) || {};
 
+  useEffect(() => {
+    if (filterMonth) {
+      const count = departmentTotals[filterDepartment] || 0;
+      if (count === 0) {
+        setFilterDepartment("");
+      }
+    }
+  }, [filterMonth, filterDepartment, departmentTotals]);
+
   return (
     <DashboardLayout activeMenu="Dashboard">
       <div className="card my-5">
@@ -220,7 +229,9 @@ const Dashboard = () => {
                         departmentTotals[m.value] === 0;
                       return (
                         <option
-                          className="text-black"
+                          className={
+                            isDisabled ? "text-gray-400" : "text-black"
+                          }
                           key={m.value}
                           value={m.value}
                           disabled={isDisabled}

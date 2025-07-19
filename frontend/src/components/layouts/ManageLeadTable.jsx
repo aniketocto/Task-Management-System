@@ -73,9 +73,9 @@ const ManageLeadTable = () => {
               <col style={{ width: "70px" }} />
               <col style={{ width: "50px" }} />
               <col style={{ width: "70px" }} />
-              <col style={{ width: "90px" }} />
-              <col style={{ width: "90px" }} />
               <col style={{ width: "120px" }} />
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "150px" }} />
               <col style={{ width: "90px" }} />
               <col style={{ width: "50px" }} />
               <col style={{ width: "50px" }} />
@@ -215,43 +215,43 @@ const ManageLeadTable = () => {
                   key={lead._id || index}
                   className="border-b border-gray-700 hover:bg-gray-800"
                 >
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700 sticky left-0 z-20 bg-gray-800">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 sticky left-0 z-20 bg-gray-800">
                     {lead.companyName || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.cName || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.email || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.jobProfile || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.status || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.type || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.category || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.credentialDeckDate
                       ? moment(lead.credentialDeckDate).format("DD-MM-YYYY")
                       : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.discoveryCallDate
                       ? moment(lead.discoveryCallDate).format("DD-MM-YYYY")
                       : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.pitchDate
                       ? moment(lead.pitchDate).format("DD-MM-YYYY hh:mm A")
                       : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.leadCameDate
                       ? moment(lead.leadCameDate).format("DD-MM-YYYY")
                       : "-"}
@@ -316,7 +316,7 @@ const ManageLeadTable = () => {
                         onClick={() => handleNavigate(lead._id)}
                         className="px-3 py-1 bg-[#E43941] text-white rounded hover:bg-red-600 cursor-pointer text-xs"
                       >
-                        View
+                        Edit
                       </button>
                     </div>
                   </td>
