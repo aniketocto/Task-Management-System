@@ -27,15 +27,17 @@ const ManageLeadTable = () => {
     }
   };
 
-
   const toggleFollowUp = async (id, attemptKey, currVal) => {
     try {
-      const payload = { followUp: { [attemptKey]: !currVal } };
+      const leadToUpdate = leads.find((l) => l._id === id);
+      const newFollowUp = {
+        ...(leadToUpdate.followUp || {}),
+        [attemptKey]: !currVal,
+      };
+
       const { data } = await axiosInstance.put(
         API_PATHS.LEADS.UPDATE_LEAD_BY_ID(id),
-        {
-          followUp: payload.followUp,
-        }
+        { followUp: newFollowUp }
       );
       setLeads((prev) => prev.map((l) => (l._id === id ? data.lead : l)));
     } catch (err) {
@@ -58,12 +60,15 @@ const ManageLeadTable = () => {
   return (
     <div className="relative bg-gray-900 rounded-lg shadow-lg p-4 w-full">
       {/* Container with controlled width and horizontal scroll */}
-      <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg">
+      <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">
         {/* Table wrapper with fixed width */}
-        <div className="relative" style={{ minWidth: "3200px" }}>
+        <div className="relative" style={{ minWidth: "3400px" }}>
           <table className="w-full bg-gray-900">
             {/* Define column widths */}
             <colgroup>
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
               <col style={{ width: "150px" }} />
               <col style={{ width: "70px" }} />
               <col style={{ width: "50px" }} />
@@ -88,61 +93,79 @@ const ManageLeadTable = () => {
               <tr className="border-b border-gray-700">
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700 sticky left-0 z-40 bg-gray-800"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700 sticky left-0 z-40 bg-gray-800"
                 >
                   Company
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Name
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Email
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Job Profile
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Status
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Type
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Category
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Credential Deck
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Discovery Call
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Pitch
                 </th>
                 <th
                   rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Lead Came
                 </th>
                 <th
                   colSpan="5"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700 text-center"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700 text-center"
                 >
                   Follow Up
                 </th>
                 <th
                   colSpan="5"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700 text-center"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700 text-center"
                 >
                   Attachments
                 </th>
@@ -164,7 +187,7 @@ const ManageLeadTable = () => {
                 ].map((label) => (
                   <th
                     key={label}
-                    className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                    className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                   >
                     {label}
                   </th>
@@ -178,7 +201,7 @@ const ManageLeadTable = () => {
                 ].map((label) => (
                   <th
                     key={label}
-                    className="px-4 py-2 text-sm font-semibold text-gray-300 border-r border-gray-700"
+                    className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                   >
                     {label}
                   </th>
@@ -192,36 +215,52 @@ const ManageLeadTable = () => {
                   key={lead._id || index}
                   className="border-b border-gray-700 hover:bg-gray-800"
                 >
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700 sticky left-0 z-20 bg-gray-800">
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700 sticky left-0 z-20 bg-gray-800">
                     {lead.companyName || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.cName || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.email || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.jobProfile || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
                     {lead.status || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
                     {lead.type || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
                     {lead.category || "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
-                    {moment(lead.credentialDeckDate).format("DD-MM-YYYY") ||
-                      "-"}
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.credentialDeckDate
+                      ? moment(lead.credentialDeckDate).format("DD-MM-YYYY")
+                      : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
-                    {moment(lead.discoveryCallDate).format("DD-MM-YYYY") || "-"}
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.discoveryCallDate
+                      ? moment(lead.discoveryCallDate).format("DD-MM-YYYY")
+                      : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
-                    {moment(lead.pitchDate).format("DD-MM-YYYY hh.mm A") || "-"}
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.pitchDate
+                      ? moment(lead.pitchDate).format("DD-MM-YYYY hh:mm A")
+                      : "-"}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700">
-                    {moment(lead.leadCame).format("DD-MM-YYYY") || "-"}
+                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                    {lead.leadCameDate
+                      ? moment(lead.leadCameDate).format("DD-MM-YYYY")
+                      : "-"}
                   </td>
                   {[1, 2, 3, 4, 5].map((attempt) => (
                     <td
                       key={`attempt-${attempt}`}
-                      className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700"
-                    >
+                      className="px-4 py-2 text-sm text-center text-gray-300 border-b border-gray-700"
+                    > 
                       <input
                         type="checkbox"
                         checked={lead.followUp?.[`attempt${attempt}`] || false}
@@ -232,7 +271,7 @@ const ManageLeadTable = () => {
                             lead.followUp?.[`attempt${attempt}`]
                           )
                         }
-                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
                       />
                     </td>
                   ))}
@@ -249,14 +288,14 @@ const ManageLeadTable = () => {
                     return (
                       <td
                         key={key}
-                        className="px-4 py-2 text-sm text-gray-300 border-r border-gray-700"
+                        className="px-4 text-center py-2 text-sm text-gray-300 border-b border-gray-700"
                       >
                         {url ? (
                           <a
                             href={url}
                             target="_blank"
                             rel="noopener"
-                            className="text-[#1368ec] hover:underline"
+                            className="text-[#E43941] hover:underline"
                           >
                             View
                           </a>
