@@ -7,6 +7,9 @@ import { API_PATHS } from "../../utils/apiPaths";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstance";
 import { useLocation, useNavigate } from "react-router-dom";
+import { LuTrash } from "react-icons/lu";
+import Modal from "components/layouts/Modal";
+import DeleteAlert from "components/layouts/DeleteAlert";
 
 const CreateLead = () => {
   const [loading, setLoading] = useState(false);
@@ -32,7 +35,7 @@ const CreateLead = () => {
       invoiceUrl: "",
       websiteUrl: "",
     },
-    remarks: "",
+    remark: "",
     followUp: {
       attempt1: false,
       attempt2: false,
@@ -71,7 +74,7 @@ const CreateLead = () => {
         invoiceUrl: "",
         websiteUrl: "",
       },
-      remarks: "",
+      remark: "",
       followUp: {
         attempt1: false,
         attempt2: false,
@@ -101,9 +104,9 @@ const CreateLead = () => {
         leadData
       );
 
-      if (response.status === 200) {
-        toast.success("Lead created successfully");
+      if (response.status === 201) {
         clearData();
+        toast.success("Lead created successfully");
         navigate("/manage-lead");
       }
     } catch (error) {
@@ -130,12 +133,12 @@ const CreateLead = () => {
           status: leadInfo.status,
           type: leadInfo.type,
           category: leadInfo.category,
-          leadCameDate: leadInfo.leadCameDate,
-          credentialDeckDate: leadInfo.credentialDeckDate,
-          discoveryCallDate: leadInfo.discoveryCallDate,
-          pitchDate: leadInfo.pitchDate,
+          leadCameDate: leadInfo.leadCameDate || null,
+          credentialDeckDate: leadInfo.credentialDeckDate || null,
+          discoveryCallDate: leadInfo.discoveryCallDate || null,
+          pitchDate: leadInfo.pitchDate || null,
           attachments: leadInfo.attachments || [],
-          remarks: leadInfo.remarks,
+          remark: leadInfo.remark,
           followUp: leadInfo.followUp || [],
         }));
       }
@@ -154,13 +157,29 @@ const CreateLead = () => {
       );
       if (response.status === 200) {
         toast.success("Lead updated successfully");
-        clearData();
-        navigate("/manage-lead");
+        // clearData();
+        // navigate("/manage-lead");
       }
+      console.log(response.data);
     } catch (error) {
       console.error("Error updating lead:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteLead = () => {
+    try {
+      const response = axiosInstance.delete(
+        API_PATHS.LEADS.DELETE_LEAD_BY_ID(leadId)
+      );
+      if (response) {
+        setOpenDeleteAlert(false);
+        toast.success("Lead deleted successfully");
+        navigate("/manage-lead");
+      }
+    } catch (error) {
+      console.error("Error deleting lead:", error);
     }
   };
 
@@ -169,6 +188,7 @@ const CreateLead = () => {
 
     if (leadId) {
       updateLead();
+      return;
     }
 
     createLead();
@@ -186,10 +206,20 @@ const CreateLead = () => {
       <div className="mt-5">
         <div className="grid grid-cols-1 md:col-auto mt-4">
           <div className="form-card col-span-3">
-            <h2 className="text-xl md:text-2xl text-white font-semibold">
-              Comapny Details
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl md:text-2xl text-white font-semibold">
+                Comapny Details
+              </h2>
 
+              {leadId && (
+                <button
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
+                  onClick={() => setOpenDeleteAlert(true)}
+                >
+                  <LuTrash className="text-base" /> Delete
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-12 gap-2 mt-4">
               {/* Company Name */}
               <div className="col-span-12 md:col-span-3">
@@ -395,15 +425,15 @@ const CreateLead = () => {
             <div className="grid grid-cols-12 gap-2 mt-4">
               <div className="col-span-12 ">
                 <label className="text-xs font-medium text-slate-200">
-                  Remarks
+                  remark
                 </label>
                 <textarea
                   className="form-input"
-                  value={leadData.remarks}
+                  value={leadData.remark}
                   onChange={({ target }) =>
-                    handleValueChange("remarks", target.value)
+                    handleValueChange("remark", target.value)
                   }
-                  placeholder="Enter remarks"
+                  placeholder="Enter remark"
                 />
               </div>
             </div>
@@ -420,6 +450,17 @@ const CreateLead = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={openDeleteAlert}
+        onClose={() => setOpenDeleteAlert(false)}
+        title="Delete Lead"
+      >
+        <DeleteAlert
+          content="Are you sure you want to delete this lead?"
+          onDelete={() => deleteLead()}
+        />
+      </Modal>
     </DashboardLayout>
   );
 };

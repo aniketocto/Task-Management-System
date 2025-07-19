@@ -147,10 +147,68 @@ const deleteLead = async (req, res) => {
   }
 };
 
+const getLeadDashboardData = async (req, res) => {
+  try {
+    // Fetch Statistic
+    const totalLeads = await Leads.countDocuments();
+    const followUpLeads = await Leads.countDocuments({ status: "followUp" });
+    const deadLeads = await Leads.countDocuments({ status: "dead" });
+    const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
+    const argumentLeads = await Leads.countDocuments({ status: "argument" });
+    const pitchLeads = await Leads.countDocuments({ status: "pitch" });
+    const negotiationLeads = await Leads.countDocuments({ status: "negotiation" });
+
+    const leadStatuses = ["followUp", "dead", "onboarded", "argument", "pitch", "negotiation" ];
+
+    const leadDistributionRaw = await Leads.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const leadDistribution = leadStatuses.reduce((acc, status) => {
+      const formattedKey = status.replace(/\s+/g, "");
+      acc[formattedKey] =
+        leadDistributionRaw.find((item) => item._id === status)?.count || 0;
+      return acc;
+    }, {});
+    
+
+    const recentLeads = await Leads.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select(
+        "companyName status type credentialDeckDate discoveryCallDate pitchDate attachments"
+      );
+
+    res.json({
+      statistic: {
+        totalLeads,
+        followUpLeads,
+        deadLeads,
+        onboardedLeads,
+        argumentLeads,
+        pitchLeads,
+        negotiationLeads
+      },
+      charts: {
+        leadDistribution,
+      },
+      recentLeads,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createLead,
   updateLead,
   getLeads,
   getLead,
   deleteLead,
+  getLeadDashboardData,
 };

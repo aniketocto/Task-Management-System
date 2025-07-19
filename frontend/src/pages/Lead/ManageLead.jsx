@@ -4,9 +4,6 @@ import React, { useState } from "react";
 import ManageLeadTable from "../../components/layouts/ManageLeadTable";
 
 const ManageLead = () => {
-  const [leads, setLeads] = useState([]);
-  const navigate = useNavigate();
-
   return (
     <DashboardLayout activeMenu="Manage Lead">
       <div className="my-5">
