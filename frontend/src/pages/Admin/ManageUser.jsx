@@ -41,11 +41,8 @@ const ManageUser = () => {
   useEffect(() => {
     getAllUsers();
     getAvailableMonths();
-  }, []);
+  }, [filterMonth]);
 
-  useEffect(() => {
-    getAllUsers();
-  }, [filterMonth, allUsers]);
 
   return (
     <DashboardLayout activeMenu="Team Members">

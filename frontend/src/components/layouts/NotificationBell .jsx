@@ -67,12 +67,11 @@ const NotificationBell = () => {
   // toggle open/close; if closing, delete immediately
   const handleBellClick = () => {
     if (open) {
-      markAllAsReadAndDelete();
+      // markAllAsReadAndDelete();
     }
     setOpen((o) => !o);
   };
 
-  console.log(notifications)
 
   // close on outside click & delete immediately
   useEffect(() => {
@@ -89,15 +88,16 @@ const NotificationBell = () => {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleClick = (taskData) => {
-    console.log(taskData);
     if (user?.role === "user") {
       navigate(`/user/task-detail/${taskData}`);
-      markAllAsReadAndDelete();
+      // markAllAsReadAndDelete();
     } else {
       navigate("/admin/create-task", { state: { taskId: taskData } });
-      markAllAsReadAndDelete();
+      // markAllAsReadAndDelete();
     }
   };
+
+  console.log(notifications);
 
   return (
     <div ref={containerRef} className="relative">

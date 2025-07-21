@@ -9,11 +9,11 @@ const getTasks = async (req, res) => {
       status,
       month, // e.g. "2025-06"
       page = 1,
-      limit = 12,
+      limit = 10,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,
-      fields, // e.g. "tasks,statusSummary,monthlyData,availableMonths"
+      fields, 
     } = req.query;
 
     // === Decide which bits to return ===
