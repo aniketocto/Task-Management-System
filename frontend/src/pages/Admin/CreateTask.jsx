@@ -15,6 +15,7 @@ import { UserContext } from "../../context/userContext";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import TaskDueDateField from "../../components/Inputs/TaskDueDateField";
+import CategorySelect from "components/Inputs/CategorySelect";
 
 const CreateTask = () => {
   const { user } = useContext(UserContext);
@@ -24,6 +25,7 @@ const CreateTask = () => {
   const [taskData, setTaskData] = useState({
     title: "",
     description: "",
+    companyName: "",
     priority: "low",
     dueDate: null,
     dueDateStatus: "",
@@ -31,6 +33,7 @@ const CreateTask = () => {
     assignedTo: [],
     todoChecklist: [],
     attachments: [],
+    createdAt: null,
   });
 
   const [currentTask, setCurrentTask] = useState(null);
@@ -48,6 +51,7 @@ const CreateTask = () => {
     setTaskData({
       title: "",
       description: "",
+      companyName: "",
       priority: "low",
       dueDate: null,
       dueDateStatus: "",
@@ -60,6 +64,7 @@ const CreateTask = () => {
 
   // Create Tasks
   const createTask = async () => {
+    console.log(taskData);
     setLoading(true);
     clearData();
 
@@ -181,6 +186,7 @@ const CreateTask = () => {
           ...prevData,
           title: taskInfo.title,
           description: taskInfo.description,
+          companyName: taskInfo.companyName,
           priority: taskInfo.priority,
           dueDate: taskInfo.dueDate
             ? moment(taskInfo.dueDate).format("YYYY-MM-DD")
@@ -190,6 +196,7 @@ const CreateTask = () => {
           assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
           todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
+          createdAt: taskInfo.createdAt,
         }));
 
         getUserbyId(taskInfo.createdBy);
@@ -286,7 +293,8 @@ const CreateTask = () => {
                 </h2>
                 {taskId && (
                   <p className="text-white text-xs font-regular">
-                    Created By: {createdBy}
+                    Created By: {createdBy} on{" "}
+                    {moment(taskData.createdAt).format("DD MMMM YYYY")}
                   </p>
                 )}
               </div>
@@ -299,6 +307,21 @@ const CreateTask = () => {
                   <LuTrash className="text-base" /> Delete
                 </button>
               )}
+            </div>
+
+            {/* Company */}
+
+            <div className="mt-4">
+              <label className="text-xs font-medium text-slate-200">
+                Company
+              </label>
+              <CategorySelect
+                value={taskData.companyName}
+                onChange={(newCompany) =>
+                  handleValueChange("companyName", newCompany)
+                }
+                from="tasks"
+              />
             </div>
 
             {/* Title */}

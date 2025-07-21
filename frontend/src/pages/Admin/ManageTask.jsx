@@ -138,8 +138,6 @@ const ManageTask = () => {
     ]
   );
 
-  console.log("Status Summary:", statusSummary);
-
   // On mount, and whenever department filter changes, reload month dropdown
   useEffect(() => {
     fetchAvailableMonths();
@@ -206,30 +204,6 @@ const ManageTask = () => {
 
           {tabs[0]?.count > 0 && (
             <div className="flex flex-wrap items-center gap-4">
-              {/* Department */}
-              {departments.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Department:
-                  </label>
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => {
-                      setFilterDepartment(e.target.value);
-                      setPage(1);
-                    }}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    <option value="">All Departments</option>
-                    {departments.map((d) => (
-                      <option key={d} value={d} className="text-black">
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-
               {/* Month */}
               {availableMonths.length > 0 && (
                 <>
@@ -258,6 +232,30 @@ const ManageTask = () => {
                           {m.label}
                         </option>
                       ))}
+                  </select>
+                </>
+              )}
+
+              {/* Department */}
+              {departments.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Department:
+                  </label>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => {
+                      setFilterDepartment(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map((d) => (
+                      <option key={d} value={d} className="text-black">
+                        {d}
+                      </option>
+                    ))}
                   </select>
                 </>
               )}
@@ -312,6 +310,7 @@ const ManageTask = () => {
               <TaskCard
                 key={item._id}
                 title={item.title}
+                company={item.companyName}
                 desc={item.description}
                 priority={item.priority}
                 status={item.status}

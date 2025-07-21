@@ -628,6 +628,7 @@ const createTask = async (req, res) => {
     const {
       title,
       description,
+      companyName,
       assignedTo,
       dueDate,
       priority,
@@ -644,6 +645,7 @@ const createTask = async (req, res) => {
     const task = await Task.create({
       title,
       description,
+      companyName,
       assignedTo,
       dueDate,
       priority,
@@ -711,6 +713,7 @@ const updateTask = async (req, res) => {
     if (role === "admin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
+      task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
 
@@ -734,6 +737,7 @@ const updateTask = async (req, res) => {
     if (role === "superAdmin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
+      task.companyName = req.body.companyName || task.companyName;
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;

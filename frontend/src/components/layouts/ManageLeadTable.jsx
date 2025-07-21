@@ -213,9 +213,9 @@ const ManageLeadTable = () => {
               {leads.map((lead, index) => (
                 <tr
                   key={lead._id || index}
-                  className="border-b border-gray-700 hover:bg-gray-800"
+                  className="border-b border-gray-700 "
                 >
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 sticky left-0 z-20 bg-gray-800">
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b  border-gray-700 sticky left-0 z-20 bg-gray-800">
                     {lead.companyName || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">

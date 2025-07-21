@@ -229,6 +229,7 @@ const MyTasks = () => {
               <TaskCard
                 key={item._id}
                 title={item.title}
+                company={item.companyName}
                 desc={item.description}
                 priority={item.priority}
                 status={item.status}
