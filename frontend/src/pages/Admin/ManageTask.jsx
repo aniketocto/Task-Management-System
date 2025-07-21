@@ -24,8 +24,9 @@ const ManageTask = () => {
   const [filterPriority, setFilterPriority] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 12;
+  const tasksPerPage = 5;
   const [totalPages, setTotalPages] = useState(1);
+  const [statusSummary, setStatusSummary] = useState({});
 
   // --- data containers ---
   const [allTasks, setAllTasks] = useState([]);
@@ -71,12 +72,34 @@ const ManageTask = () => {
             sortOrder,
             sortBy,
             // we don't request monthlyData here any more
-            fields: "tasks,statusSummary",
+            fields:
+              "tasks,statusSummary,monthSummary,departmentSummary,prioritySummary",
           },
         });
 
         const tasks = resp.data.tasks || [];
+        if (tasks.length === 0) {
+          if (filterStatus !== "All") {
+            setFilterStatus("All");
+            return;
+          }
+          if (filterMonth) {
+            setFilterMonth("");
+            return;
+          }
+          if (filterDepartment) {
+            setFilterDepartment("");
+            return;
+          }
+          if (filterPriority) {
+            setFilterPriority("");
+            return;
+          }
+        }
         setAllTasks(tasks);
+
+        const { statusSummary } = resp.data;
+        setStatusSummary(statusSummary || {});
 
         // derive departments list from tasks
         const uniqDepts = Array.from(
@@ -105,8 +128,17 @@ const ManageTask = () => {
         console.error("Error fetching tasks:", err);
       }
     },
-    [filterStatus, filterMonth, filterDepartment, filterPriority, sortOrder, sortBy]
+    [
+      filterStatus,
+      filterMonth,
+      filterDepartment,
+      filterPriority,
+      sortOrder,
+      sortBy,
+    ]
   );
+
+  console.log("Status Summary:", statusSummary);
 
   // On mount, and whenever department filter changes, reload month dropdown
   useEffect(() => {
@@ -210,9 +242,10 @@ const ManageTask = () => {
                       setFilterMonth(e.target.value);
                       setPage(1);
                     }}
+                    disabled={statusSummary?.all === 0}
                     className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    {/* <option value="">All Months</option> */}
+                    <option value="">All Months</option>
                     {availableMonths
                       .sort((a, b) => b.value.localeCompare(a.value))
                       .slice(0, 12)

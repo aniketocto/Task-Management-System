@@ -9,11 +9,11 @@ const getTasks = async (req, res) => {
       status,
       month, // e.g. "2025-06"
       page = 1,
-      limit = 12,
+      limit = 10,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,
-      fields, // e.g. "tasks,statusSummary,monthlyData,availableMonths"
+      fields, 
     } = req.query;
 
     // === Decide which bits to return ===
@@ -467,13 +467,13 @@ const getAdminTasks = async (req, res) => {
   try {
     const {
       status,
-      month,       // e.g. "2025-06"
+      month, // e.g. "2025-06"
       page = 1,
       limit = 12,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,
-      fields,      // e.g. "tasks,statusSummary,monthlyData,availableMonths"
+      fields, // e.g. "tasks,statusSummary,monthlyData,availableMonths"
     } = req.query;
 
     // Which sections to return:
@@ -492,13 +492,13 @@ const getAdminTasks = async (req, res) => {
     let filter = { assignedTo: req.user._id };
 
     // Apply optional filters:
-    if (status)   filter.status   = status;
+    if (status) filter.status = status;
     if (priority) filter.priority = priority;
     if (month) {
       const [y, m] = month.split("-");
       filter.createdAt = {
         $gte: new Date(y, m - 1, 1),
-        $lte: new Date(y, m,  0, 23, 59, 59, 999),
+        $lte: new Date(y, m, 0, 23, 59, 59, 999),
       };
     }
 
@@ -574,7 +574,9 @@ const getAdminTasks = async (req, res) => {
 
     if (include.includes("monthlyData")) {
       if (month) {
-        const only = fullMonthlyData.monthsData.filter((m) => m.value === month);
+        const only = fullMonthlyData.monthsData.filter(
+          (m) => m.value === month
+        );
         const totalForMonth = only.reduce((sum, m) => sum + m.count, 0);
         result.monthlyData = {
           monthsData: only,
@@ -629,7 +631,7 @@ const createTask = async (req, res) => {
         const n = await Notification.create({
           user: userId,
           message: `You have been assigned a new task: ${task.title}`,
-          task: task._id,
+          taskId: task._id,
           type: "task",
         });
         return n;
@@ -639,7 +641,6 @@ const createTask = async (req, res) => {
     // emit notifications
     notifications.forEach((notification) => {
       const room = notification.user.toString();
-      console.log(`📢 Emitting notification to room: ${room}`);
       io.to(room).emit("new-notification", notification);
     });
 
@@ -737,7 +738,7 @@ const updateTask = async (req, res) => {
             Notification.create({
               user: userId,
               message: `You have been newly assigned to task: ${updatedTask.title}`,
-              task: updatedTask._id,
+              taskId: updatedTask._id,
               type: "task",
             })
           )
