@@ -148,20 +148,20 @@ const SignUp = () => {
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <Input
+            {/* <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               label="Name"
               placeholder="Enter your name"
               type="text"
-            />
-            <Input
+            /> */}
+            {/* <Input
               value={email}
               onChange={({ target }) => setEmail(target.value)}
               label="Email Address"
               placeholder="example@getunstoppable.in"
               type="text"
-            />
+            /> */}
             {isAdmin && (
               <Input
                 value={adminInviteToken}
@@ -191,20 +191,20 @@ const SignUp = () => {
               ]}
             />
 
-            <Input
+            {/* <Input
               value={password}
               onChange={({ target }) => setPassword(target.value)}
               label="Password"
               placeholder="Password"
               type="password"
-            />
-            <Input
+            /> */}
+            {/* <Input
               value={confirmPassword}
               onChange={({ target }) => setConfirmPassword(target.value)}
               label="Confirm Password"
               placeholder="ConfirmPassword"
               type="password"
-            />
+            /> */}
           </div>
 
           {Array.isArray(error) && error.length > 0 && (
@@ -220,12 +220,12 @@ const SignUp = () => {
             onError={() => console.log("Google login failed")}
           />
 
-          <button
+          {/* <button
             type="submit"
             className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >
             Sign In
-          </button>
+          </button> */}
           <p className="text-[13px] text-slate-50 mt-3">
             Already have an account?{" "}
             <Link to="/login" className="text-[#E43941] font-medium ">

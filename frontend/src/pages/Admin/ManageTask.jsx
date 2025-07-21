@@ -24,7 +24,7 @@ const ManageTask = () => {
   const [filterPriority, setFilterPriority] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 5;
+  const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
@@ -343,7 +343,7 @@ const ManageTask = () => {
           previousClassName={
             "px-3 py-1 cursor-pointer border text-white rounded"
           }
-          nextClassName={"px-3 py-1 border cursor-pointer text-white rounded"}
+          nextClassName={"px-3 py-1 border  cursor-pointer text-white rounded"}
           disabledClassName={"opacity-50 cursor-not-allowed"}
         />
       </div>

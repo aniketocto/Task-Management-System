@@ -8,6 +8,7 @@ const ManageUser = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
+  const [refreshFlag, setRefreshFlag] = useState(false);
 
   const getAllUsers = async () => {
     try {
@@ -39,22 +40,31 @@ const ManageUser = () => {
   // const handleUserDownloadReports = async () => {};
 
   useEffect(() => {
-    getAllUsers();
     getAvailableMonths();
-  }, [filterMonth]);
+  }, []);
 
+  // 2️⃣ Whenever filterMonth OR refreshFlag changes:
+  useEffect(() => {
+    getAllUsers();
+  }, [filterMonth, refreshFlag]);
+
+  // callback to hand down to UserCard
+  const handleUserDeleted = () => {
+    // flip the flag, which will re-run getAllUsers()
+    setRefreshFlag((f) => !f);
+  };
 
   return (
     <DashboardLayout activeMenu="Team Members">
       <div className="mt-5 mb-10">
-        <div className="flex md:flex-row md:items-center justify-between">
-          <h2 className="text-2xl md:text-xl font-medium text-gray-50">
+        <div className="flex md:flex-row items-center justify-start gap-4">
+          <h2 className="text-lg md:text-xl font-medium text-gray-50">
             Team Members
           </h2>
 
           {/* Month filter */}
           {availableMonths.length > 0 && (
-            <div className="mb-4 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-50">Month:</label>
               <select
                 value={filterMonth}
@@ -65,7 +75,11 @@ const ManageUser = () => {
                 {[...availableMonths]
                   .sort((a, b) => b.value.localeCompare(a.value)) // latest first
                   .map((m) => (
-                    <option key={m.value} value={m.value} className="text-gray-600">
+                    <option
+                      key={m.value}
+                      value={m.value}
+                      className="text-gray-600"
+                    >
                       {m.label}
                     </option>
                   ))}
@@ -93,7 +107,7 @@ const ManageUser = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {users.map((user) => (
-                  <UserCard key={user._id} userInfo={user} />
+                  <UserCard key={user._id} userInfo={user} onUserDeleted={handleUserDeleted} />
                 ))}
               </div>
             </div>

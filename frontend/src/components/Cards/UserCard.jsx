@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { LuTrash } from "react-icons/lu";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 
-const UserCard = ({ userInfo }) => {
+const UserCard = ({ userInfo, onUserDeleted }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const navigate = useNavigate();
 
@@ -20,8 +20,8 @@ const UserCard = ({ userInfo }) => {
 
       if (response) {
         setOpenDeleteAlert(false);
-        toast.success("Task deleted successfully");
-        navigate("/admin/users");
+        toast.success("User deleted successfully");
+        onUserDeleted?.();
       }
     } catch (error) {
       toast.error("Error deleting task. Task not deleted");
@@ -40,7 +40,9 @@ const UserCard = ({ userInfo }) => {
           />
 
           <div className="">
-            <p className="text-sm font-medium text-gray-100">{userInfo?.name}</p>
+            <p className="text-sm font-medium text-gray-100">
+              {userInfo?.name}
+            </p>
             <p className="text-xs text-gray-200">{userInfo?.department}</p>
             <p className="text-xs text-gray-100">{userInfo?.email}</p>
           </div>
