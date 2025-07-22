@@ -3,6 +3,7 @@ const { protect, allowRoleOrDept } = require("../middlewares/authMiddleware");
 const {
   getCompany,
   createCompany,
+  deleteCompany,
 } = require("../controllers/companyController");
 const router = express.Router();
 
@@ -16,6 +17,11 @@ router.post(
   protect,
   createCompany
 );
-
+router.delete(
+  "/",
+  protect,
+  allowRoleOrDept(["superAdmin", "admin"], ["BusinessDevelopment"]),
+  deleteCompany
+);
 
 module.exports = router;

@@ -11,7 +11,7 @@ const getTasks = async (req, res) => {
       status,
       month, // e.g. "2025-06"
       page = 1,
-      limit = 10,
+      limit = 12,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,

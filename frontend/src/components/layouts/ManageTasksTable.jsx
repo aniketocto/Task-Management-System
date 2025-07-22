@@ -133,7 +133,7 @@ const ManageTasksTable = ({
               )}
             </th>
 
-            <th className="px-4 py-2 text-sm font-semibold text-gray-300"></th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">Alert</th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Assigned To
             </th>

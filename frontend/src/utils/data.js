@@ -48,12 +48,7 @@ export const SIDE_MENU_SUPER_ADMIN_DATA = [
     icon: LuLayoutDashboard,
     path: "/admin/dashboard",
   },
-  // {
-  //   id: "02",
-  //   label: "Lead Dashboard",
-  //   icon: MdOutlineLeaderboard,
-  //   path: "/leads",
-  // },
+   
   {
     id: "03",
     label: "Manage Tasks",

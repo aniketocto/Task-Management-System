@@ -298,7 +298,6 @@ const CreateLead = () => {
                   onChange={(newCategory) =>
                     handleValueChange("category", newCategory)
                   }
-                  from="leads"
                 />
               </div>
 

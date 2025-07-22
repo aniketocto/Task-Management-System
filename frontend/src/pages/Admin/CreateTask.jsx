@@ -15,7 +15,7 @@ import { UserContext } from "../../context/userContext";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import TaskDueDateField from "../../components/Inputs/TaskDueDateField";
-import CategorySelect from "components/Inputs/CategorySelect";
+import CompanySelect from "components/Inputs/CompanySelect";
 
 const CreateTask = () => {
   const { user } = useContext(UserContext);
@@ -315,12 +315,12 @@ const CreateTask = () => {
               <label className="text-xs font-medium text-slate-200">
                 Company
               </label>
-              <CategorySelect
+              <CompanySelect
                 value={taskData.companyName}
                 onChange={(newCompany) =>
                   handleValueChange("companyName", newCompany)
                 }
-                from="tasks"
+                
               />
             </div>
 

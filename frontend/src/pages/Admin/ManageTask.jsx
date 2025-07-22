@@ -24,7 +24,7 @@ const ManageTask = () => {
   const [filterPriority, setFilterPriority] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 10;
+  const tasksPerPage = 12;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
@@ -219,7 +219,7 @@ const ManageTask = () => {
                     disabled={statusSummary?.all === 0}
                     className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    <option value="">All Months</option>
+                    {/* <option value="">All Months</option> */}
                     {availableMonths
                       .sort((a, b) => b.value.localeCompare(a.value))
                       .slice(0, 12)

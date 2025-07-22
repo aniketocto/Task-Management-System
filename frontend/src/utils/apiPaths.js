@@ -50,7 +50,8 @@ export const API_PATHS = {
       `/api/tasks/${task_id}/due-date-approval`,
   },
   CATEGORY: {
-    GET_CATEGORIES: "/api/category"
+    GET_CATEGORIES: "/api/category",
+
   },
   LEADS: {
     CREATE_LEAD: "api/leads/create-lead",

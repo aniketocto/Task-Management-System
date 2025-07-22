@@ -24,4 +24,18 @@ const createCompany = async (req, res) => {
   }
 };
 
-module.exports = { getCompany, createCompany };
+const deleteCompany = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await companySchema.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+    res.status(200).json({ message: "Company deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting Company:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { getCompany, createCompany, deleteCompany };
