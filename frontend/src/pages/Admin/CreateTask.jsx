@@ -143,6 +143,11 @@ const CreateTask = () => {
     setError([]);
 
     // Input Validation
+    if (!taskData.companyName) {
+      setError((prevError) => [...prevError, "Please select company name"]);
+      return;
+    }
+
     if (!taskData.title.trim()) {
       setError((prevError) => [...prevError, "Please enter task title"]);
       return;
