@@ -109,8 +109,9 @@ const ViewTaskDetails = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base md:text-2xl text-slate-50 font-medium">
-                  {task?.title}
+                  {task?.companyName}
                 </h2>
+                
                 <p className="text-white text-xs font-regular">
                   Created By: {createdBy}
                 </p>
@@ -124,6 +125,9 @@ const ViewTaskDetails = () => {
               </div>
             </div>
 
+            <div className="mt-4">
+              <InfoBox label="Title" value={task?.title} />
+            </div>
             <div className="mt-4">
               <InfoBox label="Description" value={task?.description} />
             </div>

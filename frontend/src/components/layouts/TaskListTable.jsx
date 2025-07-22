@@ -68,7 +68,7 @@ const TaskListTable = ({ tableData }) => {
             <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">
               Due Date
             </th>
-            <th className="px-4 py-2 text-sm font-semibold text-gray-300"></th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">Alert</th>
           </tr>
         </thead>
         <tbody>

@@ -2,6 +2,8 @@ const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const User = require("../models/User");
 
+// In taskControllers.js
+
 const getTasks = async (req, res) => {
   try {
     const {
@@ -9,14 +11,14 @@ const getTasks = async (req, res) => {
       status,
       month, // e.g. "2025-06"
       page = 1,
-      limit = 10,
+      limit = 12,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,
-      fields, 
+      fields,
     } = req.query;
 
-    // === Decide which bits to return ===
+    // === figure out which sections to include ===
     const allSections = [
       "tasks",
       "statusSummary",
@@ -27,7 +29,7 @@ const getTasks = async (req, res) => {
       ? fields.split(",").map((f) => f.trim())
       : allSections;
 
-    // === Build your main task filter ===
+    // === build your filter & pagination ===
     const skip = (page - 1) * limit;
     let filter = {};
     if (status) filter.status = status;
@@ -40,7 +42,7 @@ const getTasks = async (req, res) => {
       };
     }
 
-    // === Department-based access control ===
+    // === department ACL ===
     const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
     let baseFilter = isPrivileged
       ? {}
@@ -49,11 +51,9 @@ const getTasks = async (req, res) => {
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
       const deptIds = usersInDept.map((u) => u._id);
-
       if (!isPrivileged) {
-        if (!deptIds.some((id) => id.equals(req.user._id))) {
-          return res.json({}); // no access
-        }
+        // non-privileged only see their own tasks
+        if (!deptIds.some((id) => id.equals(req.user._id))) return res.json({});
         filter.assignedTo = { $in: [req.user._id] };
       } else {
         filter.assignedTo = { $in: deptIds };
@@ -62,32 +62,72 @@ const getTasks = async (req, res) => {
       filter = { ...filter, ...baseFilter };
     }
 
-    // === Prepare the response object ===
-    const result = {};
+    // === fetch the raw Task documents ===
+    let tasks = await Task.find(filter)
+      .populate("assignedTo", "name email profileImageUrl department")
+      .sort(
+        sortBy === "dueDate"
+          ? { dueDate: sortOrder === "asc" ? 1 : -1, createdAt: -1 }
+          : { createdAt: sortOrder === "asc" ? 1 : -1 }
+      )
+      .skip(skip)
+      .limit(Number(limit));
+
+    //
+    // ─── A ─── RECALCULATE & PERSIST EACH TASK’S PROGRESS + STATUS ───
+    //
+    await Promise.all(
+      tasks.map(async (taskDoc) => {
+        // 1) completed vs total checklist items → progress%
+        const completedCount = taskDoc.todoChecklist.filter(
+          (i) => i.completed
+        ).length;
+        const totalItems = taskDoc.todoChecklist.length;
+        const newProgress =
+          totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+
+        // 2) determine newStatus by comparing now vs dueDate end-of-day
+        const now = new Date();
+        const dueDateEnd = new Date(taskDoc.dueDate);
+        dueDateEnd.setHours(23, 59, 59, 999);
+
+        let newStatus;
+        if (newProgress === 100) {
+          newStatus = now > dueDateEnd ? "delayed" : "completed";
+        } else if (now > dueDateEnd) {
+          newStatus = "pending";
+        } else if (newProgress > 0) {
+          newStatus = "inProgress";
+        } else {
+          newStatus = "new";
+        }
+
+        // 3) if anything changed, write it back
+        if (taskDoc.progress !== newProgress || taskDoc.status !== newStatus) {
+          taskDoc.progress = newProgress;
+          taskDoc.status = newStatus;
+          await taskDoc.save();
+        }
+      })
+    );
+
+    //
+    // ─── B ─── TRANSFORM FOR RESPONSE ───
+    //
+    // now that DB is in sync, we re-map to plain objects including completed count
+    const transformed = tasks.map((t) => ({
+      ...t._doc,
+      completedTodoCount: t.todoChecklist.filter((c) => c.completed).length,
+    }));
 
     // 1) tasks + pagination
-    if (include.includes("tasks")) {
-      let tasks = await Task.find(filter)
-        .populate("assignedTo", "name email profileImageUrl department")
-        .sort(
-          sortBy === "dueDate"
-            ? { dueDate: sortOrder === "asc" ? 1 : -1, createdAt: -1 }
-            : { createdAt: sortOrder === "asc" ? 1 : -1 }
-        )
-        .skip(skip)
-        .limit(Number(limit));
+    const totalCount = include.includes("tasks")
+      ? await Task.countDocuments(filter)
+      : undefined;
 
-      tasks = tasks.map((t) => ({
-        ...t._doc,
-        completedTodoCount: t.todoChecklist.filter((c) => c.completed).length,
-      }));
-      const totalCount = await Task.countDocuments(filter);
+    const result = { tasks: transformed, totalCount };
 
-      result.tasks = tasks;
-      result.totalCount = totalCount;
-    }
-
-    // 2) status summary
+    // 2) statusSummary (re-query now that statuses are current)
     if (include.includes("statusSummary")) {
       const countWith = (s) => Task.countDocuments({ ...filter, status: s });
       const [
@@ -105,7 +145,6 @@ const getTasks = async (req, res) => {
         countWith("completed"),
         countWith("delayed"),
       ]);
-
       result.statusSummary = {
         all: allTasks,
         newTasks,
@@ -116,40 +155,31 @@ const getTasks = async (req, res) => {
       };
     }
 
-    // 3) monthlyData & 4) availableMonths
+    // 3) & 4) monthlyData & availableMonths (unchanged)
     let fullMonthlyData;
     if (
       include.includes("monthlyData") ||
       include.includes("availableMonths")
     ) {
-      // run your heavy aggregation once
       fullMonthlyData = await getEnhancedMonthlyTaskData(
         isPrivileged ? {} : { assignedTo: { $in: [req.user._id] } },
         department
       );
     }
-
     if (include.includes("availableMonths")) {
-      // only label+value for dropdown
       result.availableMonths = fullMonthlyData.monthsData.map((m) => ({
         label: m.label,
         value: m.value,
       }));
     }
-
     if (include.includes("monthlyData")) {
       if (month) {
-        // narrow to just the filtered month
         const only = fullMonthlyData.monthsData.filter(
           (m) => m.value === month
         );
         const totalForMonth = only.reduce((sum, m) => sum + m.count, 0);
-        result.monthlyData = {
-          monthsData: only,
-          allTimeTotal: totalForMonth,
-        };
+        result.monthlyData = { monthsData: only, allTimeTotal: totalForMonth };
       } else {
-        // send the full series
         result.monthlyData = fullMonthlyData;
       }
     }
@@ -598,6 +628,7 @@ const createTask = async (req, res) => {
     const {
       title,
       description,
+      companyName,
       assignedTo,
       dueDate,
       priority,
@@ -614,6 +645,7 @@ const createTask = async (req, res) => {
     const task = await Task.create({
       title,
       description,
+      companyName,
       assignedTo,
       dueDate,
       priority,
@@ -681,6 +713,7 @@ const updateTask = async (req, res) => {
     if (role === "admin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
+      task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
 
@@ -704,6 +737,7 @@ const updateTask = async (req, res) => {
     if (role === "superAdmin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
+      task.companyName = req.body.companyName || task.companyName;
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;

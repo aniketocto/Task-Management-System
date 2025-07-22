@@ -16,6 +16,9 @@ export const API_PATHS = {
     UPDATE_USER_BY_ID: (userId) => `/api/users/${userId}`, // update user by id admin only
     DELETE_USER_BY_ID: (userId) => `/api/users/${userId}`, // delete user by id admin only
   },
+  COMPANY: {
+    GET_COMPANY: "/api/company",
+  },
   TASKS: {
     GET_DASHBOARD_DATA: "/api/tasks/dashboard-data", // get dashboard data
     GET_USER_DASHBOARD_DATA: "/api/tasks/user-dashboard-data", // get user dashboard data
@@ -47,7 +50,8 @@ export const API_PATHS = {
       `/api/tasks/${task_id}/due-date-approval`,
   },
   CATEGORY: {
-    GET_CATEGORIES: "/api/category"
+    GET_CATEGORIES: "/api/category",
+
   },
   LEADS: {
     CREATE_LEAD: "api/leads/create-lead",

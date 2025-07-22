@@ -6,6 +6,7 @@ import { LuPaperclip } from "react-icons/lu";
 const TaskCard = ({
   title,
   desc,
+  company,
   priority,
   status,
   progress,
@@ -83,6 +84,9 @@ const TaskCard = ({
         }`}
       >
         <p className="text-sm font-medium text-gray-50 mt-4 line-clamp-2">
+          {company}
+        </p>
+        <p className="text-sm font-medium text-gray-50 mt-2 line-clamp-2">
           {title}
         </p>
         <p className="text-[13px] text-gray-100 font-medium  leading-[18px]">

@@ -24,7 +24,7 @@ const ManageTask = () => {
   const [filterPriority, setFilterPriority] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 5;
+  const tasksPerPage = 12;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
@@ -138,8 +138,6 @@ const ManageTask = () => {
     ]
   );
 
-  console.log("Status Summary:", statusSummary);
-
   // On mount, and whenever department filter changes, reload month dropdown
   useEffect(() => {
     fetchAvailableMonths();
@@ -206,6 +204,38 @@ const ManageTask = () => {
 
           {tabs[0]?.count > 0 && (
             <div className="flex flex-wrap items-center gap-4">
+              {/* Month */}
+              {availableMonths.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Month:
+                  </label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setPage(1);
+                    }}
+                    disabled={statusSummary?.all === 0}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    {/* <option value="">All Months</option> */}
+                    {availableMonths
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .slice(0, 12)
+                      .map((m) => (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          className="text-black"
+                        >
+                          {m.label}
+                        </option>
+                      ))}
+                  </select>
+                </>
+              )}
+
               {/* Department */}
               {departments.length > 0 && (
                 <>
@@ -226,38 +256,6 @@ const ManageTask = () => {
                         {d}
                       </option>
                     ))}
-                  </select>
-                </>
-              )}
-
-              {/* Month */}
-              {availableMonths.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Month:
-                  </label>
-                  <select
-                    value={filterMonth}
-                    onChange={(e) => {
-                      setFilterMonth(e.target.value);
-                      setPage(1);
-                    }}
-                    disabled={statusSummary?.all === 0}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    <option value="">All Months</option>
-                    {availableMonths
-                      .sort((a, b) => b.value.localeCompare(a.value))
-                      .slice(0, 12)
-                      .map((m) => (
-                        <option
-                          key={m.value}
-                          value={m.value}
-                          className="text-black"
-                        >
-                          {m.label}
-                        </option>
-                      ))}
                   </select>
                 </>
               )}
@@ -312,6 +310,7 @@ const ManageTask = () => {
               <TaskCard
                 key={item._id}
                 title={item.title}
+                company={item.companyName}
                 desc={item.description}
                 priority={item.priority}
                 status={item.status}
@@ -343,7 +342,7 @@ const ManageTask = () => {
           previousClassName={
             "px-3 py-1 cursor-pointer border text-white rounded"
           }
-          nextClassName={"px-3 py-1 border cursor-pointer text-white rounded"}
+          nextClassName={"px-3 py-1 border  cursor-pointer text-white rounded"}
           disabledClassName={"opacity-50 cursor-not-allowed"}
         />
       </div>

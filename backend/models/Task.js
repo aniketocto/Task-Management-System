@@ -12,6 +12,7 @@ const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
+    companyName: { type: String, required: true, trim: true },
     priority: {
       type: String,
       enum: ["low", "medium", "high"],

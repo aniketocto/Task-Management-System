@@ -1,7 +1,7 @@
 import useCategories from "../../hooks/useCategories";
 import Creatable from "react-select/creatable";
 const CategorySelect = ({ value, onChange }) => {
-  const { options, addCategory } = useCategories();
+  const { options, addCategory, } = useCategories();
 
   const handleCreate = async (inputValue) => {
     const newOpt = await addCategory(inputValue);
@@ -17,7 +17,7 @@ const CategorySelect = ({ value, onChange }) => {
       value={selectedOption}
       onChange={(opt) => onChange(opt ? opt.value : "")}
       onCreateOption={handleCreate}
-      placeholder="Type or Select Category"
+      placeholder="Select Category or Type"
       styles={{
         control: (base) => ({
           ...base,

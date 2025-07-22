@@ -5,7 +5,7 @@ import { API_PATHS } from "../utils/apiPaths";
 const useCategories = () => {
   const [options, setOptions] = useState([]);
 
-    const loadCategories = async () => {
+  const loadCategories = async () => {
     try {
       const { data } = await axiosInstance.get(
         API_PATHS.CATEGORY.GET_CATEGORIES
@@ -32,6 +32,11 @@ const useCategories = () => {
     }
   };
 
+  const deleteCategory = async (id) => {
+    await axiosInstance.delete(API_PATHS.CATEGORY.GET_CATEGORY_BY_ID(id));
+    setOptions((opts) => opts.filter((o) => o.value !== id));
+  };
+
   useEffect(() => {
     let mounted = true;
     loadCategories().then((cats) => {
@@ -47,6 +52,8 @@ const useCategories = () => {
     };
   }, []);
 
+    useEffect(() => { loadCategories() }, []);
+
   const addCategory = async (name) => {
     const cat = await upsertCategory(name);
     const newOpt = { label: cat.name, value: cat.name };
@@ -56,7 +63,7 @@ const useCategories = () => {
     return newOpt;
   };
 
-  return { options, addCategory };
+  return { options, addCategory, deleteCategory };
 };
 
 export default useCategories;
