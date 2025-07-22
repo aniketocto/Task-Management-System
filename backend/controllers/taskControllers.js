@@ -2,16 +2,17 @@ const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const User = require("../models/User");
 
-// In taskControllers.js
-
 const getTasks = async (req, res) => {
   try {
     const {
       department,
       status,
       month, // e.g. "2025-06"
+      timeframe, // new: "today" | "yesterday" | "last7Days" | "custom"
+      startDate, // new: ISO date string, e.g. "2025-07-20"
+      endDate, // new: ISO date string, e.g. "2025-07-20"
       page = 1,
-      limit = 12,
+      limit = 10,
       sortOrder = "desc",
       sortBy = "createdAt",
       priority,
@@ -24,6 +25,8 @@ const getTasks = async (req, res) => {
       "statusSummary",
       "monthlyData",
       "availableMonths",
+      "departmentSummary",
+      "userBreakdown",
     ];
     const include = fields
       ? fields.split(",").map((f) => f.trim())
@@ -34,7 +37,53 @@ const getTasks = async (req, res) => {
     let filter = {};
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
-    if (month) {
+
+    const now = new Date();
+    if (timeframe) {
+      switch (timeframe) {
+        case "today":
+          filter.createdAt = {
+            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+            $lte: now,
+          };
+          break;
+
+        case "yesterday":
+          const yd = new Date(now);
+          yd.setDate(now.getDate() - 1);
+          filter.createdAt = {
+            $gte: new Date(yd.getFullYear(), yd.getMonth(), yd.getDate()),
+            $lte: new Date(
+              yd.getFullYear(),
+              yd.getMonth(),
+              yd.getDate(),
+              23,
+              59,
+              59,
+              999
+            ),
+          };
+          break;
+
+        case "last7Days":
+          const last7 = new Date(now);
+          last7.setDate(now.getDate() - 7);
+          filter.createdAt = { $gte: last7, $lte: now };
+          break;
+
+        case "custom":
+          if (startDate && endDate) {
+            filter.createdAt = {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            };
+          }
+          break;
+
+        default:
+          break;
+      }
+    } else if (month) {
       const [y, m] = month.split("-");
       filter.createdAt = {
         $gte: new Date(y, m - 1, 1),
@@ -172,6 +221,16 @@ const getTasks = async (req, res) => {
         value: m.value,
       }));
     }
+    if (include.includes("departmentSummary")) {
+      const deptSummary = await getDepartmentBreakdown(filter);
+      result.departmentSummary = deptSummary;
+    }
+
+    // userBreakdown (respects filter + optional department)
+    if (include.includes("userBreakdown")) {
+      const userSummary = await getUserBreakdown(filter, department);
+      result.userBreakdown = userSummary;
+    }
     if (include.includes("monthlyData")) {
       if (month) {
         const only = fullMonthlyData.monthsData.filter(
@@ -190,7 +249,6 @@ const getTasks = async (req, res) => {
   }
 };
 
-// Enhanced helper function to get monthly task data with department and user breakdown
 const getEnhancedMonthlyTaskData = async (
   baseFilter,
   departmentFilter = null
@@ -213,12 +271,17 @@ const getEnhancedMonthlyTaskData = async (
       1
     );
 
+    let gte = monthDate;
+    let lt = nextMonthDate;
+    if (baseFilter.createdAt) {
+      const { $gte: fGte, $lte: fLte } = baseFilter.createdAt;
+      lt = fLte && fLte < nextMonthDate ? fLte : nextMonthDate; // if your timeframe had an upper‐bound, use that instead of month’s end
+      gte = fGte && fGte > monthDate ? fGte : monthDate; // if your timeframe had a lower‐bound, use that instead of month’s star
+    }
+
     const monthFilter = {
       ...baseFilter,
-      createdAt: {
-        $gte: monthDate,
-        $lt: nextMonthDate,
-      },
+      createdAt: { $gte: gte, $lt: lt },
     };
 
     const monthLabel = monthDate.toLocaleDateString("en-US", {
@@ -312,7 +375,6 @@ const getEnhancedMonthlyTaskData = async (
   };
 };
 
-// Helper function to get department breakdown
 const getDepartmentBreakdown = async (monthFilter) => {
   const pipeline = [
     { $match: monthFilter },
@@ -386,7 +448,6 @@ const getDepartmentBreakdown = async (monthFilter) => {
   return breakdown;
 };
 
-// Helper function to get user breakdown
 const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
   const pipeline = [
     { $match: monthFilter },
@@ -913,13 +974,80 @@ const updateTaskChecklist = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
+    const { timeframe, startDate, endDate } = req.query;
+    const now = new Date();
+    let dateFilter = {};
+
+    if (timeframe) {
+      switch (timeframe) {
+        case "today":
+          dateFilter.createdAt = {
+            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+            $lte: now,
+          };
+          break;
+
+        case "yesterday":
+          const yd = new Date(now);
+          yd.setDate(now.getDate() - 1);
+          dateFilter.createdAt = {
+            $gte: new Date(yd.getFullYear(), yd.getMonth(), yd.getDate()),
+            $lte: new Date(
+              yd.getFullYear(),
+              yd.getMonth(),
+              yd.getDate(),
+              23,
+              59,
+              59,
+              999
+            ),
+          };
+          break;
+
+        case "last7Days":
+          const last7 = new Date(now);
+          last7.setDate(now.getDate() - 7);
+          dateFilter.createdAt = { $gte: last7, $lte: now };
+          break;
+
+        case "custom":
+          if (startDate && endDate) {
+            dateFilter.createdAt = {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            };
+          }
+          break;
+
+        default:
+          // ignore unknown
+          break;
+      }
+    }
+
     // Fetch statistics
-    const totalTasks = await Task.countDocuments();
-    const newTasks = await Task.countDocuments({ status: "new" });
-    const inProgressTasks = await Task.countDocuments({ status: "inProgress" });
-    const completedTasks = await Task.countDocuments({ status: "completed" });
-    const pendingTasks = await Task.countDocuments({ status: "pending" });
-    const delayedTasks = await Task.countDocuments({ status: "delayed" });
+    // before: const totalTasks = await Task.countDocuments();
+    const totalTasks = await Task.countDocuments(dateFilter);
+    const newTasks = await Task.countDocuments({
+      ...dateFilter,
+      status: "new",
+    });
+    const inProgressTasks = await Task.countDocuments({
+      ...dateFilter,
+      status: "inProgress",
+    });
+    const completedTasks = await Task.countDocuments({
+      ...dateFilter,
+      status: "completed",
+    });
+    const pendingTasks = await Task.countDocuments({
+      ...dateFilter,
+      status: "pending",
+    });
+    const delayedTasks = await Task.countDocuments({
+      ...dateFilter,
+      status: "delayed",
+    });
 
     // Ensure all task status
     const taskStatuses = [
@@ -931,6 +1059,9 @@ const getDashboardData = async (req, res) => {
     ];
 
     const taskDistributionRaw = await Task.aggregate([
+      {
+        $match: dateFilter,
+      },
       {
         $group: {
           _id: "$status",
@@ -950,6 +1081,9 @@ const getDashboardData = async (req, res) => {
     // Ensure all priority level
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
+      {
+        $match: dateFilter,
+      },
       {
         $group: {
           _id: "$priority",
@@ -971,7 +1105,7 @@ const getDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt");
 
-    const monthlyData = await getEnhancedMonthlyTaskData({});
+    const monthlyData = await getEnhancedMonthlyTaskData(dateFilter);
 
     res.status(200).json({
       statistic: {
