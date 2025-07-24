@@ -10,9 +10,9 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const notifyRoutes = require("./routes/notifyRoutes");
-const leadRoutes = require("./routes/leadRoutes")
-const categoryRoutes = require("./routes/categoryRoutes")
-const companyRoutes = require("./routes/companyRoutes")
+const leadRoutes = require("./routes/leadRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const companyRoutes = require("./routes/companyRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -41,9 +41,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notify", notifyRoutes);
 app.use("/api/leads", leadRoutes);
-app.use("/api/category", categoryRoutes)
-app.use("/api/company", companyRoutes)
-
+app.use("/api/category", categoryRoutes);
+app.use("/api/company", companyRoutes);
 
 // Static Server upload folder
 const path = require("path");
@@ -82,13 +81,12 @@ io.on("connection", (socket) => {
   }
 });
 
-
 app.get("/", (req, res) => {
   res.send("Hello World!");
-})
+});
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, "127.0.0.1", () => {      //added 127.0.0.1 for server to work on dns
   console.log(`Server is running on port: ${PORT}`);
 });
