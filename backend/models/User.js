@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema(
         "Strategy",
         "Content",
         "SEO",
+        "Management",
         "Other"
       ],
       default: "Other",

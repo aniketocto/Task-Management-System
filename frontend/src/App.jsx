@@ -101,7 +101,7 @@ const Root = () => {
   if (loading) return <Outlet />;
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/sign-up" />;
   }
 
   return user.role === "admin" || user.role === "superAdmin" ? (

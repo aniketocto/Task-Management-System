@@ -10,6 +10,7 @@ import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
 import uploadImage from "../../utils/uploadImage";
 import { GoogleLogin } from "@react-oauth/google";
+import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -28,8 +29,22 @@ const SignUp = () => {
   const { updateUser } = useContext(UserContext);
 
   // Parse query params
-  const params = new URLSearchParams(location.search);
-  const isAdmin = params.get("admin") === "true";
+  const isAdmin = new URLSearchParams(location.search).get("admin") === "true";
+
+  const handleAdminClick = () => {
+    const searchParams = new URLSearchParams(location.search);
+
+    if (isAdmin) {
+      searchParams.delete("admin");
+    } else {
+      searchParams.set("admin", "true");
+    }
+
+    navigate({
+      pathname: "/sign-up",
+      search: searchParams.toString(),
+    });
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -109,16 +124,36 @@ const SignUp = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      const errors = [];
+      if (!department) {
+        errors.push("Please select your department");
+      }
+      if (errors.length > 0) {
+        setError(errors);
+        return;
+      }
+
+      setError([]);
+
       const { credential: idToken } = credentialResponse;
+      let uploadedImageUrl = "";
+
+      if (profilePic) {
+        uploadedImageUrl = await uploadToCloudinary(profilePic); // upload file
+      }
+
       const payload = {
-        idToken, // Google auth token
-        adminInviteToken, // from state
-        department, // from state
+        idToken,
+        adminInviteToken,
+        department,
+        profileImage: uploadedImageUrl || "",
       };
+
       const { data } = await axiosInstance.post(
         API_PATHS.AUTH.GOOGLE_AUTH,
         payload
       );
+
       if (data.token) {
         localStorage.setItem("taskManagerToken", data.token);
         updateUser(data);
@@ -137,7 +172,7 @@ const SignUp = () => {
 
   return (
     <AuthLayout>
-      <div className="lg:w-full h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
+      <div className="lg:w-full h-screen md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-white">Create an Account</h3>
         <p className="text-sm text-slate-50 mt-[2px] mb-6">
           Join today by entering your details below and start managing your
@@ -147,7 +182,7 @@ const SignUp = () => {
         <form onSubmit={handleSignUp}>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
             {/* <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -188,6 +223,7 @@ const SignUp = () => {
                 { value: "SEO", label: "SEO" },
                 { value: "BusinessDevelopment", label: "Business Development" },
                 { value: "ClientServicing", label: "Client Servicing" },
+                { value: "Management", label: "Management" },
               ]}
             />
 
@@ -234,12 +270,13 @@ const SignUp = () => {
           </p>
           <p className="text-[13px] text-slate-50 mt-3">
             Admin Sign In?{" "}
-            <Link
-              to="/sign-up?admin=true"
-              className="text-[#E43941] font-medium "
+            <button
+              type="button"
+              onClick={handleAdminClick}
+              className="text-[#E43941] font-medium underline cursor-pointer"
             >
-              Admin
-            </Link>
+              {isAdmin ? "Cancel Admin" : "Admin"}
+            </button>
           </p>
         </form>
       </div>

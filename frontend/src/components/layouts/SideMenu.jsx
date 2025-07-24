@@ -15,8 +15,6 @@ const SideMenu = ({ activeMenu }) => {
   const [sideMenuData, setSideMenuData] = useState([]);
   const [profileImg, setProfileImg] = useState("");
 
- 
-
   const navigate = useNavigate();
 
   const handleClick = (route) => {
@@ -45,8 +43,8 @@ const SideMenu = ({ activeMenu }) => {
           ? SIDE_MENU_BE_USER_DATA
           : SIDE_MENU_USER_DATA
       );
+      setProfileImg(user?.profileImageUrl);
     }
-    setProfileImg(user?.profileImageUrl);
     return () => {};
   }, [user]);
 
@@ -55,8 +53,8 @@ const SideMenu = ({ activeMenu }) => {
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="">
           <img
-            src={ USER_IMG}
-            alt="profile Image"
+            src={profileImg?.length > 10 ? profileImg : USER_IMG}
+            alt="profile"
             className="w-20 h-20 border border-gray-500/40 rounded-full object-contain"
           />
         </div>
