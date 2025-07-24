@@ -10,6 +10,7 @@ import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
 import uploadImage from "../../utils/uploadImage";
 import { GoogleLogin } from "@react-oauth/google";
+import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -128,20 +129,31 @@ const SignUp = () => {
         errors.push("Please select your department");
       }
       if (errors.length > 0) {
-        setError(errors); // setError can be an array now
+        setError(errors);
         return;
       }
+
       setError([]);
+
       const { credential: idToken } = credentialResponse;
+      let uploadedImageUrl = "";
+
+      if (profilePic) {
+        uploadedImageUrl = await uploadToCloudinary(profilePic); // upload file
+      }
+
       const payload = {
-        idToken, // Google auth token
-        adminInviteToken, // from state
-        department, // from state
+        idToken,
+        adminInviteToken,
+        department,
+        profileImage: uploadedImageUrl || "",
       };
+
       const { data } = await axiosInstance.post(
         API_PATHS.AUTH.GOOGLE_AUTH,
         payload
       );
+
       if (data.token) {
         localStorage.setItem("taskManagerToken", data.token);
         updateUser(data);
@@ -160,7 +172,7 @@ const SignUp = () => {
 
   return (
     <AuthLayout>
-      <div className="lg:w-full h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
+      <div className="lg:w-full h-screen md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-white">Create an Account</h3>
         <p className="text-sm text-slate-50 mt-[2px] mb-6">
           Join today by entering your details below and start managing your
@@ -258,7 +270,8 @@ const SignUp = () => {
           </p>
           <p className="text-[13px] text-slate-50 mt-3">
             Admin Sign In?{" "}
-            <button type="button"
+            <button
+              type="button"
               onClick={handleAdminClick}
               className="text-[#E43941] font-medium underline cursor-pointer"
             >

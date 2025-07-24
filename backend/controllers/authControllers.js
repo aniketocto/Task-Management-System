@@ -150,12 +150,15 @@ const updateUserProfile = async (req, res) => {
 
 const googleAuth = async (req, res) => {
   try {
-    const { idToken, adminInviteToken, department } = req.body;
+    const { idToken, adminInviteToken, department, profileImage } = req.body;
+
     const ticket = await googleClient.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
+
     const { email_verified, email, name, picture } = ticket.getPayload();
+
     if (!email_verified) {
       return res.status(401).json({ message: "Email not verified by Google" });
     }
@@ -168,18 +171,23 @@ const googleAuth = async (req, res) => {
     }
 
     let user = await User.findOne({ email });
+
     if (!user) {
       const randomPassword = bcrypt.hashSync(
         Math.random().toString(36).slice(-8),
         10
       );
+
+      // Use uploaded profileImage (base64), otherwise fallback to Google profile pic
+      const profileImageUrl = profileImage || picture;
+
       user = await User.create({
         name,
         email,
         password: randomPassword,
-        profileImageUrl: picture,
-        role, // ← carry over the role
-        department, // ← save the department too
+        profileImageUrl, // base64 or Google image URL
+        role,
+        department,
       });
     }
 
@@ -190,7 +198,7 @@ const googleAuth = async (req, res) => {
       email: user.email,
       profileImageUrl: user.profileImageUrl,
       role: user.role,
-      department: user.department, 
+      department: user.department,
       token,
     });
   } catch (error) {

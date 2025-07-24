@@ -1,19 +1,25 @@
-import UI_IMG from "../../assets/auth-img-1.png";
-import AUTH_IMG from "../../assets/bg-img.png";
 import LOGO from "../../assets/logo-png.png";
+import CRM_VIDEO from "../../assets/crm-video.mp4";
 
 const AuthLayout = ({ children }) => {
   return (
     <div className="flex">
-      <div className="w-screen h-screen md:w-[60vw] px-12 pt-8 pb-12">
-         <img src={LOGO} alt="Unstoppable" className="w-40" />
+      <div className="w-screen h-screen md:w-[55vw] px-12 pt-8 pb-12 relative z-10">
+        <img src={LOGO} alt="Unstoppable" className="w-40" />
         {children}
       </div>
-      <div
-        className="hidden md:flex w-[40vw] h-auto items-center justify-center bg-blue-50 bg-cover bg-no-repeat bg-center"
-        style={{ backgroundImage: `url(${AUTH_IMG})` }}
-      >
-        <img src={UI_IMG} alt="" className="w-[80%] h-[80%] object-contain" />
+
+      <div className="hidden md:flex w-[45vw] h-screen items-center justify-center relative overflow-hidden">
+        <video
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          src={CRM_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        {/* Optional: Overlay (if you want a semi-transparent tint) */}
+        <div className="absolute inset-0 bg-black/30 z-10" />
       </div>
     </div>
   );
