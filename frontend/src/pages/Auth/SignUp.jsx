@@ -11,6 +11,7 @@ import { UserContext } from "../../context/userContext";
 import uploadImage from "../../utils/uploadImage";
 import { GoogleLogin } from "@react-oauth/google";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
+import SpinLoader from "../../components/layouts/SpinLoader";
 
 const SignUp = () => {
   const [email, setEmail] = useState([]);
@@ -20,6 +21,7 @@ const SignUp = () => {
   const [name, setName] = useState("");
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [department, setDepartment] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -124,6 +126,7 @@ const SignUp = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      setLoading(true);
       const errors = [];
       if (!department) {
         errors.push("Please select your department");
@@ -167,11 +170,17 @@ const SignUp = () => {
       }
     } catch (error) {
       console.log("Google Login Error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <AuthLayout>
+      {loading && (
+        <SpinLoader />
+      )}
+
       <div className="lg:w-full h-screen md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-white">Create an Account</h3>
         <p className="text-sm text-slate-50 mt-[2px] mb-6">
