@@ -211,6 +211,7 @@ const SignUp = () => {
                 { value: "SEO", label: "SEO" },
                 { value: "BusinessDevelopment", label: "Business Development" },
                 { value: "ClientServicing", label: "Client Servicing" },
+                { value: "Management", label: "Management" },
               ]}
             />
 
