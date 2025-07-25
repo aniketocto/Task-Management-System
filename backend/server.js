@@ -78,8 +78,6 @@ io.on("connection", (socket) => {
   } catch (err) {
     console.error("❌ JWT verification failed:", err.message);
     socket.disconnect(true);
-
-    socket.disconnect(true);
   }
 });
 

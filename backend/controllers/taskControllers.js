@@ -743,10 +743,21 @@ const createTask = async (req, res) => {
 
     // emit notifications
     notifications.forEach((notification) => {
-      const room = notification.user.toString();
-      io.to(room).emit("new-notification", notification);
-    });
+      try {
+        if (!notification || !notification.user) {
+          console.warn(
+            "⚠️ Skipped emitting notification due to missing user:",
+            notification
+          );
+          return;
+        }
 
+        const room = notification.user.toString();
+        io.to(room).emit("new-notification", notification);
+      } catch (emitErr) {
+        console.error("❌ Socket emit failed:", emitErr.message);
+      }
+    });
     res.json({ message: "Task & notifications created successfully", task });
   } catch (error) {
     console.error("❌ createTask error:", error);
@@ -762,7 +773,6 @@ const updateTask = async (req, res) => {
     }
 
     const role = req.user.role;
-    // Grab the old array before you mutate it:
     const oldAssigned = task.assignedTo.map((id) => id.toString());
 
     // --- User can only update todoChecklist ---
@@ -824,34 +834,38 @@ const updateTask = async (req, res) => {
       }
     }
 
-    // Now you’ve updated task.assignedTo in-memory—time to save
     const updatedTask = await task.save();
 
-    // If assignedTo was part of the request, figure out which users are newly added
     if (req.body.assignedTo) {
       const newAssigned = updatedTask.assignedTo.map((id) => id.toString());
-      // users in newAssigned but not in oldAssigned
       const addedUsers = newAssigned.filter((id) => !oldAssigned.includes(id));
 
       if (addedUsers.length > 0) {
-        // grab your io instance
         const io = req.app.get("io");
 
-        // create + emit a notification for each newly assigned user
         const notifications = await Promise.all(
-          addedUsers.map((userId) =>
-            Notification.create({
+          addedUsers.map(async (userId) => {
+            if (!userId) return null;
+            return await Notification.create({
               user: userId,
               message: `You have been newly assigned to task: ${updatedTask.title}`,
               taskId: updatedTask._id,
               type: "task",
-            })
-          )
+            });
+          })
         );
 
-        // emit each one to the correct socket room
         notifications.forEach((notif) => {
-          io.to(notif.user.toString()).emit("new-notification", notif);
+          try {
+            if (!notif || !notif.user) {
+              console.warn("⚠️ Missing user in notification:", notif);
+              return;
+            }
+            const room = notif.user.toString();
+            io.to(room).emit("new-notification", notif);
+          } catch (emitErr) {
+            console.error("❌ Failed to emit notification:", emitErr.message);
+          }
         });
       }
     }
