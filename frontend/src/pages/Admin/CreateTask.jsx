@@ -304,7 +304,7 @@ const CreateTask = () => {
                 )}
               </div>
 
-              {taskId && (
+              {taskId && user?.role === "admin" && (
                 <button
                   className="flex items-center gap-1.5 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
                   onClick={() => setOpenDeleteAlert(true)}
