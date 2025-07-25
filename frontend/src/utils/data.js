@@ -34,6 +34,12 @@ export const SIDE_MENU_ADMIN_DATA = [
     path: "/admin/my-tasks",
   },
   {
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
+  {
     id: "05",
     label: "Logout",
     icon: LuLogOut,
@@ -48,31 +54,31 @@ export const SIDE_MENU_SUPER_ADMIN_DATA = [
     icon: LuLayoutDashboard,
     path: "/admin/dashboard",
   },
-   
+
   {
     id: "03",
     label: "Manage Tasks",
     icon: LuClipboardCheck,
     path: "/admin/tasks",
   },
-  // {
-  //   id: "04",
-  //   label: "Manage Lead",
-  //   icon: LuClipboardCheck,
-  //   path: "/manage-lead",
-  // },
+  {
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
   {
     id: "04",
     label: "Create Task",
     icon: LuSquare,
     path: "/admin/create-task",
   },
-  // {
-  //   id: "05",
-  //   label: "Create Leads",
-  //   icon: LuSquare,
-  //   path: "/leads-create",
-  // },
+  {
+    id: "05",
+    label: "Create Leads",
+    icon: LuSquare,
+    path: "/leads-create",
+  },
   {
     id: "06",
     label: "Team Members",
@@ -94,24 +100,24 @@ export const SIDE_MENU_BE_USER_DATA = [
     icon: LuLayoutDashboard,
     path: "/user/dashboard",
   },
-  // {
-  //   id: "03",
-  //   label: "Lead Dashboard",
-  //   icon: MdOutlineLeaderboard,
-  //   path: "/leads",
-  // },
+  {
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
   {
     id: "02",
     label: "View Tasks",
     icon: LuClipboardCheck,
     path: "/user/tasks",
   },
-  // {
-  //   id: "04",
-  //   label: "Create Leads",
-  //   icon: LuClipboardCheck,
-  //   path: "/leads-create",
-  // },
+  {
+    id: "04",
+    label: "Create Leads",
+    icon: LuClipboardCheck,
+    path: "/leads-create",
+  },
   {
     id: "05",
     label: "Logout",
@@ -169,7 +175,11 @@ export const leadStats = [
   { label: "Follow-Up Leads", key: "followUpLeads", color: "bg-yellow-500" },
   { label: "Argument Leads", key: "argumentLeads", color: "bg-blue-500" },
   { label: "Pitch Leads", key: "pitchLeads", color: "bg-purple-500" },
-  { label: "Negotiation Leads", key: "negotiationLeads", color: "bg-indigo-500" },
+  {
+    label: "Negotiation Leads",
+    key: "negotiationLeads",
+    color: "bg-indigo-500",
+  },
   { label: "Dead Leads", key: "deadLeads", color: "bg-red-500" },
   { label: "Total Leads", key: "totalLeads", color: "bg-indigo-500" },
 ];

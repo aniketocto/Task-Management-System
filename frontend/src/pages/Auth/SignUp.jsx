@@ -1,6 +1,6 @@
 import { validateEmail, validatePassword } from "../../utils/helper";
 import AuthLayout from "../../components/layouts/AuthLayout";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
 import Input from "../../components/Inputs/Input";
 import SelectInput from "../../components/Inputs/SelectInput";
@@ -28,7 +28,7 @@ const SignUp = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { updateUser } = useContext(UserContext);
+  const { updateUser, user } = useContext(UserContext);
 
   // Parse query params
   const isAdmin = new URLSearchParams(location.search).get("admin") === "true";
@@ -123,6 +123,12 @@ const SignUp = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user]);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {

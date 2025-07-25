@@ -54,6 +54,9 @@ const TaskListTable = ({ tableData }) => {
         <thead>
           <tr className="text-left">
             <th className="py-3 px-4 text-white font-semibold text-[13px]">
+              Company
+            </th>
+            <th className="py-3 px-4 text-white font-semibold text-[13px]">
               Title
             </th>
             <th className="py-3 px-4 text-white font-semibold text-[13px]">
@@ -68,15 +71,18 @@ const TaskListTable = ({ tableData }) => {
             <th className="py-3 px-4 text-white font-semibold text-[13px] hidden md:table-cell">
               Due Date
             </th>
-            <th className="px-4 py-2 text-sm font-semibold text-gray-300">Alert</th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">
+              Alert
+            </th>
           </tr>
         </thead>
         <tbody>
           {tableData.map((task) => (
             <tr key={task._id} className="border-t border-gray-200">
               <td className="my-2 mx-4 text-[13px] line-clamp-1 overflow-hidden">
-                {task.title}
+                {task.companyName}
               </td>
+              <td className="px-4 py-2 ">{task.title}</td>
               <td className="px-4 py-2">
                 <span
                   className={`px-2 py-1 text-sm capitalize rounded inline-block ${getStatusBadgeColor(

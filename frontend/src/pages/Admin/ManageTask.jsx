@@ -11,38 +11,57 @@ import ReactPaginate from "react-paginate";
 import { UserContext } from "../../context/userContext";
 import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
+import SpinLoader from "../../components/layouts/SpinLoader";
 
 const ManageTask = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const userRole = user?.role;
 
-  // --- filters & pagination ---
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMonth, setFilterMonth] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
+  const [filterTimeframe, setFilterTimeframe] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 12;
+  const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
-  // --- data containers ---
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([]);
   const [departments, setDepartments] = useState([]);
 
-  // ** new ** months dropdown
   const [availableMonths, setAvailableMonths] = useState([]);
-
-  // --- sorting ---
   const [sortOrder, setSortOrder] = useState("desc");
   const [sortBy, setSortBy] = useState("createdAt");
-
   const [viewType, setViewType] = useState("table");
 
-  // Fetch only the list of months for the dropdown
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (filterTimeframe) setFilterMonth("");
+    if (filterTimeframe !== "custom") {
+      setFilterStartDate("");
+      setFilterEndDate("");
+    }
+  }, [filterTimeframe]);
+
+  useEffect(() => {
+    if (filterMonth) {
+      setFilterTimeframe("");
+      setFilterStartDate("");
+      setFilterEndDate("");
+    }
+  }, [filterMonth]);
+
+  useEffect(() => {
+    if (filterDepartment) setPage(1);
+  }, [filterDepartment]);
+
   const fetchAvailableMonths = useCallback(async () => {
     try {
       const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
@@ -55,53 +74,33 @@ const ManageTask = () => {
     } catch (err) {
       console.error("Failed to load months:", err);
     }
-  }, [filterDepartment, filterMonth]);
+  }, [filterDepartment]);
 
-  // Fetch tasks + status summary
   const getAllTasks = useCallback(
     async (currentPage = 1) => {
       try {
+        setLoading(true);
         const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
           params: {
             status: filterStatus === "All" ? "" : filterStatus,
             month: filterMonth || undefined,
             department: filterDepartment || undefined,
             priority: filterPriority || undefined,
+            timeframe: filterTimeframe || undefined,
+            startDate: filterStartDate || undefined,
+            endDate: filterEndDate || undefined,
             page: currentPage,
             limit: tasksPerPage,
             sortOrder,
             sortBy,
-            // we don't request monthlyData here any more
-            fields:
-              "tasks,statusSummary,monthSummary,departmentSummary,prioritySummary",
+            fields: "tasks,statusSummary,availableMonths",
           },
         });
 
         const tasks = resp.data.tasks || [];
-        if (tasks.length === 0) {
-          if (filterStatus !== "All") {
-            setFilterStatus("All");
-            return;
-          }
-          if (filterMonth) {
-            setFilterMonth("");
-            return;
-          }
-          if (filterDepartment) {
-            setFilterDepartment("");
-            return;
-          }
-          if (filterPriority) {
-            setFilterPriority("");
-            return;
-          }
-        }
         setAllTasks(tasks);
+        setStatusSummary(resp.data.statusSummary || {});
 
-        const { statusSummary } = resp.data;
-        setStatusSummary(statusSummary || {});
-
-        // derive departments list from tasks
         const uniqDepts = Array.from(
           new Set(
             tasks.flatMap((t) =>
@@ -111,7 +110,6 @@ const ManageTask = () => {
         );
         setDepartments(uniqDepts);
 
-        // statusSummary → tabs
         const s = resp.data.statusSummary || {};
         setTabs([
           { label: "All", count: s.all || 0 },
@@ -122,10 +120,11 @@ const ManageTask = () => {
           { label: "delayed", count: s.delayedTasks || 0 },
         ]);
 
-        // pagination
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
       } catch (err) {
         console.error("Error fetching tasks:", err);
+      } finally {
+        setLoading(false);
       }
     },
     [
@@ -133,46 +132,39 @@ const ManageTask = () => {
       filterMonth,
       filterDepartment,
       filterPriority,
+      filterTimeframe,
+      filterStartDate,
+      filterEndDate,
       sortOrder,
       sortBy,
     ]
   );
 
-  // On mount, and whenever department filter changes, reload month dropdown
   useEffect(() => {
     fetchAvailableMonths();
   }, [fetchAvailableMonths]);
-
-  // Whenever any filter/sort/page changes, reload tasks
   useEffect(() => {
     getAllTasks(page);
   }, [getAllTasks, page]);
 
   useEffect(() => {
-    if (availableMonths.length > 0 && !filterMonth) {
-      // sort descending so the “latest” is first
+    if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
       const sorted = [...availableMonths].sort((a, b) =>
         b.value.localeCompare(a.value)
       );
-
-      const curr = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+      const curr = new Date().toISOString().slice(0, 7);
       const hasCurrent = sorted.some((m) => m.value === curr);
-
-      // pick real current month if present, otherwise pick latest
       setFilterMonth(hasCurrent ? curr : sorted[0].value);
       setPage(1);
     }
-  }, [availableMonths, filterMonth]);
+  }, [availableMonths, filterMonth, filterTimeframe]);
 
-  // Navigate to edit on row click
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
   };
-
   return (
     <DashboardLayout activeMenu="Manage Tasks">
       <div className="my-5">
-        {/* header + filters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="text-lg text-white md:text-xl font-medium">
@@ -202,80 +194,151 @@ const ManageTask = () => {
             </div>
           </div>
 
-          {tabs[0]?.count > 0 && (
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Month */}
-              {availableMonths.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Month:
-                  </label>
-                  <select
-                    value={filterMonth}
-                    onChange={(e) => {
-                      setFilterMonth(e.target.value);
-                      setPage(1);
-                    }}
-                    disabled={statusSummary?.all === 0}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    {/* <option value="">All Months</option> */}
-                    {availableMonths
-                      .sort((a, b) => b.value.localeCompare(a.value))
-                      .slice(0, 12)
-                      .map((m) => (
-                        <option
-                          key={m.value}
-                          value={m.value}
-                          className="text-black"
-                        >
-                          {m.label}
-                        </option>
-                      ))}
-                  </select>
-                </>
-              )}
-
-              {/* Department */}
-              {departments.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Department:
-                  </label>
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => {
-                      setFilterDepartment(e.target.value);
-                      setPage(1);
-                    }}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    <option value="">All Departments</option>
-                    {departments.map((d) => (
-                      <option key={d} value={d} className="text-black">
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-
-              {/* Status Tabs */}
-              <TaskStatusTabs
-                tabs={tabs}
-                activeTab={filterStatus}
-                setActiveTab={(newStatus) => {
-                  setFilterStatus(newStatus);
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Timeframe */}
+            <>
+              <label className="text-sm font-medium text-gray-600">
+                Timeframe:
+              </label>
+              <select
+                value={filterTimeframe}
+                onChange={(e) => {
+                  setFilterTimeframe(e.target.value);
                   setPage(1);
                 }}
-              />
-            </div>
-          )}
-        </div>
+                className="border rounded px-3 py-2 text-sm text-white"
+                
+              >
+                <option className="text-black" value="">
+                  All Time
+                </option>
+                <option className="text-black" value="today">
+                  Today
+                </option>
+                <option className="text-black" value="yesterday">
+                  Yesterday
+                </option>
+                <option className="text-black" value="last7Days">
+                  Last 7 Days
+                </option>
+                <option className="text-black" value="custom">
+                  Custom
+                </option>
+              </select>
+              {filterTimeframe === "custom" && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    From:
+                  </label>
+                  <input
+                    type="date"
+                    value={filterStartDate}
+                    onChange={(e) => {
+                      setFilterStartDate(e.target.value);
+                      setPage(1);
+                    }}
+                    max={new Date().toISOString().split("T")[0]}
+                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                  />
+                  <label className="text-sm font-medium text-gray-600">
+                    To:
+                  </label>
+                  <input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(e) => {
+                      setFilterEndDate(e.target.value);
+                      setPage(1);
+                    }}
+                    min={filterStartDate}
+                    max={new Date().toISOString().split("T")[0]}
+                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                  />
+                </>
+              )}
+            </>
+            {/* Department */}
 
+            <>
+              <label className="text-sm font-medium text-gray-600">
+                Department:
+              </label>
+              <select
+                value={filterDepartment}
+                onChange={(e) => {
+                  setFilterDepartment(e.target.value);
+                  setPage(1);
+                }}
+                className="border rounded px-3 py-2 text-sm text-white"
+              >
+                <option value="" className="text-black">
+                  All Departments
+                </option>
+                {departments.map((d) => (
+                  <option key={d} value={d} className="text-black">
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </>
+            {/* Month */}
+            {availableMonths.length > 0 && (
+              <>
+                <label className="text-sm font-medium text-gray-600">
+                  Month:
+                </label>
+                <select
+                  value={filterMonth}
+                  onChange={(e) => {
+                    setFilterMonth(e.target.value);
+                    setPage(1);
+                  }}
+                  disabled={statusSummary?.all === 0}
+                  className="border rounded px-3 py-2 text-sm text-white"
+                >
+                  <option value="" className="text-black">
+                    All Months
+                  </option>
+                  {availableMonths
+                    .sort((a, b) => b.value.localeCompare(a.value))
+                    .slice(0, 12)
+                    .map((m) => (
+                      <option
+                        key={m.value}
+                        value={m.value}
+                        className="text-black"
+                      >
+                        {m.label}
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
+            {/* User
+              {users.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">User:</label>
+                  <select value={filterUser} onChange={(e) => { setFilterUser(e.target.value); setPage(1); }} className="border rounded px-3 py-2 text-sm text-white">
+                    <option value="">All Users</option>
+                    {users.map((u) => (<option key={u._id} value={u._id} className="text-black">{u.name}</option>))}
+                  </select>
+                </>
+              )} */}
+
+            {/* Status Tabs */}
+            <TaskStatusTabs
+              tabs={tabs}
+              activeTab={filterStatus}
+              setActiveTab={(newStatus) => {
+                setFilterStatus(newStatus);
+                setPage(1);
+              }}
+            />
+          </div>
+        </div>
+        {loading && <SpinLoader />}
         {viewType === "table" ? (
           <div className="mt-4">
-            {/* Always render the table (it will render only the <thead> if no rows) */}
             <ManageTasksTable
               userRole={userRole}
               allTasks={allTasks}
@@ -296,8 +359,6 @@ const ManageTask = () => {
                 setPage(1);
               }}
             />
-
-            {/* If there were no tasks, show a “no data” message below the header */}
             {allTasks.length === 0 && (
               <p className="mt-2 text-center text-white">
                 No tasks found for this filter.
@@ -342,7 +403,7 @@ const ManageTask = () => {
           previousClassName={
             "px-3 py-1 cursor-pointer border text-white rounded"
           }
-          nextClassName={"px-3 py-1 border  cursor-pointer text-white rounded"}
+          nextClassName={"px-3 py-1 border cursor-pointer text-white rounded"}
           disabledClassName={"opacity-50 cursor-not-allowed"}
         />
       </div>
