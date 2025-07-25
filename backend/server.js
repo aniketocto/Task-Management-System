@@ -22,7 +22,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // 🔧 Vite dev server
-      "https://unstoppablecrm.vercel.app",
+      "http://crm.getunstoppable.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
