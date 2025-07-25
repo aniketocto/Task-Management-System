@@ -19,7 +19,7 @@ const AuthLayout = ({ children }) => {
           playsInline
         />
         {/* Optional: Overlay (if you want a semi-transparent tint) */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
+        <div className="absolute inset-0 bg-black/30 z-1" />
       </div>
     </div>
   );
