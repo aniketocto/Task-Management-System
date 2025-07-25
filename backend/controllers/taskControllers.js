@@ -72,11 +72,21 @@ const getTasks = async (req, res) => {
           break;
 
         case "custom":
-          if (startDate && endDate) {
-            filter.createdAt = {
-              $gte: new Date(startDate),
-              $lte: new Date(endDate),
-            };
+          if (startDate && !endDate) {
+            const from = new Date(startDate);
+            const to = new Date(startDate);
+            to.setHours(23, 59, 59, 999);
+            filter.createdAt = { $gte: from, $lte: to };
+          } else if (!startDate && endDate) {
+            const to = new Date(endDate);
+            const from = new Date(endDate);
+            from.setHours(0, 0, 0, 0);
+            filter.createdAt = { $gte: from, $lte: to };
+          } else if (startDate && endDate) {
+            const from = new Date(startDate);
+            const to = new Date(endDate);
+            to.setHours(23, 59, 59, 999);
+            filter.createdAt = { $gte: from, $lte: to };
           }
           break;
 

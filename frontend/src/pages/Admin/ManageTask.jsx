@@ -194,132 +194,127 @@ const ManageTask = () => {
             </div>
           </div>
 
-          {tabs[0]?.count > 0 && (
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Month */}
-              {availableMonths.length > 0 && (
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Timeframe */}
+            <>
+              <label className="text-sm font-medium text-gray-600">
+                Timeframe:
+              </label>
+              <select
+                value={filterTimeframe}
+                onChange={(e) => {
+                  setFilterTimeframe(e.target.value);
+                  setPage(1);
+                }}
+                className="border rounded px-3 py-2 text-sm text-white"
+                
+              >
+                <option className="text-black" value="">
+                  All Time
+                </option>
+                <option className="text-black" value="today">
+                  Today
+                </option>
+                <option className="text-black" value="yesterday">
+                  Yesterday
+                </option>
+                <option className="text-black" value="last7Days">
+                  Last 7 Days
+                </option>
+                <option className="text-black" value="custom">
+                  Custom
+                </option>
+              </select>
+              {filterTimeframe === "custom" && (
                 <>
                   <label className="text-sm font-medium text-gray-600">
-                    Month:
+                    From:
                   </label>
-                  <select
-                    value={filterMonth}
+                  <input
+                    type="date"
+                    value={filterStartDate}
                     onChange={(e) => {
-                      setFilterMonth(e.target.value);
+                      setFilterStartDate(e.target.value);
                       setPage(1);
                     }}
-                    disabled={statusSummary?.all === 0}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    <option value="" className="text-black">
-                      All Months
-                    </option>
-                    {availableMonths
-                      .sort((a, b) => b.value.localeCompare(a.value))
-                      .slice(0, 12)
-                      .map((m) => (
-                        <option
-                          key={m.value}
-                          value={m.value}
-                          className="text-black"
-                        >
-                          {m.label}
-                        </option>
-                      ))}
-                  </select>
+                    max={new Date().toISOString().split("T")[0]}
+                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                  />
+                  <label className="text-sm font-medium text-gray-600">
+                    To:
+                  </label>
+                  <input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(e) => {
+                      setFilterEndDate(e.target.value);
+                      setPage(1);
+                    }}
+                    min={filterStartDate}
+                    max={new Date().toISOString().split("T")[0]}
+                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                  />
                 </>
               )}
+            </>
+            {/* Department */}
 
-              {/* Timeframe */}
+            <>
+              <label className="text-sm font-medium text-gray-600">
+                Department:
+              </label>
+              <select
+                value={filterDepartment}
+                onChange={(e) => {
+                  setFilterDepartment(e.target.value);
+                  setPage(1);
+                }}
+                className="border rounded px-3 py-2 text-sm text-white"
+              >
+                <option value="" className="text-black">
+                  All Departments
+                </option>
+                {departments.map((d) => (
+                  <option key={d} value={d} className="text-black">
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </>
+            {/* Month */}
+            {availableMonths.length > 0 && (
               <>
                 <label className="text-sm font-medium text-gray-600">
-                  Timeframe:
+                  Month:
                 </label>
                 <select
-                  value={filterTimeframe}
+                  value={filterMonth}
                   onChange={(e) => {
-                    setFilterTimeframe(e.target.value);
+                    setFilterMonth(e.target.value);
                     setPage(1);
                   }}
-                  className="border rounded px-3 py-2 text-sm text-white"
                   disabled={statusSummary?.all === 0}
+                  className="border rounded px-3 py-2 text-sm text-white"
                 >
-                  <option className="text-black" value="">
-                    All Time
+                  <option value="" className="text-black">
+                    All Months
                   </option>
-                  <option className="text-black" value="today">
-                    Today
-                  </option>
-                  <option className="text-black" value="yesterday">
-                    Yesterday
-                  </option>
-                  <option className="text-black" value="last7Days">
-                    Last 7 Days
-                  </option>
-                  <option className="text-black" value="lastMonth">
-                    Last Month
-                  </option>
-                  <option className="text-black" value="custom">
-                    Custom
-                  </option>
-                </select>
-                {filterTimeframe === "custom" && (
-                  <>
-                    <label className="text-sm font-medium text-gray-600">
-                      From:
-                    </label>
-                    <input
-                      type="date"
-                      value={filterStartDate}
-                      onChange={(e) => {
-                        setFilterStartDate(e.target.value);
-                        setPage(1);
-                      }}
-                      max={new Date().toISOString().split("T")[0]}
-                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                    />
-                    <label className="text-sm font-medium text-gray-600">
-                      To:
-                    </label>
-                    <input
-                      type="date"
-                      value={filterEndDate}
-                      onChange={(e) => {
-                        setFilterEndDate(e.target.value);
-                        setPage(1);
-                      }}
-                      min={filterStartDate}
-                      max={new Date().toISOString().split("T")[0]}
-                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                    />
-                  </>
-                )}
-              </>
-              {/* Department */}
-              {departments.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Department:
-                  </label>
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => {
-                      setFilterDepartment(e.target.value);
-                      setPage(1);
-                    }}
-                    className="border rounded px-3 py-2 text-sm text-white"
-                  >
-                    <option value="" className="text-black">All Departments</option>
-                    {departments.map((d) => (
-                      <option key={d} value={d} className="text-black">
-                        {d}
+                  {availableMonths
+                    .sort((a, b) => b.value.localeCompare(a.value))
+                    .slice(0, 12)
+                    .map((m) => (
+                      <option
+                        key={m.value}
+                        value={m.value}
+                        className="text-black"
+                      >
+                        {m.label}
                       </option>
                     ))}
-                  </select>
-                </>
-              )}
-
-              {/* User
+                </select>
+              </>
+            )}
+            {/* User
               {users.length > 0 && (
                 <>
                   <label className="text-sm font-medium text-gray-600">User:</label>
@@ -330,17 +325,16 @@ const ManageTask = () => {
                 </>
               )} */}
 
-              {/* Status Tabs */}
-              <TaskStatusTabs
-                tabs={tabs}
-                activeTab={filterStatus}
-                setActiveTab={(newStatus) => {
-                  setFilterStatus(newStatus);
-                  setPage(1);
-                }}
-              />
-            </div>
-          )}
+            {/* Status Tabs */}
+            <TaskStatusTabs
+              tabs={tabs}
+              activeTab={filterStatus}
+              setActiveTab={(newStatus) => {
+                setFilterStatus(newStatus);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
         {loading && <SpinLoader />}
         {viewType === "table" ? (
