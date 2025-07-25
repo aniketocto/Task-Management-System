@@ -769,10 +769,20 @@ const createTask = async (req, res) => {
 
     // Emit notifications via socket.io
     notifications.forEach((notification) => {
-      io.to(notification.user.toString()).emit(
-        "new-notification",
-        notification
-      );
+      try {
+        if (!notification || !notification.user) {
+          console.warn(
+            "⚠️ Skipped emitting notification due to missing user:",
+            notification
+          );
+          return;
+        }
+
+        const room = notification.user.toString();
+        io.to(room).emit("new-notification", notification);
+      } catch (emitErr) {
+        console.error("❌ Socket emit failed:", emitErr.message);
+      }
     });
 
     res.json({ message: "Task & notifications created successfully", task });
@@ -885,18 +895,28 @@ const updateTask = async (req, res) => {
         const io = req.app.get("io");
 
         const notifications = await Promise.all(
-          addedUsers.map((userId) =>
-            Notification.create({
+          addedUsers.map(async (userId) => {
+            if (!userId) return null;
+            return await Notification.create({
               user: userId,
               message: `You have been newly assigned to task: ${updatedTask.title}`,
               taskId: updatedTask._id,
               type: "task",
-            })
-          )
+            });
+          })
         );
 
         notifications.forEach((notif) => {
-          io.to(notif.user.toString()).emit("new-notification", notif);
+          try {
+            if (!notif || !notif.user) {
+              console.warn("⚠️ Missing user in notification:", notif);
+              return;
+            }
+            const room = notif.user.toString();
+            io.to(room).emit("new-notification", notif);
+          } catch (emitErr) {
+            console.error("❌ Failed to emit notification:", emitErr.message);
+          }
         });
       }
     }

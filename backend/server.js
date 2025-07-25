@@ -22,7 +22,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // 🔧 Vite dev server
-      "https://unstoppablecrm.vercel.app",
+      "http://crm.getunstoppable.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -52,8 +52,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Socket IO Setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    origin: ["http://localhost:5173", "http://crm.getunstoppable.in"],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 app.set("io", io);
@@ -76,7 +77,6 @@ io.on("connection", (socket) => {
     // console.log(`👥 Socket joined room: ${userId}`);
   } catch (err) {
     console.error("❌ JWT verification failed:", err.message);
-    socket.emit("connect_error", { message: "Authentication error" });
     socket.disconnect(true);
   }
 });
@@ -87,6 +87,6 @@ app.get("/", (req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, "127.0.0.1", () => {      //added 127.0.0.1 for server to work on dns
+server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
