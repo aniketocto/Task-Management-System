@@ -101,6 +101,7 @@ const updateLead = async (req, res) => {
       cName: req.body.cName,
       jobProfile: req.body.jobProfile,
       companyName: req.body.companyName,
+      email: req.body.email,
       status: req.body.status,
       type: req.body.type,
       category: req.body.category,
