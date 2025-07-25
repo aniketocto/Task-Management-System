@@ -86,10 +86,13 @@ const ManageTasksTable = ({
   // const formattedValue = String(label).replace(/([a-z])([A-Z])/g, "$1-$2");
 
   return (
-    <div className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg p-4">
+    <div className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg">
       <table className="min-w-full text-left">
         <thead>
           <tr className="border-b border-gray-700">
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">
+              Company
+            </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Title
             </th>
@@ -133,7 +136,9 @@ const ManageTasksTable = ({
               )}
             </th>
 
-            <th className="px-4 py-2 text-sm font-semibold text-gray-300">Alert</th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">
+              Alert
+            </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Assigned To
             </th>
@@ -148,9 +153,13 @@ const ManageTasksTable = ({
               key={task._id}
               className="border-b border-gray-800 hover:bg-gray-800"
             >
-              <td className="my-2 mx-4 text-[13px]  line-clamp-1 overflow-hidden text-white">
-                {task.title}
+              <td className="px-4 py-2 text-[13px] max-w-[160px] text-white whitespace-nowrap overflow-hidden text-ellipsis ">
+                {task.companyName}
               </td>
+              <td className="px-4 py-2 text-[13px] max-w-[250px] text-white overflow-hidden line-clamp-1">
+                <div className="break-words">{task.title}</div>
+              </td>
+
               <td className="px-4 py-2">
                 <span
                   className={`px-2 py-1 text-sm text-white rounded capitalize inline-block ${getStatusBadgeColor(
