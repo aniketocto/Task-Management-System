@@ -105,7 +105,12 @@ const getTasks = async (req, res) => {
     const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
     let baseFilter = isPrivileged
       ? {}
-      : { assignedTo: { $in: [req.user._id] } };
+      : {
+          $or: [
+            { assignedTo: { $in: [req.user._id] } },
+            { "todoChecklist.assignedTo": req.user._id },
+          ],
+        };
 
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
@@ -966,8 +971,16 @@ const updateTaskChecklist = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    const isAssigned =
+      task.assignedTo.some(
+        (userId) => userId.toString() === req.user._id.toString()
+      ) ||
+      task.todoChecklist.some(
+        (item) => item.assignedTo?.toString() === req.user._id.toString()
+      );
+
     if (
-      !task.assignedTo.includes(req.user._id) &&
+      !isAssigned &&
       req.user.role !== "superAdmin" &&
       req.user.role !== "admin"
     ) {
@@ -1026,8 +1039,9 @@ const getDashboardData = async (req, res) => {
   try {
     const { timeframe, startDate, endDate } = req.query;
     const now = new Date();
-    let dateFilter = {};
 
+    // === DATE FILTER ===
+    let dateFilter = {};
     if (timeframe) {
       switch (timeframe) {
         case "today":
@@ -1070,36 +1084,43 @@ const getDashboardData = async (req, res) => {
           break;
 
         default:
-          // ignore unknown
           break;
       }
     }
 
-    // Fetch statistics
-    // before: const totalTasks = await Task.countDocuments();
-    const totalTasks = await Task.countDocuments(dateFilter);
-    const newTasks = await Task.countDocuments({
+    // === ENHANCED FILTER (assignedTo or todoChecklist.assignedTo) ===
+    const matchFilter = {
       ...dateFilter,
+      $or: [
+        { assignedTo: { $exists: true, $ne: [] } },
+        { "todoChecklist.assignedTo": { $exists: true } },
+      ],
+    };
+
+    // === BASIC STATS ===
+    const totalTasks = await Task.countDocuments(matchFilter);
+    const newTasks = await Task.countDocuments({
+      ...matchFilter,
       status: "new",
     });
     const inProgressTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "inProgress",
     });
     const completedTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "completed",
     });
     const pendingTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "pending",
     });
     const delayedTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "delayed",
     });
 
-    // Ensure all task status
+    // === STATUS DISTRIBUTION ===
     const taskStatuses = [
       "new",
       "pending",
@@ -1107,41 +1128,24 @@ const getDashboardData = async (req, res) => {
       "completed",
       "delayed",
     ];
-
     const taskDistributionRaw = await Task.aggregate([
-      {
-        $match: dateFilter,
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
+      { $match: matchFilter },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
-
     const taskDistribution = taskStatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/\s+/g, "");
-      acc[formattedKey] =
+      const formatted = status.replace(/\s+/g, "");
+      acc[formatted] =
         taskDistributionRaw.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
     taskDistribution["All"] = totalTasks;
 
-    // Ensure all priority level
+    // === PRIORITY DISTRIBUTION ===
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
-      {
-        $match: dateFilter,
-      },
-      {
-        $group: {
-          _id: "$priority",
-          count: { $sum: 1 },
-        },
-      },
+      { $match: matchFilter },
+      { $group: { _id: "$priority", count: { $sum: 1 } } },
     ]);
-
     const taskPrioritiesLevels = taskPriorities.reduce((acc, priority) => {
       acc[priority] =
         taskPrioritiesLevelsRaw.find((item) => item._id === priority)?.count ||
@@ -1149,14 +1153,16 @@ const getDashboardData = async (req, res) => {
       return acc;
     }, {});
 
-    // Fetch recent 10 tasks
-    const recentTasks = await Task.find()
+    // === RECENT TASKS ===
+    const recentTasks = await Task.find(matchFilter)
       .sort({ createdAt: -1 })
       .limit(10)
       .select("companyName title status priority dueDate createdAt");
 
-    const monthlyData = await getEnhancedMonthlyTaskData(dateFilter);
+    // === MONTHLY DATA (pass matchFilter)
+    const monthlyData = await getEnhancedMonthlyTaskData(matchFilter);
 
+    // === FINAL RESPONSE ===
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -1183,7 +1189,11 @@ const getUserDashboardData = async (req, res) => {
     const userId = req.user._id; // Only to fetch data of logged-in user
 
     // Fetch statistics for the user
-    const totalTasks = await Task.countDocuments({ assignedTo: userId });
+    const matchFilter = {
+      $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
+    };
+
+    const totalTasks = await Task.countDocuments(matchFilter);
     const newTasks = await Task.countDocuments({
       status: "new",
       assignedTo: userId,
@@ -1215,7 +1225,7 @@ const getUserDashboardData = async (req, res) => {
     ];
 
     const taskDistributionRaw = await Task.aggregate([
-      { $match: { assignedTo: userId } },
+      { $match: matchFilter },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
@@ -1230,7 +1240,7 @@ const getUserDashboardData = async (req, res) => {
     // Ensure all priority level
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
-      { $match: { assignedTo: userId } },
+      { $match: matchFilter },
       { $group: { _id: "$priority", count: { $sum: 1 } } },
     ]);
 

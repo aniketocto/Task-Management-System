@@ -197,7 +197,12 @@ const ManageTasksTable = ({
               </td>
               <td className="px-4 py-2">
                 <AvatarGroup
-                  avatars={task.assignedTo?.map((u) => u.profileImageUrl) || []}
+                  avatars={
+                    task.assignedTo?.map((u) => ({
+                      name: u.name,
+                      profileImageUrl: u.profileImageUrl,
+                    })) || []
+                  }
                   maxVisible={3}
                 />
               </td>

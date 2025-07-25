@@ -16,7 +16,7 @@ const CreateLead = () => {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const { leadId } = location.state || {};
-  const {user} = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [leadData, setLeadData] = useState({
     cName: "",
@@ -339,7 +339,7 @@ const CreateLead = () => {
                   Lead Came Date
                 </label>
                 <input
-                disabled= {leadId && user.role !== "superAdmin"}
+                  disabled={leadId && user.role !== "superAdmin" && leadData.leadCameDate}
                   type="date"
                   className="form-input-date"
                   value={leadData.leadCameDate?.split("T")[0] ?? ""}
@@ -355,10 +355,18 @@ const CreateLead = () => {
                   Credential Deck Date
                 </label>
                 <input
-                disabled= {leadId && user.role !== "superAdmin"}
+                  disabled={
+                    leadId &&
+                    user.role !== "superAdmin" &&
+                    leadData.credentialDeckDate
+                  }
                   type="datetime-local"
                   className="form-input-date"
-                  value={leadData.credentialDeckDate ? leadData.credentialDeckDate.slice(0, 16) : ""}
+                  value={
+                    leadData.credentialDeckDate
+                      ? leadData.credentialDeckDate.slice(0, 16)
+                      : ""
+                  }
                   onChange={({ target }) =>
                     handleValueChange("credentialDeckDate", target.value)
                   }
@@ -372,7 +380,7 @@ const CreateLead = () => {
                   Discovery Call Date
                 </label>
                 <input
-                disabled= {leadId && user.role !== "superAdmin"}
+                  disabled={leadId && user.role !== "superAdmin" && leadData.discoveryCallDate}
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -393,7 +401,7 @@ const CreateLead = () => {
                   Pitch Date
                 </label>
                 <input
-                disabled= {leadId && user.role !== "superAdmin"}
+                  disabled={leadId && user.role !== "superAdmin" && leadData.pitchDate}
                   type="datetime-local"
                   className="form-input-date"
                   value={

@@ -4,14 +4,17 @@ import axiosInstance from "../../utils/axiosInstance";
 import { LuUser } from "react-icons/lu";
 import Modal from "../../components/layouts/Modal";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
+import { SyncLoader } from "react-spinners";
 
 const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
   const [allUsers, setAllUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempSelectedUsers, setTempSelectedUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const getAllUser = async () => {
+    setLoading(true);
     try {
       const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
 
@@ -20,6 +23,8 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,7 +43,10 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
 
   const selectedUserAvatars = allUsers
     .filter((user) => selectedUsers.includes(user._id))
-    .map((user) => user.profileImageUrl);
+    .map((user) => ({
+      name: user.name,
+      profileImageUrl: user.profileImageUrl,
+    }));
 
   useEffect(() => {
     getAllUser();
@@ -60,6 +68,12 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
 
   return (
     <div className="space-y-4 mt-2">
+      {loading && (
+        <div className="fixed top-0 left-0 w-screen h-screen z-50 bg-black/5 flex flex-col items-center justify-center">
+          <SyncLoader color="#e43941" loading={true} size={20} />
+          <p className="text-white mt-4 text-lg font-medium">Loading...</p>
+        </div>
+      )}
       {selectedUserAvatars.length === 0 && (
         <button className="card-btn" onClick={() => setIsModalOpen(true)}>
           <LuUser className="text-sm" /> Add Members

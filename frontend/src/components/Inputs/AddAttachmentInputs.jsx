@@ -31,12 +31,14 @@ const AddAttachmentInputs = ({ attachments = [], setAttachments }) => {
             <LuPaperclip className="text-gray-400" />
             <p className="text-sm text-black break-all">{item}</p>
           </div>
-          <button
-            className="cursor-pointer"
-            onClick={() => handleRemoveOption(index)}
-          >
-            <HiOutlineTrash className="text-lg text-red-500" />
-          </button>
+          <div>
+            <button
+              className="cursor-pointer"
+              onClick={() => handleRemoveOption(index)}
+            >
+              <HiOutlineTrash className="text-lg text-red-500" />
+            </button>
+          </div>
         </div>
       ))}
 
