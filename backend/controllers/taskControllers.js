@@ -694,6 +694,8 @@ const getAdminTasks = async (req, res) => {
   }
 };
 
+const mongoose = require("mongoose");
+
 const createTask = async (req, res) => {
   try {
     const {
@@ -707,12 +709,33 @@ const createTask = async (req, res) => {
       todoChecklist,
     } = req.body;
 
+    // Ensure main task assignees is an array
     if (!Array.isArray(assignedTo)) {
       return res
         .status(400)
         .json({ message: "Assigned to must be an array of user IDs" });
     }
 
+    // ✅ Validate todoChecklist entries if provided
+    if (todoChecklist && Array.isArray(todoChecklist)) {
+      for (const item of todoChecklist) {
+        if (!item.text) {
+          return res
+            .status(400)
+            .json({ message: "Each checklist item must have a text field." });
+        }
+        if (
+          item.assignedTo &&
+          !mongoose.Types.ObjectId.isValid(item.assignedTo)
+        ) {
+          return res
+            .status(400)
+            .json({ message: "Invalid assignedTo in checklist." });
+        }
+      }
+    }
+
+    // ✅ Create the task
     const task = await Task.create({
       title,
       description,
@@ -725,26 +748,26 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    // grab socket io server
+    // 🔔 Notify assigned users
     const io = req.app.get("io");
 
-    // create notifications
     const notifications = await Promise.all(
       assignedTo.map(async (userId) => {
-        const n = await Notification.create({
+        return await Notification.create({
           user: userId,
           message: `You have been assigned a new task: ${task.title}`,
           taskId: task._id,
           type: "task",
         });
-        return n;
       })
     );
 
-    // emit notifications
+    // Emit notifications via socket.io
     notifications.forEach((notification) => {
-      const room = notification.user.toString();
-      io.to(room).emit("new-notification", notification);
+      io.to(notification.user.toString()).emit(
+        "new-notification",
+        notification
+      );
     });
 
     res.json({ message: "Task & notifications created successfully", task });
@@ -762,10 +785,9 @@ const updateTask = async (req, res) => {
     }
 
     const role = req.user.role;
-    // Grab the old array before you mutate it:
     const oldAssigned = task.assignedTo.map((id) => id.toString());
 
-    // --- User can only update todoChecklist ---
+    // ✅ If user, allow only checklist item completion
     if (role === "user") {
       if (req.body.todoChecklist) {
         task.todoChecklist = req.body.todoChecklist;
@@ -780,13 +802,36 @@ const updateTask = async (req, res) => {
         .json({ message: "Users can only update the todo checklist." });
     }
 
-    // --- Admin can update all except dueDate ---
+    // ✅ Common checklist validation if provided
+    if (req.body.todoChecklist && Array.isArray(req.body.todoChecklist)) {
+      for (const item of req.body.todoChecklist) {
+        if (!item.text) {
+          return res
+            .status(400)
+            .json({ message: "Each checklist item must have a text field." });
+        }
+        if (
+          item.assignedTo &&
+          !mongoose.Types.ObjectId.isValid(item.assignedTo)
+        ) {
+          return res
+            .status(400)
+            .json({ message: "Invalid assignedTo in checklist." });
+        }
+      }
+    }
+
+    // ✅ Admin can update all except dueDate
     if (role === "admin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+
+      if (req.body.todoChecklist) {
+        task.todoChecklist = req.body.todoChecklist;
+      }
 
       if (req.body.assignedTo) {
         if (!Array.isArray(req.body.assignedTo)) {
@@ -804,7 +849,7 @@ const updateTask = async (req, res) => {
       }
     }
 
-    // --- SuperAdmin can update everything ---
+    // ✅ SuperAdmin can update everything
     if (role === "superAdmin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
@@ -824,20 +869,16 @@ const updateTask = async (req, res) => {
       }
     }
 
-    // Now you’ve updated task.assignedTo in-memory—time to save
+    // ✅ Save and notify newly added users (same logic as before)
     const updatedTask = await task.save();
 
-    // If assignedTo was part of the request, figure out which users are newly added
     if (req.body.assignedTo) {
       const newAssigned = updatedTask.assignedTo.map((id) => id.toString());
-      // users in newAssigned but not in oldAssigned
       const addedUsers = newAssigned.filter((id) => !oldAssigned.includes(id));
 
       if (addedUsers.length > 0) {
-        // grab your io instance
         const io = req.app.get("io");
 
-        // create + emit a notification for each newly assigned user
         const notifications = await Promise.all(
           addedUsers.map((userId) =>
             Notification.create({
@@ -849,7 +890,6 @@ const updateTask = async (req, res) => {
           )
         );
 
-        // emit each one to the correct socket room
         notifications.forEach((notif) => {
           io.to(notif.user.toString()).emit("new-notification", notif);
         });

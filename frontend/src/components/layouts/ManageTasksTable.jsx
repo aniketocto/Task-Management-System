@@ -156,8 +156,8 @@ const ManageTasksTable = ({
               <td className="px-4 py-2 text-[13px] max-w-[160px] text-white whitespace-nowrap overflow-hidden text-ellipsis ">
                 {task.companyName}
               </td>
-              <td className="px-4 py-2 text-[13px] max-w-[250px] text-white overflow-hidden line-clamp-1">
-                <div className="break-words">{task.title}</div>
+              <td className="px-4 py-2 text-[13px] max-w-[160px] text-white whitespace-nowrap overflow-hidden text-ellipsis ">
+                {task.title}
               </td>
 
               <td className="px-4 py-2">
