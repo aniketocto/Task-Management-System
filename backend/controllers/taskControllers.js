@@ -1103,7 +1103,7 @@ const getDashboardData = async (req, res) => {
     const recentTasks = await Task.find()
       .sort({ createdAt: -1 })
       .limit(10)
-      .select("title status priority dueDate createdAt");
+      .select("companyName title status priority dueDate createdAt");
 
     const monthlyData = await getEnhancedMonthlyTaskData(dateFilter);
 
