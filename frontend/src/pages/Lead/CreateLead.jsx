@@ -106,7 +106,7 @@ const CreateLead = () => {
         leadData
       );
 
-      if (response.status === 201) {
+      if (response) {
         clearData();
         toast.success("Lead created successfully");
         navigate("/manage-lead");
@@ -159,8 +159,8 @@ const CreateLead = () => {
       );
       if (response.status === 200) {
         toast.success("Lead updated successfully");
-        // clearData();
-        // navigate("/manage-lead");
+        clearData();
+        navigate("/manage-lead");
       }
       console.log(response.data);
     } catch (error) {
@@ -462,7 +462,7 @@ const CreateLead = () => {
                 onClick={handleSubmit}
                 disabled={loading}
               >
-                OK
+                {leadId ? "Update Lead" : "Create Lead"}
               </button>
             </div>
           </div>
