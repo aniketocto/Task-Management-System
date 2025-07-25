@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { use, useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
@@ -16,7 +16,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const { updateUser } = useContext(UserContext);
+  const { updateUser, user } = useContext(UserContext);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -98,6 +98,12 @@ const Login = () => {
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user]);
+
   return (
     <AuthLayout>
       <div className="lg:w-[70%] h-screen flex flex-col justify-center">
@@ -107,20 +113,20 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin} className="mt-8">
-          {/* <Input
+           <Input
             value={email}
             onChange={({ target }) => setEmail(target.value)}
             label="Email Address"
             placeholder="example@getunstoppable.in"
             type="text"
-          /> */}
-          {/* <Input
+          /> *
+           <Input
             value={password}
             onChange={({ target }) => setPassword(target.value)}
             label="Password"
             placeholder="Password"
             type="password"
-          /> */}
+          /> 
 
           {/* {Array.isArray(error) && error.length > 0 && (
             <ul className="text-red-500 text-sm pb-2.5">
@@ -133,12 +139,12 @@ const Login = () => {
             onSuccess={handleGoogleSuccess}
             onError={() => console.log("Google login failed")}
           />
-          {/* <button
+           <button
             type="submit"
             className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >
             Login
-          </button> */}
+          </button> 
           <p className="text-[13px] text-slate-50 mt-3">
             Don't have an account?{" "}
             <Link to="/sign-up" className="text-[#E43941] font-medium">
