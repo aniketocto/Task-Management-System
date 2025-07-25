@@ -33,19 +33,19 @@ const TodoListInput = ({ todoList = [], setTodoList }) => {
     border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2`}
         >
           <p className="text-sm text-gray-800">
-            <span className="text-sm text-gray-400 font-semibold mr-2">
+            <span className="text-sm text-red-500 font-semibold mr-2">
               {index < 9 ? `0${index + 1}` : index + 1}
             </span>
             <span>{item?.text}</span>
           </p>
 
-          <button
+          {/* <button
             className="text-lg text-red-500 cursor-pointer"
             onClick={() => handleRemoveOption(index)}
             type="button"
           >
             <HiOutlineTrash className="text-lg" />
-          </button>
+          </button> */}
         </div>
       ))}
 
