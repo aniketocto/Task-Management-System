@@ -41,6 +41,12 @@ export const SIDE_MENU_ADMIN_DATA = [
   },
   {
     id: "05",
+    label: "Create Leads",
+    icon: LuSquare,
+    path: "/leads-create",
+  },
+  {
+    id: "05",
     label: "Logout",
     icon: LuLogOut,
     path: "logout",
