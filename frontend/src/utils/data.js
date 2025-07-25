@@ -33,6 +33,12 @@ export const SIDE_MENU_ADMIN_DATA = [
     icon: LuClipboardCheck,
     path: "/admin/my-tasks",
   },
+   {
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
   {
     id: "05",
     label: "Logout",
@@ -55,24 +61,24 @@ export const SIDE_MENU_SUPER_ADMIN_DATA = [
     icon: LuClipboardCheck,
     path: "/admin/tasks",
   },
-  // {
-  //   id: "04",
-  //   label: "Manage Lead",
-  //   icon: LuClipboardCheck,
-  //   path: "/manage-lead",
-  // },
+  {
+    id: "04",
+    label: "Manage Lead",
+    icon: LuClipboardCheck,
+    path: "/manage-lead",
+  },
   {
     id: "04",
     label: "Create Task",
     icon: LuSquare,
     path: "/admin/create-task",
   },
-  // {
-  //   id: "05",
-  //   label: "Create Leads",
-  //   icon: LuSquare,
-  //   path: "/leads-create",
-  // },
+  {
+    id: "05",
+    label: "Create Leads",
+    icon: LuSquare,
+    path: "/leads-create",
+  },
   {
     id: "06",
     label: "Team Members",
@@ -94,24 +100,24 @@ export const SIDE_MENU_BE_USER_DATA = [
     icon: LuLayoutDashboard,
     path: "/user/dashboard",
   },
-  // {
-  //   id: "03",
-  //   label: "Lead Dashboard",
-  //   icon: MdOutlineLeaderboard,
-  //   path: "/leads",
-  // },
+  {
+    id: "03",
+    label: "Lead Dashboard",
+    icon: MdOutlineLeaderboard,
+    path: "/leads",
+  },
   {
     id: "02",
     label: "View Tasks",
     icon: LuClipboardCheck,
     path: "/user/tasks",
   },
-  // {
-  //   id: "04",
-  //   label: "Create Leads",
-  //   icon: LuClipboardCheck,
-  //   path: "/leads-create",
-  // },
+  {
+    id: "04",
+    label: "Create Leads",
+    icon: LuClipboardCheck,
+    path: "/leads-create",
+  },
   {
     id: "05",
     label: "Logout",
