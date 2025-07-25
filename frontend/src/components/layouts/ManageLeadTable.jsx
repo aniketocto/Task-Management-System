@@ -66,28 +66,28 @@ const ManageLeadTable = () => {
           <table className="w-full bg-gray-900">
             {/* Define column widths */}
             <colgroup>
-              <col style={{ width: "150px" }} />
-              <col style={{ width: "150px" }} />
-              <col style={{ width: "150px" }} />
-              <col style={{ width: "150px" }} />
-              <col style={{ width: "70px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "70px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "90px" }} />
-              <col style={{ width: "150px" }} />
-              <col style={{ width: "90px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "100px" }} />
+              <col style={{ width: "150px" }} /> {/* companyName */}
+              <col style={{ width: "70px" }} /> {/* Status */}
+              <col style={{ width: "50px" }} /> {/* Type */}
+              <col style={{ width: "150px" }} /> {/* Category */}
+              <col style={{ width: "150px" }} /> {/* credential */}
+              <col style={{ width: "150px" }} /> {/* discovery */}
+              <col style={{ width: "150px" }} /> {/* pitch */}
+              <col style={{ width: "90px" }} /> {/* lead */}
+              <col style={{ width: "50px" }} /> {/* f1 */}
+              <col style={{ width: "50px" }} /> {/* f2 */}
+              <col style={{ width: "50px" }} /> {/* f3 */}
+              <col style={{ width: "50px" }} /> {/* f4 */}
+              <col style={{ width: "50px" }} /> {/* f5 */}
+              <col style={{ width: "50px" }} /> {/* l1 */}
+              <col style={{ width: "120px" }} /> {/* l2 */}
+              <col style={{ width: "120px" }} /> {/* l3 */}
+              <col style={{ width: "120px" }} /> {/* l4 */}
+              <col style={{ width: "120px" }} /> {/* l5 */}
+              <col style={{ width: "150px" }} /> {/* Name */}
+              <col style={{ width: "150px" }} /> {/* Email */}
+              <col style={{ width: "150px" }} /> {/* Job Profile */}
+              <col style={{ width: "100px" }} /> {/* action */}
             </colgroup>
             <thead className="sticky top-0 bg-gray-900 z-30">
               <tr className="border-b border-gray-700">
@@ -96,24 +96,6 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700 sticky left-0 z-40 bg-gray-800"
                 >
                   Company
-                </th>
-                <th
-                  rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
-                >
-                  Name
-                </th>
-                <th
-                  rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
-                >
-                  Email
-                </th>
-                <th
-                  rowSpan="2"
-                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
-                >
-                  Job Profile
                 </th>
                 <th
                   rowSpan="2"
@@ -171,6 +153,24 @@ const ManageLeadTable = () => {
                 </th>
                 <th
                   rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Name
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Email
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Job Profile
+                </th>
+                <th
+                  rowSpan="2"
                   className="px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-800 sticky right-0 z-40 border-l-2 border-gray-600"
                   style={{ boxShadow: "-2px 0 4px rgba(0, 0, 0, 0.1)" }}
                 >
@@ -219,15 +219,6 @@ const ManageLeadTable = () => {
                     {lead.companyName || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
-                    {lead.cName || "-"}
-                  </td>
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
-                    {lead.email || "-"}
-                  </td>
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
-                    {lead.jobProfile || "-"}
-                  </td>
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.status || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
@@ -238,12 +229,12 @@ const ManageLeadTable = () => {
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.credentialDeckDate
-                      ? moment(lead.credentialDeckDate).format("DD-MM-YYYY")
+                      ? moment(lead.credentialDeckDate).format("DD-MM-YYYY hh:mm A")
                       : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.discoveryCallDate
-                      ? moment(lead.discoveryCallDate).format("DD-MM-YYYY")
+                      ? moment(lead.discoveryCallDate).format("DD-MM-YYYY hh:mm A")
                       : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
@@ -260,7 +251,7 @@ const ManageLeadTable = () => {
                     <td
                       key={`attempt-${attempt}`}
                       className="px-4 py-2 text-sm text-center text-gray-300 border-b border-gray-700"
-                    > 
+                    >
                       <input
                         type="checkbox"
                         checked={lead.followUp?.[`attempt${attempt}`] || false}
@@ -306,6 +297,15 @@ const ManageLeadTable = () => {
                     );
                   })}
 
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
+                    {lead.cName || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
+                    {lead.email || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
+                    {lead.jobProfile || "-"}
+                  </td>
                   {/* Actions column - sticky */}
                   <td
                     className="px-4 py-2 text-sm text-gray-300 bg-gray-800 sticky right-0 z-20 border-l-2 border-gray-600"
