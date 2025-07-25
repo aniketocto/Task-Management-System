@@ -11,6 +11,7 @@ import ReactPaginate from "react-paginate";
 import { UserContext } from "../../context/userContext";
 import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
+import SpinLoader from "../../components/layouts/SpinLoader";
 
 const ManageTask = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const ManageTask = () => {
   const [filterEndDate, setFilterEndDate] = useState("");
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 12;
+  const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
@@ -341,7 +342,7 @@ const ManageTask = () => {
             </div>
           )}
         </div>
-        {loading && <p className="text-white text-center mb-2">Loading...</p>}
+        {loading && <SpinLoader />}
         {viewType === "table" ? (
           <div className="mt-4">
             <ManageTasksTable
