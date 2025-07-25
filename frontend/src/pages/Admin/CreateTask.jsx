@@ -72,6 +72,7 @@ const CreateTask = () => {
       const todoList = taskData.todoChecklist?.map((item) => ({
         text: item.text,
         completed: false,
+        assignedTo: item.assignedTo || null,
       }));
 
       const response = await axiosInstance.post(API_PATHS.TASKS.CREATE_TASK, {
@@ -108,6 +109,7 @@ const CreateTask = () => {
           return {
             text: item.text,
             completed: matchedTask ? matchedTask.completed : false,
+            assignedTo: item.assignedTo || null,
           };
         });
 
@@ -325,7 +327,6 @@ const CreateTask = () => {
                 onChange={(newCompany) =>
                   handleValueChange("companyName", newCompany)
                 }
-                
               />
             </div>
 

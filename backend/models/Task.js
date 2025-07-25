@@ -6,6 +6,10 @@ const todoSchema = new mongoose.Schema({
     required: true,
   },
   completed: { type: Boolean, default: false },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  }
 });
 
 const taskSchema = new mongoose.Schema(

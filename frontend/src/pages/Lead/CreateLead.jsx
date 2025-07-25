@@ -339,7 +339,7 @@ const CreateLead = () => {
                   Lead Came Date
                 </label>
                 <input
-                  disabled={leadId && user.role !== "superAdmin"}
+                disabled= {leadId && user.role !== "superAdmin"}
                   type="date"
                   className="form-input-date"
                   value={leadData.leadCameDate?.split("T")[0] ?? ""}

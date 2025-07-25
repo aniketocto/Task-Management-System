@@ -100,6 +100,7 @@ const ViewTaskDetails = () => {
     return () => {};
   }, [id]);
 
+
   return (
     // This line Shows the left side dashboard on the Task-details page
     <DashboardLayout activeMenu="My Tasks">
@@ -111,7 +112,7 @@ const ViewTaskDetails = () => {
                 <h2 className="text-base md:text-2xl text-slate-50 font-medium">
                   {task?.companyName}
                 </h2>
-                
+
                 <p className="text-white text-xs font-regular">
                   Created By: {createdBy}
                 </p>
@@ -154,9 +155,12 @@ const ViewTaskDetails = () => {
 
                 <AvatarGroup
                   avatars={
-                    task?.assignedTo?.map((item) => item?.profileImageUrl) || []
+                    task?.assignedTo?.map((u) => ({
+                      name: u.name,
+                      profileImageUrl: u.profileImageUrl,
+                    })) || []
                   }
-                  maxVisible={5}
+                  maxVisible={3}
                 />
               </div>
             </div>
@@ -212,7 +216,7 @@ const InfoBox = ({ label, value }) => {
   );
 };
 
-const TodoCheckList = ({ text, isChecked, onChange }) => {
+const TodoCheckList = ({ text, isChecked, onChange, assignedTo }) => {
   return (
     <div className="flex items-center gap-3 p-3">
       <input

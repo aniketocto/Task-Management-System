@@ -105,7 +105,12 @@ const getTasks = async (req, res) => {
     const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
     let baseFilter = isPrivileged
       ? {}
-      : { assignedTo: { $in: [req.user._id] } };
+      : {
+          $or: [
+            { assignedTo: { $in: [req.user._id] } },
+            { "todoChecklist.assignedTo": req.user._id },
+          ],
+        };
 
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
@@ -694,6 +699,8 @@ const getAdminTasks = async (req, res) => {
   }
 };
 
+const mongoose = require("mongoose");
+
 const createTask = async (req, res) => {
   try {
     const {
@@ -707,12 +714,33 @@ const createTask = async (req, res) => {
       todoChecklist,
     } = req.body;
 
+    // Ensure main task assignees is an array
     if (!Array.isArray(assignedTo)) {
       return res
         .status(400)
         .json({ message: "Assigned to must be an array of user IDs" });
     }
 
+    // ✅ Validate todoChecklist entries if provided
+    if (todoChecklist && Array.isArray(todoChecklist)) {
+      for (const item of todoChecklist) {
+        if (!item.text) {
+          return res
+            .status(400)
+            .json({ message: "Each checklist item must have a text field." });
+        }
+        if (
+          item.assignedTo &&
+          !mongoose.Types.ObjectId.isValid(item.assignedTo)
+        ) {
+          return res
+            .status(400)
+            .json({ message: "Invalid assignedTo in checklist." });
+        }
+      }
+    }
+
+    // ✅ Create the task
     const task = await Task.create({
       title,
       description,
@@ -725,24 +753,36 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    // grab socket io server
+    // 🔔 Notify assigned users
     const io = req.app.get("io");
 
-    // create notifications
     const notifications = await Promise.all(
       assignedTo.map(async (userId) => {
-        const n = await Notification.create({
+        return await Notification.create({
           user: userId,
           message: `You have been assigned a new task: ${task.title}`,
           taskId: task._id,
           type: "task",
         });
-        return n;
       })
     );
 
-    // emit notifications
+    // Emit notifications via socket.io
     notifications.forEach((notification) => {
+      try {
+        if (!notification || !notification.user) {
+          console.warn(
+            "⚠️ Skipped emitting notification due to missing user:",
+            notification
+          );
+          return;
+        }
+
+        const room = notification.user.toString();
+        io.to(room).emit("new-notification", notification);
+      } catch (emitErr) {
+        console.error("❌ Socket emit failed:", emitErr.message);
+      }
       try {
         if (!notification || !notification.user) {
           console.warn(
@@ -775,7 +815,7 @@ const updateTask = async (req, res) => {
     const role = req.user.role;
     const oldAssigned = task.assignedTo.map((id) => id.toString());
 
-    // --- User can only update todoChecklist ---
+    // ✅ If user, allow only checklist item completion
     if (role === "user") {
       if (req.body.todoChecklist) {
         task.todoChecklist = req.body.todoChecklist;
@@ -790,13 +830,36 @@ const updateTask = async (req, res) => {
         .json({ message: "Users can only update the todo checklist." });
     }
 
-    // --- Admin can update all except dueDate ---
+    // ✅ Common checklist validation if provided
+    if (req.body.todoChecklist && Array.isArray(req.body.todoChecklist)) {
+      for (const item of req.body.todoChecklist) {
+        if (!item.text) {
+          return res
+            .status(400)
+            .json({ message: "Each checklist item must have a text field." });
+        }
+        if (
+          item.assignedTo &&
+          !mongoose.Types.ObjectId.isValid(item.assignedTo)
+        ) {
+          return res
+            .status(400)
+            .json({ message: "Invalid assignedTo in checklist." });
+        }
+      }
+    }
+
+    // ✅ Admin can update all except dueDate
     if (role === "admin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+
+      if (req.body.todoChecklist) {
+        task.todoChecklist = req.body.todoChecklist;
+      }
 
       if (req.body.assignedTo) {
         if (!Array.isArray(req.body.assignedTo)) {
@@ -814,7 +877,7 @@ const updateTask = async (req, res) => {
       }
     }
 
-    // --- SuperAdmin can update everything ---
+    // ✅ SuperAdmin can update everything
     if (role === "superAdmin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
@@ -834,6 +897,7 @@ const updateTask = async (req, res) => {
       }
     }
 
+    // Now you’ve updated task.assignedTo in-memory—time to save
     const updatedTask = await task.save();
 
     if (req.body.assignedTo) {
@@ -940,8 +1004,16 @@ const updateTaskChecklist = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    const isAssigned =
+      task.assignedTo.some(
+        (userId) => userId.toString() === req.user._id.toString()
+      ) ||
+      task.todoChecklist.some(
+        (item) => item.assignedTo?.toString() === req.user._id.toString()
+      );
+
     if (
-      !task.assignedTo.includes(req.user._id) &&
+      !isAssigned &&
       req.user.role !== "superAdmin" &&
       req.user.role !== "admin"
     ) {
@@ -1000,8 +1072,9 @@ const getDashboardData = async (req, res) => {
   try {
     const { timeframe, startDate, endDate } = req.query;
     const now = new Date();
-    let dateFilter = {};
 
+    // === DATE FILTER ===
+    let dateFilter = {};
     if (timeframe) {
       switch (timeframe) {
         case "today":
@@ -1044,36 +1117,43 @@ const getDashboardData = async (req, res) => {
           break;
 
         default:
-          // ignore unknown
           break;
       }
     }
 
-    // Fetch statistics
-    // before: const totalTasks = await Task.countDocuments();
-    const totalTasks = await Task.countDocuments(dateFilter);
-    const newTasks = await Task.countDocuments({
+    // === ENHANCED FILTER (assignedTo or todoChecklist.assignedTo) ===
+    const matchFilter = {
       ...dateFilter,
+      $or: [
+        { assignedTo: { $exists: true, $ne: [] } },
+        { "todoChecklist.assignedTo": { $exists: true } },
+      ],
+    };
+
+    // === BASIC STATS ===
+    const totalTasks = await Task.countDocuments(matchFilter);
+    const newTasks = await Task.countDocuments({
+      ...matchFilter,
       status: "new",
     });
     const inProgressTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "inProgress",
     });
     const completedTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "completed",
     });
     const pendingTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "pending",
     });
     const delayedTasks = await Task.countDocuments({
-      ...dateFilter,
+      ...matchFilter,
       status: "delayed",
     });
 
-    // Ensure all task status
+    // === STATUS DISTRIBUTION ===
     const taskStatuses = [
       "new",
       "pending",
@@ -1081,41 +1161,24 @@ const getDashboardData = async (req, res) => {
       "completed",
       "delayed",
     ];
-
     const taskDistributionRaw = await Task.aggregate([
-      {
-        $match: dateFilter,
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
+      { $match: matchFilter },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
-
     const taskDistribution = taskStatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/\s+/g, "");
-      acc[formattedKey] =
+      const formatted = status.replace(/\s+/g, "");
+      acc[formatted] =
         taskDistributionRaw.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
     taskDistribution["All"] = totalTasks;
 
-    // Ensure all priority level
+    // === PRIORITY DISTRIBUTION ===
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
-      {
-        $match: dateFilter,
-      },
-      {
-        $group: {
-          _id: "$priority",
-          count: { $sum: 1 },
-        },
-      },
+      { $match: matchFilter },
+      { $group: { _id: "$priority", count: { $sum: 1 } } },
     ]);
-
     const taskPrioritiesLevels = taskPriorities.reduce((acc, priority) => {
       acc[priority] =
         taskPrioritiesLevelsRaw.find((item) => item._id === priority)?.count ||
@@ -1123,14 +1186,16 @@ const getDashboardData = async (req, res) => {
       return acc;
     }, {});
 
-    // Fetch recent 10 tasks
-    const recentTasks = await Task.find()
+    // === RECENT TASKS ===
+    const recentTasks = await Task.find(matchFilter)
       .sort({ createdAt: -1 })
       .limit(10)
       .select("companyName title status priority dueDate createdAt");
 
-    const monthlyData = await getEnhancedMonthlyTaskData(dateFilter);
+    // === MONTHLY DATA (pass matchFilter)
+    const monthlyData = await getEnhancedMonthlyTaskData(matchFilter);
 
+    // === FINAL RESPONSE ===
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -1157,7 +1222,11 @@ const getUserDashboardData = async (req, res) => {
     const userId = req.user._id; // Only to fetch data of logged-in user
 
     // Fetch statistics for the user
-    const totalTasks = await Task.countDocuments({ assignedTo: userId });
+    const matchFilter = {
+      $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
+    };
+
+    const totalTasks = await Task.countDocuments(matchFilter);
     const newTasks = await Task.countDocuments({
       status: "new",
       assignedTo: userId,
@@ -1189,7 +1258,7 @@ const getUserDashboardData = async (req, res) => {
     ];
 
     const taskDistributionRaw = await Task.aggregate([
-      { $match: { assignedTo: userId } },
+      { $match: matchFilter },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
@@ -1204,7 +1273,7 @@ const getUserDashboardData = async (req, res) => {
     // Ensure all priority level
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
-      { $match: { assignedTo: userId } },
+      { $match: matchFilter },
       { $group: { _id: "$priority", count: { $sum: 1 } } },
     ]);
 
