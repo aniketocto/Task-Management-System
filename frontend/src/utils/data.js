@@ -29,7 +29,7 @@ export const SIDE_MENU_ADMIN_DATA = [
   },
   {
     id: "04",
-    label: "View Tasks",
+    label: "My Tasks",
     icon: LuClipboardCheck,
     path: "/admin/my-tasks",
   },
