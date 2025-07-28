@@ -13,6 +13,8 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  console.log(selectedUsers);
+
   const getAllUser = async () => {
     setLoading(true);
     try {
@@ -21,7 +23,6 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
       if (response.data?.length > 0) {
         setAllUsers(response.data);
       }
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -30,24 +31,23 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
   };
 
   const toggleUserSelection = (userId) => {
-    setTempSelectedUsers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
+    setTempSelectedUsers((prev) => {
+      const ids = prev.map((u) => (typeof u === "string" ? u : u._id));
+      return ids.includes(userId)
+        ? prev.filter((u) => (typeof u === "string" ? u : u._id) !== userId)
+        : [...prev, userId];
+    });
   };
 
   const handleAssign = () => {
-    setSelectedUsers(tempSelectedUsers);
+    setSelectedUsers(tempSelectedUsers); // ✅ just array of IDs
     setIsModalOpen(false);
   };
 
-  const selectedUserAvatars = allUsers
-    .filter((user) => selectedUsers.includes(user._id))
-    .map((user) => ({
-      name: user.name,
-      profileImageUrl: user.profileImageUrl,
-    }));
+  const selectedUserAvatars = selectedUsers.map((user) => ({
+    name: user.name,
+    profileImageUrl: user.profileImageUrl,
+  }));
 
   useEffect(() => {
     getAllUser();
@@ -72,7 +72,7 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
       {loading && (
         <div className="fixed top-0 left-0 w-screen h-screen z-50 bg-black/5 flex flex-col items-center justify-center">
           <SyncLoader color="#e43941" loading={true} size={20} />
-          <p className="text-white mt-4 text-lg font-medium">Loading...</p>
+          <p className="text-white mt-4 text- lg font-medium">Loading...</p>
         </div>
       )}
       {selectedUserAvatars.length === 0 && (
