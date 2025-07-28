@@ -95,6 +95,9 @@ const CreateTask = () => {
 
   // Update Tasks
   const updateTask = async () => {
+    console.log(taskData);
+    console.log("Updating");
+
     setLoading(true);
 
     try {
@@ -112,9 +115,12 @@ const CreateTask = () => {
             completed: matchedTask
               ? matchedTask.completed
               : item.completed || false,
-            assignedTo: item.assignedTo || [],
+            assignedTo:
+              Array.isArray(item.assignedTo) && item.assignedTo.length > 0
+                ? item.assignedTo
+                : matchedTask?.assignedTo || [],
           };
-        });   
+        });
 
       const payload = {
         ...taskData,
@@ -124,6 +130,7 @@ const CreateTask = () => {
       if (user?.role !== "superAdmin") {
         delete payload.dueDate;
       }
+      console.log(payload, "payload");
 
       const response = await axiosInstance.put(
         API_PATHS.TASKS.UPDATE_TASK_BY_ID(taskId),
@@ -169,10 +176,11 @@ const CreateTask = () => {
       setError((prevError) => [...prevError, "Task is not assigned to anyone"]);
       return;
     }
-    if (taskData.todoChecklist.length === 0) {
+    if (taskData.todoChecklist.length === 0 && user?.role !== "superAdmin") {
       setError((prevError) => [...prevError, "Please add todo checklist"]);
       return;
     }
+
     if (taskId) {
       updateTask();
       return;
@@ -203,7 +211,8 @@ const CreateTask = () => {
             : null,
           dueDateStatus: taskInfo.dueDateStatus,
           pendingDueDate: taskInfo.pendingDueDate,
-          assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
+          // assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
+          assignedTo: taskInfo.assignedTo || [], // ✅ full objects
           todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
           createdAt: taskInfo.createdAt,

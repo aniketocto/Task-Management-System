@@ -13,8 +13,6 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
-  console.log(selectedUsers);
-
   const getAllUser = async () => {
     setLoading(true);
     try {
@@ -44,10 +42,21 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
     setIsModalOpen(false);
   };
 
-  const selectedUserAvatars = selectedUsers.map((user) => ({
-    name: user.name,
-    profileImageUrl: user.profileImageUrl,
-  }));
+  const selectedUserAvatars = selectedUsers
+    .map((user) => {
+      if (typeof user === "object") {
+        return {
+          name: user.name,
+          profileImageUrl: user.profileImageUrl,
+        };
+      } else {
+        const found = allUsers.find((u) => u._id === user);
+        return found
+          ? { name: found.name, profileImageUrl: found.profileImageUrl }
+          : null;
+      }
+    })
+    .filter(Boolean);
 
   useEffect(() => {
     getAllUser();
@@ -126,7 +135,9 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
 
                 <input
                   type="checkbox"
-                  checked={tempSelectedUsers.includes(user._id)}
+                  checked={tempSelectedUsers.some((u) =>
+                    typeof u === "object" ? u._id === user._id : u === user._id
+                  )}
                   readOnly
                   className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none"
                   onClick={(e) => e.stopPropagation()} // optional: if you still want to prevent bubbling
