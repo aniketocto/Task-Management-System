@@ -6,6 +6,7 @@ import DashboardLayout from "components/layouts/DashboardLayout";
 import AvatarGroup from "components/layouts/AvatarGroup";
 import moment from "moment";
 import { LuSquareArrowOutUpRight } from "react-icons/lu";
+import toast from "react-hot-toast";
 
 const ViewTaskDetails = () => {
   const { id } = useParams();
@@ -80,6 +81,7 @@ const ViewTaskDetails = () => {
           todoChecklist[index].completed = !todoChecklist[index].completed;
         }
       } catch (error) {
+        toast.error(error.message);
         console.error("Error updating todo checklist:", error);
       }
     }
@@ -99,7 +101,6 @@ const ViewTaskDetails = () => {
     }
     return () => {};
   }, [id]);
-
 
   return (
     // This line Shows the left side dashboard on the Task-details page
@@ -176,6 +177,7 @@ const ViewTaskDetails = () => {
                   text={item.text}
                   isChecked={item?.completed}
                   onChange={() => updateTodoChecklist(index)}
+                  assignedTo={item?.assignedTo}
                 />
               ))}
             </div>
@@ -216,19 +218,30 @@ const InfoBox = ({ label, value }) => {
   );
 };
 
-const TodoCheckList = ({ text, isChecked, onChange, assignedTo }) => {
+const TodoCheckList = ({ text, isChecked, onChange, assignedTo = [] }) => {
   return (
-    <div className="flex items-center gap-3 p-3">
-      <input
-        type="checkbox"
-        name="taskCheck"
-        checked={isChecked}
-        onChange={onChange}
-        className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none cursor-pointer"
+    <div className="flex items-center justify-between border px-3 py-2 rounded-md mb-3 mt-2 border-gray-100 gap-2">
+      <div className="flex justify-center items-center gap-2">
+        <input
+          type="checkbox"
+          name="taskCheck"
+          checked={isChecked}
+          onChange={onChange}
+          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none cursor-pointer"
+        />
+        <label htmlFor="taskCheck" className="text-[15px] text-gray-50">
+          {text}
+        </label>
+      </div>
+      <AvatarGroup
+        avatars={
+          assignedTo?.map((user) => ({
+            name: user?.name,
+            profileImageUrl: user?.profileImageUrl,
+          })) || []
+        }
+        maxVisible={3}
       />
-      <label htmlFor="taskCheck" className="text-[15px] text-gray-50">
-        {text}
-      </label>
     </div>
   );
 };

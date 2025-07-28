@@ -6,7 +6,7 @@ import Modal from "../../components/layouts/Modal";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
 import { SyncLoader } from "react-spinners";
 
-const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
+const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
   const [allUsers, setAllUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempSelectedUsers, setTempSelectedUsers] = useState([]);
@@ -21,6 +21,7 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
       if (response.data?.length > 0) {
         setAllUsers(response.data);
       }
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -100,6 +101,10 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
         />
         <div className="sapce-y-4 h-[60vh] overflow-y-auto">
           {allUsers
+            .filter((user) => {
+              if (role === "admin") return user.role === "admin";
+              return true;
+            })
             .filter((user) =>
               user.name.toLowerCase().includes(searchTerm.toLowerCase())
             )

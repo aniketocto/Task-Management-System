@@ -36,8 +36,14 @@ const ManageTask = () => {
   const [departments, setDepartments] = useState([]);
 
   const [availableMonths, setAvailableMonths] = useState([]);
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortBy, setSortBy] = useState(() => {
+    return localStorage.getItem("taskSortBy") || "createdAt";
+  });
+
+  const [sortOrder, setSortOrder] = useState(() => {
+    return localStorage.getItem("taskSortOrder") || "desc";
+  });
+
   const [viewType, setViewType] = useState("table");
 
   const [loading, setLoading] = useState(false);
@@ -162,6 +168,7 @@ const ManageTask = () => {
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
   };
+
   return (
     <DashboardLayout activeMenu="Manage Tasks">
       <div className="my-5">
@@ -207,7 +214,6 @@ const ManageTask = () => {
                   setPage(1);
                 }}
                 className="border rounded px-3 py-2 text-sm text-white"
-                
               >
                 <option className="text-black" value="">
                   All Time
@@ -346,10 +352,14 @@ const ManageTask = () => {
               sortBy={sortBy}
               onToggleSort={() => {
                 if (sortBy === "dueDate") {
-                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                  const newOrder = sortOrder === "asc" ? "desc" : "asc";
+                  setSortOrder(newOrder);
+                  localStorage.setItem("taskSortOrder", newOrder);
                 } else {
                   setSortBy("dueDate");
                   setSortOrder("asc");
+                  localStorage.setItem("taskSortBy", "dueDate");
+                  localStorage.setItem("taskSortOrder", "asc");
                 }
                 setPage(1);
               }}
@@ -397,14 +407,13 @@ const ManageTask = () => {
           marginPagesDisplayed={2}
           pageRangeDisplayed={3}
           onPageChange={(e) => setPage(e.selected + 1)}
-          containerClassName={"flex gap-2 mt-4 justify-center"}
-          pageClassName={"px-3 py-1 border rounded"}
-          activeClassName={"bg-primary text-white"}
-          previousClassName={
-            "px-3 py-1 cursor-pointer border text-white rounded"
-          }
-          nextClassName={"px-3 py-1 border cursor-pointer text-white rounded"}
-          disabledClassName={"opacity-50 cursor-not-allowed"}
+          containerClassName="flex gap-2 mt-4 justify-center"
+          pageClassName="" // leave this empty
+          pageLinkClassName="px-3 py-1 border rounded text-white cursor-pointer transition-colors duration-200 block"
+          activeLinkClassName="bg-[#E43941] border-[#E43941] text-white"
+          previousLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+          nextLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+          disabledLinkClassName="opacity-50 cursor-not-allowed"
         />
       </div>
     </DashboardLayout>
