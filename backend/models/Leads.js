@@ -10,11 +10,8 @@ const leadSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
-      // If you never want duplicates:
-      unique: true,
     },
     jobProfile: {
       type: String,
