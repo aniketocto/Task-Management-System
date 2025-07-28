@@ -59,7 +59,7 @@ const Dashboard = () => {
       { status: "completed", count: taskDistribution?.completed || 0 },
       { status: "pending", count: taskDistribution?.pending || 0 },
       { status: "delayed", count: taskDistribution?.delayed || 0 },
-      { status: "working", count: taskDistribution?.startedWork || 0 },
+      // { status: "working", count: taskDistribution?.startedWork || 0 },
     ];
 
     setPieChartData(taskDistributionData);
@@ -167,7 +167,7 @@ const Dashboard = () => {
       setFilterDepartment,
     }) || {};
 
-  console.log("chartsToUse passed to prepareChartData:", chartsToUse);
+  
 
   useEffect(() => {
     if (filterMonth) {
