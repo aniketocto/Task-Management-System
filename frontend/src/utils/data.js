@@ -60,7 +60,6 @@ export const SIDE_MENU_SUPER_ADMIN_DATA = [
     icon: LuLayoutDashboard,
     path: "/admin/dashboard",
   },
-
   {
     id: "03",
     label: "Manage Tasks",

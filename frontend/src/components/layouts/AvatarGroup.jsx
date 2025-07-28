@@ -1,7 +1,6 @@
 import React from "react";
 
 const AvatarGroup = ({ avatars, maxVisible = 3 }) => {
-  console.log("AvatarGroup users:", avatars); // 👈 You'll see names here
 
   return (
     <div className="flex items-center">

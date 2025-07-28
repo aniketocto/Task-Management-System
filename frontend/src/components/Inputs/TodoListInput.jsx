@@ -23,10 +23,10 @@ const TodoListInput = ({ todoList = [], setTodoList }) => {
   };
 
   //   function to handle removing option
-  const handleRemoveOption = (index) => {
-    const updatedArr = todoList.filter((_, i) => i !== index);
-    setTodoList(updatedArr);
-  };
+  // const handleRemoveOption = (index) => {
+  //   const updatedArr = todoList.filter((_, i) => i !== index);
+  //   setTodoList(updatedArr);
+  // };
 
   return (
     <div>
@@ -53,12 +53,13 @@ const TodoListInput = ({ todoList = [], setTodoList }) => {
           {/* 👇 Add select user & avatar for this checklist item */}
           <div>
             <SelectUsers
-              selectedUsers={item.assignedTo ? [item.assignedTo] : []}
+              selectedUsers={item.assignedTo || []}
               setSelectedUsers={(newUserIdArr) => {
                 const updated = [...todoList];
-                updated[index].assignedTo = newUserIdArr[0]; // single user
+                updated[index].assignedTo = newUserIdArr; // ✅ full array
                 setTodoList(updated);
               }}
+              role="user"
             />
           </div>
           {/* <button

@@ -71,8 +71,8 @@ const CreateTask = () => {
     try {
       const todoList = taskData.todoChecklist?.map((item) => ({
         text: item.text,
-        completed: false,
-        assignedTo: item.assignedTo || null,
+        completed: item.completed || false, // ✅ preserve completed state
+        assignedTo: item.assignedTo || [],
       }));
 
       const response = await axiosInstance.post(API_PATHS.TASKS.CREATE_TASK, {
@@ -102,16 +102,19 @@ const CreateTask = () => {
         ?.filter((item) => item?.text?.trim())
         .map((item) => {
           const prevTodoCheckList = currentTask?.todoChecklist || [];
-          const matchedTask = prevTodoCheckList.find(
-            (task) => task.text === item.text
-          );
+          const matchedTask = item._id
+            ? prevTodoCheckList.find((task) => task._id === item._id)
+            : null;
 
           return {
+            _id: item._id, // important for backend merge
             text: item.text,
-            completed: matchedTask ? matchedTask.completed : false,
-            assignedTo: item.assignedTo || null,
+            completed: matchedTask
+              ? matchedTask.completed
+              : item.completed || false,
+            assignedTo: item.assignedTo || [],
           };
-        });
+        });   
 
       const payload = {
         ...taskData,
@@ -395,6 +398,7 @@ const CreateTask = () => {
                   setSelectedUsers={(selectedUsers) =>
                     handleValueChange("assignedTo", selectedUsers)
                   }
+                  role="admin"
                 />
               </div>
             </div>

@@ -556,10 +556,9 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
 
 const getTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id).populate(
-      "assignedTo",
-      "name email profileImageUrl"
-    );
+    const task = await Task.findById(req.params.id)
+      .populate("assignedTo", "name email profileImageUrl")
+      .populate("todoChecklist.assignedTo", "name email profileImageUrl");
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
@@ -721,22 +720,48 @@ const createTask = async (req, res) => {
         .json({ message: "Assigned to must be an array of user IDs" });
     }
 
-    // ✅ Validate todoChecklist entries if provided
+    // Normalize and validate todoChecklist
+    const normalizedChecklist = [];
+    const checklistAssigneesSet = new Set();
+
     if (todoChecklist && Array.isArray(todoChecklist)) {
-      for (const item of todoChecklist) {
+      for (let i = 0; i < todoChecklist.length; i++) {
+        const item = todoChecklist[i];
+
         if (!item.text) {
           return res
             .status(400)
             .json({ message: "Each checklist item must have a text field." });
         }
-        if (
-          item.assignedTo &&
-          !mongoose.Types.ObjectId.isValid(item.assignedTo)
-        ) {
-          return res
-            .status(400)
-            .json({ message: "Invalid assignedTo in checklist." });
+
+        // Normalize to array
+        if (item.assignedTo) {
+          if (typeof item.assignedTo === "string") {
+            item.assignedTo = [item.assignedTo];
+          }
+
+          if (!Array.isArray(item.assignedTo)) {
+            return res.status(400).json({
+              message:
+                "Checklist 'assignedTo' must be a string or an array of user IDs.",
+            });
+          }
+
+          // Validate IDs
+          for (const id of item.assignedTo) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+              return res.status(400).json({
+                message: `Invalid user ID in checklist assignedTo: ${id}`,
+              });
+            }
+
+            checklistAssigneesSet.add(id); // Collect for notifications
+          }
+        } else {
+          item.assignedTo = [];
         }
+
+        normalizedChecklist.push(item);
       }
     }
 
@@ -749,15 +774,20 @@ const createTask = async (req, res) => {
       dueDate,
       priority,
       attachments,
-      todoChecklist,
+      todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
     });
 
-    // 🔔 Notify assigned users
+    // 🔔 Notify all unique users (main assignees + checklist assignees)
+    const allUsersToNotify = new Set([
+      ...assignedTo.map(String),
+      ...checklistAssigneesSet,
+    ]);
+
     const io = req.app.get("io");
 
     const notifications = await Promise.all(
-      assignedTo.map(async (userId) => {
+      Array.from(allUsersToNotify).map(async (userId) => {
         return await Notification.create({
           user: userId,
           message: `You have been assigned a new task: ${task.title}`,
@@ -815,10 +845,14 @@ const updateTask = async (req, res) => {
     const role = req.user.role;
     const oldAssigned = task.assignedTo.map((id) => id.toString());
 
-    // ✅ If user, allow only checklist item completion
+    // ✅ Only allow users to update their checklist
     if (role === "user") {
       if (req.body.todoChecklist) {
-        task.todoChecklist = req.body.todoChecklist;
+        req.body.todoChecklist = normalizeChecklist(req.body.todoChecklist);
+        task.todoChecklist = mergeChecklistPreservingCompletion(
+          task.todoChecklist,
+          req.body.todoChecklist
+        );
         const updatedTask = await task.save();
         return res.status(200).json({
           message: "Task updated successfully (todo checklist only)",
@@ -830,26 +864,12 @@ const updateTask = async (req, res) => {
         .json({ message: "Users can only update the todo checklist." });
     }
 
-    // ✅ Common checklist validation if provided
+    // ✅ Validate and normalize checklist
     if (req.body.todoChecklist && Array.isArray(req.body.todoChecklist)) {
-      for (const item of req.body.todoChecklist) {
-        if (!item.text) {
-          return res
-            .status(400)
-            .json({ message: "Each checklist item must have a text field." });
-        }
-        if (
-          item.assignedTo &&
-          !mongoose.Types.ObjectId.isValid(item.assignedTo)
-        ) {
-          return res
-            .status(400)
-            .json({ message: "Invalid assignedTo in checklist." });
-        }
-      }
+      req.body.todoChecklist = normalizeChecklist(req.body.todoChecklist);
     }
 
-    // ✅ Admin can update all except dueDate
+    // ✅ Admin role
     if (role === "admin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
@@ -858,14 +878,17 @@ const updateTask = async (req, res) => {
       task.attachments = req.body.attachments || task.attachments;
 
       if (req.body.todoChecklist) {
-        task.todoChecklist = req.body.todoChecklist;
+        task.todoChecklist = mergeChecklistPreservingCompletion(
+          task.todoChecklist,
+          req.body.todoChecklist
+        );
       }
 
       if (req.body.assignedTo) {
         if (!Array.isArray(req.body.assignedTo)) {
-          return res
-            .status(400)
-            .json({ message: "Assigned to must be an array of user IDs" });
+          return res.status(400).json({
+            message: "Assigned to must be an array of user IDs",
+          });
         }
         task.assignedTo = req.body.assignedTo;
       }
@@ -877,7 +900,7 @@ const updateTask = async (req, res) => {
       }
     }
 
-    // ✅ SuperAdmin can update everything
+    // ✅ SuperAdmin role
     if (role === "superAdmin") {
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
@@ -885,21 +908,28 @@ const updateTask = async (req, res) => {
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
-      task.todoChecklist = req.body.todoChecklist || task.todoChecklist;
+
+      if (req.body.todoChecklist) {
+        task.todoChecklist = mergeChecklistPreservingCompletion(
+          task.todoChecklist,
+          req.body.todoChecklist
+        );
+      }
 
       if (req.body.assignedTo) {
         if (!Array.isArray(req.body.assignedTo)) {
-          return res
-            .status(400)
-            .json({ message: "Assigned to must be an array of user IDs" });
+          return res.status(400).json({
+            message: "Assigned to must be an array of user IDs",
+          });
         }
         task.assignedTo = req.body.assignedTo;
       }
     }
 
-    // Now you’ve updated task.assignedTo in-memory—time to save
+    // ✅ Save and notify newly added users (same logic as before)
     const updatedTask = await task.save();
 
+    // ✅ Notify newly assigned users
     if (req.body.assignedTo) {
       const newAssigned = updatedTask.assignedTo.map((id) => id.toString());
       const addedUsers = newAssigned.filter((id) => !oldAssigned.includes(id));
@@ -943,6 +973,42 @@ const updateTask = async (req, res) => {
       .status(500)
       .json({ message: "Server error", error: error.message });
   }
+};
+
+const normalizeChecklist = (checklist) => {
+  return checklist.map((item) => {
+    let assigned = item.assignedTo;
+    if (assigned) {
+      if (typeof assigned === "string") assigned = [assigned];
+      if (!Array.isArray(assigned)) {
+        throw new Error("Checklist assignedTo must be a string or array.");
+      }
+
+      // Validate ObjectIDs
+      assigned = assigned.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    } else {
+      assigned = [];
+    }
+
+    return {
+      ...item,
+      assignedTo: assigned,
+    };
+  });
+};
+
+// 🔧 Helper to merge and preserve completed status
+const mergeChecklistPreservingCompletion = (existing = [], incoming = []) => {
+  return incoming.map((item) => {
+    const match = item._id
+      ? existing.find((e) => e._id?.toString() === item._id)
+      : null;
+
+    return {
+      ...item,
+      completed: match?.completed || false, // ✅ preserve true
+    };
+  });
 };
 
 const deleteTask = async (req, res) => {
@@ -1004,6 +1070,8 @@ const updateTaskChecklist = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
+
     const isAssigned =
       task.assignedTo.some(
         (userId) => userId.toString() === req.user._id.toString()
@@ -1012,19 +1080,40 @@ const updateTaskChecklist = async (req, res) => {
         (item) => item.assignedTo?.toString() === req.user._id.toString()
       );
 
-    if (
-      !isAssigned &&
-      req.user.role !== "superAdmin" &&
-      req.user.role !== "admin"
-    ) {
+    if (!isAssigned && !isPrivileged) {
       return res.status(403).json({
         message: "You are not authorized to update the task checklist.",
       });
     }
 
-    task.todoChecklist = todoChecklist;
+    if (isPrivileged) {
+      // Admins can update the full checklist
+      task.todoChecklist = todoChecklist;
+    } else {
+      // 🧠 Regular users can only update their own checklist items' `completed` status
+      const updatedChecklist = task.todoChecklist.map((item) => {
+        const updated = todoChecklist.find(
+          (i) => i._id === item._id.toString()
+        );
 
-    // Auto update progress based on completed items
+        // If item matches AND user is assigned → allow completion update
+        if (
+          updated &&
+          item.assignedTo?.toString() === req.user._id.toString()
+        ) {
+          return {
+            ...item.toObject(), // ensure we spread mongoose subdoc
+            completed: updated.completed,
+          };
+        }
+
+        return item;
+      });
+
+      task.todoChecklist = updatedChecklist;
+    }
+
+    // Recalculate progress
     const completedCount = task.todoChecklist.filter(
       (item) => item.completed
     ).length;
@@ -1033,19 +1122,13 @@ const updateTaskChecklist = async (req, res) => {
       totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
     const now = new Date();
-
-    // Create a copy of dueDate at the end of the day
     const dueDateEnd = new Date(task.dueDate);
     dueDateEnd.setHours(23, 59, 59, 999);
 
     if (task.progress === 100) {
-      if (now > dueDateEnd) {
-        task.status = "delayed"; // completed, but late
-      } else {
-        task.status = "completed"; // completed on time
-      }
+      task.status = now > dueDateEnd ? "delayed" : "completed";
     } else if (now > dueDateEnd) {
-      task.status = "pending"; // overdue & not completed
+      task.status = "pending";
     } else if (task.progress > 0) {
       task.status = "inProgress";
     } else {
@@ -1054,10 +1137,9 @@ const updateTaskChecklist = async (req, res) => {
 
     await task.save();
 
-    const updatedTask = await Task.findById(req.params.id).populate(
-      "assignedTo",
-      "name email profileImageUrl"
-    );
+    const updatedTask = await Task.findById(task._id)
+      .populate("assignedTo", "name email profileImageUrl")
+      .populate("todoChecklist.assignedTo", "name email profileImageUrl");
 
     res.status(200).json({
       message: "Task checklist updated successfully",

@@ -229,16 +229,16 @@ const SignUp = () => {
                 { value: "Creative", label: "Creative" },
                 { value: "Digital", label: "Digital" },
                 { value: "Social", label: "Social" },
-                { value: "Influencer", label: "Influencer" },
                 { value: "Development", label: "Development" },
                 { value: "UiUx", label: "UI/UX" },
-                { value: "Sales", label: "Sales" },
                 { value: "Strategy", label: "Strategy" },
-                { value: "Content", label: "Content" },
-                { value: "SEO", label: "SEO" },
                 { value: "BusinessDevelopment", label: "Business Development" },
                 { value: "ClientServicing", label: "Client Servicing" },
                 { value: "Management", label: "Management" },
+                // { value: "Influencer", label: "Influencer" },
+                // { value: "Sales", label: "Sales" },
+                // { value: "Content", label: "Content" },
+                // { value: "SEO", label: "SEO" },
               ]}
             />
 
