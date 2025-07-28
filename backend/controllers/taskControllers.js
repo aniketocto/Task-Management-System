@@ -157,9 +157,9 @@ const getTasks = async (req, res) => {
 
         let newStatus;
 
-        // 🔒 Preserve "working" if previously set manually and no progress has started
-        if (taskDoc.status === "working") {
-          newStatus = "working";
+        // ✅ Preserve manually set "inProgress" if progress is still 0
+        if (taskDoc.status === "inProgress" && newProgress === 0) {
+          newStatus = "inProgress";
         } else if (newProgress === 100) {
           newStatus = now > dueDateEnd ? "delayed" : "completed";
         } else if (now > dueDateEnd) {
@@ -201,7 +201,7 @@ const getTasks = async (req, res) => {
       const [
         allTasks,
         newTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
         pendingTasks,
         inProgressTasks,
         completedTasks,
@@ -213,7 +213,7 @@ const getTasks = async (req, res) => {
         countWith("inProgress"),
         countWith("completed"),
         countWith("delayed"),
-        countWith("working"),
+        // countWith("working"),
       ]);
       result.statusSummary = {
         all: allTasks,
@@ -222,7 +222,7 @@ const getTasks = async (req, res) => {
         inProgressTasks,
         completedTasks,
         delayedTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
       };
     }
 
@@ -325,7 +325,7 @@ const getEnhancedMonthlyTaskData = async (
       inProgressTasks,
       completedTasks,
       delayedTasks,
-      startedWorkTasks,
+      // startedWorkTasks,
     ] = await Promise.all([
       Task.countDocuments(monthFilter),
       countWith("new"),
@@ -333,7 +333,7 @@ const getEnhancedMonthlyTaskData = async (
       countWith("inProgress"),
       countWith("completed"),
       countWith("delayed"),
-      countWith("working"),
+      // countWith("work/ing"),
     ]);
 
     // Priority breakdown
@@ -365,18 +365,18 @@ const getEnhancedMonthlyTaskData = async (
         inProgressTasks,
         completedTasks,
         delayedTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
       },
       priorityBreakdown: {
         ...priorityCounts,
       },
       departmentBreakdown,
-      userBreakdown,
+      // userBreakdown,
       charts: {
         taskDistribution: {
           new: newTasks,
           pending: pendingTasks,
-          startedWork: startedWorkTasks,
+          // startedWork: startedWorkTasks,
           inProgress: inProgressTasks,
           completed: completedTasks,
           delayed: delayedTasks,
@@ -423,9 +423,9 @@ const getDepartmentBreakdown = async (monthFilter) => {
         inProgress: {
           $sum: { $cond: [{ $eq: ["$status", "inProgress"] }, 1, 0] },
         },
-        startedWork: {
-          $sum: { $cond: [{ $eq: ["$status", "working"] }, 1, 0] },
-        },
+        // startedWork: {
+        //   $sum: { $cond: [{ $eq: ["$status", "working"] }, 1, 0] },
+        // },
         completed: {
           $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
         },
@@ -450,7 +450,7 @@ const getDepartmentBreakdown = async (monthFilter) => {
         inProgress: dept.inProgress,
         completed: dept.completed,
         delayed: dept.delayed,
-        startedWork: dept.startedWork,
+        // startedWork: dept.startedWork,
       },
       priorityBreakdown: {
         high: dept.high,
@@ -465,7 +465,7 @@ const getDepartmentBreakdown = async (monthFilter) => {
           completed: dept.completed,
           delayed: dept.delayed,
           All: dept.total,
-          startedWork: dept.startedWork,
+          // startedWork: dept.startedWork,
         },
         taskPrioritiesLevels: {
           high: dept.high,
@@ -516,9 +516,9 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         inProgress: {
           $sum: { $cond: [{ $eq: ["$status", "inProgress"] }, 1, 0] },
         },
-        startedWork: {
-          $sum: { $cond: [{ $eq: ["$status", "working"] }, 1, 0] },
-        },
+        // startedWork: {
+        //   $sum: { $cond: [{ $eq: ["$status", "working"] }, 1, 0] },
+        // },
         completed: {
           $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
         },
@@ -546,7 +546,7 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         inProgress: user.inProgress,
         completed: user.completed,
         delayed: user.delayed,
-        startedWork: user.startedWork,
+        // startedWork: user.startedWork,
       },
       priorityBreakdown: {
         high: user.high,
@@ -561,7 +561,7 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
           completed: user.completed,
           delayed: user.delayed,
           All: user.total,
-          startedWork: user.startedWork,
+          // startedWork: user.startedWork,
         },
         taskPrioritiesLevels: {
           high: user.high,
@@ -656,7 +656,7 @@ const getAdminTasks = async (req, res) => {
       const [
         allTasks,
         newTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
         pendingTasks,
         inProgressTasks,
         completedTasks,
@@ -668,7 +668,7 @@ const getAdminTasks = async (req, res) => {
         countWith("inProgress"),
         countWith("completed"),
         countWith("delayed"),
-        countWith("working"),
+        // countWith("working"),
       ]);
 
       result.statusSummary = {
@@ -678,7 +678,7 @@ const getAdminTasks = async (req, res) => {
         inProgressTasks,
         completedTasks,
         delayedTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
       };
     }
 
@@ -1260,10 +1260,10 @@ const getDashboardData = async (req, res) => {
       ...matchFilter,
       status: "delayed",
     });
-    const startedWorkTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "working",
-    });
+    // const startedWorkTasks = await Task.countDocuments({
+    //   ...matchFilter,
+    //   status: "working",
+    // });
 
     // === STATUS DISTRIBUTION ===
     const taskStatuses = [
@@ -1272,7 +1272,7 @@ const getDashboardData = async (req, res) => {
       "inProgress",
       "completed",
       "delayed",
-      "working",
+      // "working",
     ];
     const taskDistributionRaw = await Task.aggregate([
       { $match: matchFilter },
@@ -1317,7 +1317,7 @@ const getDashboardData = async (req, res) => {
         completedTasks,
         pendingTasks,
         delayedTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
       },
       charts: {
         taskDistribution,
@@ -1361,10 +1361,10 @@ const getUserDashboardData = async (req, res) => {
       status: "delayed",
       assignedTo: userId,
     });
-    const startedWorkTasks = await Task.countDocuments({
-      status: "working",
-      assignedTo: userId,
-    });
+    // const startedWorkTasks = await Task.countDocuments({
+    //   status: "working",
+    //   assignedTo: userId,
+    // });
 
     // Ensure all task status
     const taskStatuses = [
@@ -1373,7 +1373,7 @@ const getUserDashboardData = async (req, res) => {
       "inProgress",
       "completed",
       "delayed",
-      "working",
+      // "working",
     ];
 
     const taskDistributionRaw = await Task.aggregate([
@@ -1419,7 +1419,7 @@ const getUserDashboardData = async (req, res) => {
         completedTasks,
         pendingTasks,
         delayedTasks,
-        startedWorkTasks,
+        // startedWorkTasks,
       },
       charts: {
         taskDistribution,
