@@ -13,6 +13,8 @@ const Progress = ({ progress, status }) => {
         return "bg-[#6FE439] text-green-500 border border-[#6FE439]";
       case "delayed":
         return "bg-[#E43941] text-green-500 border border-[#E43941]";
+      case "StartedWork":
+        return "bg-[#E48E39] text-yellow-600 border border-[#E48E39]";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }

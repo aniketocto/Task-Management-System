@@ -124,6 +124,7 @@ const ManageTask = () => {
           { label: "completed", count: s.completedTasks || 0 },
           { label: "pending", count: s.pendingTasks || 0 },
           { label: "delayed", count: s.delayedTasks || 0 },
+          { label: "working", count: s.startedWorkTasks || 0 },
         ]);
 
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));

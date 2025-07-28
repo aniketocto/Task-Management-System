@@ -166,6 +166,7 @@ export const infoCard = [
   { label: "Completed Tasks", key: "completed", color: "bg-[#6FE439]" },
   { label: "Pending Tasks", key: "pending", color: "bg-[#39C5E4]" },
   { label: "Delayed Tasks", key: "delayed", color: "bg-[#E43941]" },
+  { label: "Working Tasks", key: "startedWork", color: "bg-[#E4CA39]" },
   { label: "Total Tasks", key: "All", color: "bg-[#B439E4]" },
 ];
 
