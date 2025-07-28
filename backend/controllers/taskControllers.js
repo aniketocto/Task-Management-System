@@ -813,8 +813,21 @@ const createTask = async (req, res) => {
       } catch (emitErr) {
         console.error("❌ Socket emit failed:", emitErr.message);
       }
-    });
+      try {
+        if (!notification || !notification.user) {
+          console.warn(
+            "⚠️ Skipped emitting notification due to missing user:",
+            notification
+          );
+          return;
+        }
 
+        const room = notification.user.toString();
+        io.to(room).emit("new-notification", notification);
+      } catch (emitErr) {
+        console.error("❌ Socket emit failed:", emitErr.message);
+      }
+    });
     res.json({ message: "Task & notifications created successfully", task });
   } catch (error) {
     console.error("❌ createTask error:", error);
@@ -913,6 +926,7 @@ const updateTask = async (req, res) => {
       }
     }
 
+    // ✅ Save and notify newly added users (same logic as before)
     const updatedTask = await task.save();
 
     // ✅ Notify newly assigned users
