@@ -9,11 +9,14 @@ import {
 } from "../../utils/data";
 import AnalogClock from "./AnalogClock";
 import USER_IMG from "../../assets/user_fallback.svg";
+import Modal from "./Modal";
+import DeleteAlert from "./DeleteAlert";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser } = useContext(UserContext);
   const [sideMenuData, setSideMenuData] = useState([]);
   const [profileImg, setProfileImg] = useState("");
+  const [openLogoutModal, setOpenLogoutModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -28,6 +31,9 @@ const SideMenu = ({ activeMenu }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("taskManagerToken");
+    localStorage.removeItem("taskTableSortBy");
+    localStorage.removeItem("taskTableSortOrder");
+
     clearUser();
     navigate("/login");
   };
@@ -68,27 +74,47 @@ const SideMenu = ({ activeMenu }) => {
         <p className="text-[12px] text-gray-500"> {user?.department || ""} </p>
         <p className="text-[12px] text-gray-500 mb-5"> {user?.email || ""} </p>
 
-        {sideMenuData.map((item, index) => (
-          <button
-            key={`menu_${index}`}
-            className={`w-full flex items-center gap-4 text-[15px] ${
-              activeMenu == item.label
-                ? "text-[#E43941] bg-linear-to-r from-red-500/20 to-transparent border-r-3"
-                : "text-white"
-            } py-3 px-6 mb-3 cursor-pointer`}
-            onClick={() => handleClick(item.path)}
-          >
-            <item.icon
-              className={`text-xl ${
-                activeMenu == item.label && "text-[#E43941]"
-              }`}
-            />
-            {item.label}
-          </button>
-        ))}
+        {sideMenuData.map((item, index) => {
+          const isLogout = item.path === "logout";
+
+          return (
+            <button
+              key={`menu_${index}`}
+              className={`w-full flex items-center gap-4 text-[15px] ${
+                activeMenu === item.label
+                  ? "text-[#E43941] bg-linear-to-r from-red-500/20 to-transparent border-r-3"
+                  : "text-white"
+              } py-3 px-6 mb-3 cursor-pointer`}
+              onClick={() => {
+                if (isLogout) {
+                  setOpenLogoutModal(true);
+                } else {
+                  handleClick(item.path);
+                }
+              }}
+            >
+              <item.icon
+                className={`text-xl ${
+                  activeMenu === item.label && "text-[#E43941]"
+                }`}
+              />
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* <AnalogClock /> */}
+      <Modal
+        isOpen={openLogoutModal}
+        onClose={() => setOpenLogoutModal(false)}
+        title="Logout"
+      >
+        <DeleteAlert
+          content="Are you sure sure you want to logout?"
+          onDelete={() => handleLogout()}
+          title="Logout"
+        />
+      </Modal>
     </div>
   );
 };
