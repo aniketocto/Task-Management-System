@@ -978,14 +978,16 @@ const updateTask = async (req, res) => {
 const normalizeChecklist = (checklist) => {
   return checklist.map((item) => {
     let assigned = item.assignedTo;
-    if (assigned) {
-      if (typeof assigned === "string") assigned = [assigned];
-      if (!Array.isArray(assigned)) {
-        throw new Error("Checklist assignedTo must be a string or array.");
-      }
 
-      // Validate ObjectIDs
-      assigned = assigned.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (Array.isArray(assigned)) {
+      // Extract _id if full user object passed
+      assigned = assigned
+        .map((entry) =>
+          typeof entry === "object" && entry._id ? entry._id : entry
+        )
+        .filter((id) => mongoose.Types.ObjectId.isValid(id));
+    } else if (typeof assigned === "string") {
+      assigned = mongoose.Types.ObjectId.isValid(assigned) ? [assigned] : [];
     } else {
       assigned = [];
     }
