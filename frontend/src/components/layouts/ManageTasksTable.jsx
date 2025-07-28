@@ -52,6 +52,8 @@ const ManageTasksTable = ({
         return "bg-[#E43941] border border-red-200";
       case "All":
         return "bg-[#B439E4] border border-purple-200";
+      case "working":
+        return "bg-[#E4ca39] border border-yellow-200";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }

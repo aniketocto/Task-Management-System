@@ -93,6 +93,8 @@ const StatCard = ({ label, count }) => {
         return "text-cyan-500";
       case "Delayed":
         return "text-red-500";
+      case "working":
+        return "text-yellow-500";
       default:
         return "text-gray-500";
     }

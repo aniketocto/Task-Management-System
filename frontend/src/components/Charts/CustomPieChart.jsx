@@ -17,9 +17,11 @@ const STATUS_COLORS = {
   completed: "#6FE439",
   delayed: "#E43941",
   pending: "#39C5E4",
+  working: "#E4CA39",
 };
 
 const CustomPieChart = ({ data }) => {
+  // console.log(data);
   return (
     <ResponsiveContainer width="100%" height={325}>
       <PieChart>

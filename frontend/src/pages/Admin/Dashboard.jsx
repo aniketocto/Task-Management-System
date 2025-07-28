@@ -17,6 +17,7 @@ import TaskListTable from "../../components/layouts/TaskListTable";
 import CustomPieChart from "../../components/Charts/CustomPieChart";
 import CustomBarChart from "../../components/Charts/CustomBarChart";
 import { infoCard, officeQuotes } from "../../utils/data";
+import SpinLoader from "../../components/layouts/SpinLoader";
 
 const getDailyQuote = () => {
   const today = new Date().toISOString().slice(0, 10);
@@ -40,6 +41,7 @@ const Dashboard = () => {
 
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [filterDepartment, setFilterDepartment] = useState(""); // selected dept
   const [departments, setDepartments] = useState([]); // available dept list
@@ -57,6 +59,7 @@ const Dashboard = () => {
       { status: "completed", count: taskDistribution?.completed || 0 },
       { status: "pending", count: taskDistribution?.pending || 0 },
       { status: "delayed", count: taskDistribution?.delayed || 0 },
+      { status: "working", count: taskDistribution?.startedWork || 0 },
     ];
 
     setPieChartData(taskDistributionData);
@@ -71,6 +74,7 @@ const Dashboard = () => {
   };
 
   const getDashboardData = async () => {
+    setLoading(true);
     try {
       const res = await axiosInstance.get(API_PATHS.TASKS.GET_DASHBOARD_DATA);
       if (res.data) {
@@ -94,6 +98,8 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -161,6 +167,8 @@ const Dashboard = () => {
       setFilterDepartment,
     }) || {};
 
+  console.log("chartsToUse passed to prepareChartData:", chartsToUse);
+
   useEffect(() => {
     if (filterMonth) {
       const count = departmentTotals[filterDepartment] || 0;
@@ -172,6 +180,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout activeMenu="Dashboard">
+      {loading && <SpinLoader />}
       <div className="card my-5">
         <div>
           <div className="flex items-center justify-between">

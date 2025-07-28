@@ -51,7 +51,6 @@ export const API_PATHS = {
   },
   CATEGORY: {
     GET_CATEGORIES: "/api/category",
-
   },
   LEADS: {
     CREATE_LEAD: "api/leads/create-lead",
@@ -60,5 +59,5 @@ export const API_PATHS = {
     UPDATE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     DELETE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     GET_DASHBOARD_DATA: "/api/leads/dashboard-data",
-  }
+  },
 };

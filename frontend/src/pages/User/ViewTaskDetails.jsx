@@ -27,6 +27,8 @@ const ViewTaskDetails = () => {
         return "bg-red-100 text-[#E43941] border border-red-200";
       case "All":
         return "bg-purple-100 text-[#B439E4] border border-purple-200";
+      case "startedWork":
+        return "bg-yellow-100 text-[#E4ca39] border border-yellow-200";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -57,6 +59,22 @@ const ViewTaskDetails = () => {
       setCreatedBy(user?.name);
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const setTaskToWorking = async () => {
+    try {
+      const response = await axiosInstance.put(
+        API_PATHS.TASKS.UPDATE_TASK_STATUS(id),
+        { status: "working" }
+      );
+      if (response.status === 200) {
+        toast.success("Task marked as Working");
+        getTaskDetailsByID(); // Refresh task
+      }
+    } catch (error) {
+      toast.error("Failed to update status");
+      console.error("Update status error:", error);
     }
   };
 
@@ -118,12 +136,23 @@ const ViewTaskDetails = () => {
                   Created By: {createdBy}
                 </p>
               </div>
-              <div
-                className={`text-[11px] md:text-[13px] font-medium ${getStatusTagColor(
-                  task?.status
-                )} px-4 py-0.5 rounded`}
-              >
-                {task?.status}
+              <div className="flex items-center justify-center gap-2">
+                {task?.status === "new" && (
+                  <button
+                    className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                    onClick={setTaskToWorking}
+                  >
+                    Set to Working
+                  </button>
+                )}
+
+                <div
+                  className={`text-[11px] md:text-[13px] font-medium ${getStatusTagColor(
+                    task?.status
+                  )} px-3 py-1 rounded`}
+                >
+                  {task?.status}
+                </div>
               </div>
             </div>
 

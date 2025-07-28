@@ -339,7 +339,7 @@ const CreateLead = () => {
                   Lead Came Date
                 </label>
                 <input
-                disabled= {leadId && user.role !== "superAdmin"}
+                // disabled= {leadId && user.role !== "superAdmin"}
                   type="date"
                   className="form-input-date"
                   value={leadData.leadCameDate?.split("T")[0] ?? ""}
@@ -355,11 +355,11 @@ const CreateLead = () => {
                   Credential Deck Date
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.credentialDeckDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.credentialDeckDate
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -380,7 +380,7 @@ const CreateLead = () => {
                   Discovery Call Date
                 </label>
                 <input
-                  disabled={leadId && user.role !== "superAdmin" && leadData.discoveryCallDate}
+                  // disabled={leadId && user.role !== "superAdmin" && leadData.discoveryCallDate}
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -401,7 +401,7 @@ const CreateLead = () => {
                   Pitch Date
                 </label>
                 <input
-                  disabled={leadId && user.role !== "superAdmin" && leadData.pitchDate}
+                  // disabled={leadId && user.role !== "superAdmin" && leadData.pitchDate}
                   type="datetime-local"
                   className="form-input-date"
                   value={

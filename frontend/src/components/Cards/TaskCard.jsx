@@ -32,6 +32,8 @@ const TaskCard = ({
         return "bg-red-100 text-[#E43941] border border-red-200";
       case "All":
         return "bg-purple-100 text-[#B439E4] border border-purple-200";
+      case "working":
+        return "bg-orange-100 text-[#E4ca39] border border-yellow-200";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
