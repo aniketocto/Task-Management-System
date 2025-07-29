@@ -67,15 +67,21 @@ const SideMenu = ({ activeMenu }) => {
 
   useEffect(() => {
     if (user) {
-      setSideMenuData(
-        user?.role === "admin"
-          ? SIDE_MENU_ADMIN_DATA
-          : user?.role === "superAdmin"
-          ? SIDE_MENU_SUPER_ADMIN_DATA
-          : user?.department === "BusinessDevelopment"
-          ? SIDE_MENU_BE_USER_DATA
-          : SIDE_MENU_USER_DATA
-      );
+      if (user?.role === "superAdmin") {
+        setSideMenuData(SIDE_MENU_SUPER_ADMIN_DATA);
+      } else if (
+        user?.role === "admin" &&
+        user?.department === "BusinessDevelopment"
+      ) {
+        setSideMenuData(SIDE_MENU_BE_USER_DATA); // maybe you want BE admin UI
+      } else if (user?.role === "admin") {
+        setSideMenuData(SIDE_MENU_ADMIN_DATA);
+      } else if (user?.department === "BusinessDevelopment") {
+        setSideMenuData(SIDE_MENU_BE_USER_DATA);
+      } else {
+        setSideMenuData(SIDE_MENU_USER_DATA);
+      }
+
       setProfileImg(user?.profileImageUrl);
     }
     return () => {};
@@ -163,7 +169,7 @@ const SideMenu = ({ activeMenu }) => {
           Upload & Save
         </button>
       </Modal>
-      {loading && <SpinLoader  />}
+      {loading && <SpinLoader />}
     </div>
   );
 };
