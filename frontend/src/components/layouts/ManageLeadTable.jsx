@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
+import { UserContext } from "../../context/userContext";
 
 const ManageLeadTable = () => {
   const [leads, setLeads] = useState([]);
@@ -10,6 +11,14 @@ const ManageLeadTable = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const navigate = useNavigate();
+
+  const { user } = useContext(UserContext);
+
+  const allow = !(
+    user.role === "superAdmin" ||
+    (user.role === "admin" && user.department === "BusinessDevelopment") ||
+    (user.role !== "admin" && user.department === "BusinessDevelopment")
+  );
 
   const fetchLeads = async (pageNumber = 1) => {
     setLoading(true);
@@ -66,28 +75,28 @@ const ManageLeadTable = () => {
           <table className="w-full bg-gray-900">
             {/* Define column widths */}
             <colgroup>
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "70px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "90px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "50px" }} /> 
-              <col style={{ width: "120px" }} /> 
-              <col style={{ width: "120px" }} /> 
-              <col style={{ width: "120px" }} /> 
-              <col style={{ width: "120px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "150px" }} /> 
-              <col style={{ width: "100px" }} /> 
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "70px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "50px" }} />
+              <col style={{ width: "120px" }} />
+              <col style={{ width: "120px" }} />
+              <col style={{ width: "120px" }} />
+              <col style={{ width: "120px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "100px" }} />
             </colgroup>
             <thead className="sticky top-0 bg-gray-900 z-30">
               <tr className="border-b border-gray-700">
@@ -229,12 +238,16 @@ const ManageLeadTable = () => {
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.credentialDeckDate
-                      ? moment(lead.credentialDeckDate).format("DD-MM-YYYY hh:mm A")
+                      ? moment(lead.credentialDeckDate).format(
+                          "DD-MM-YYYY hh:mm A"
+                        )
                       : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.discoveryCallDate
-                      ? moment(lead.discoveryCallDate).format("DD-MM-YYYY hh:mm A")
+                      ? moment(lead.discoveryCallDate).format(
+                          "DD-MM-YYYY hh:mm A"
+                        )
                       : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
@@ -255,6 +268,7 @@ const ManageLeadTable = () => {
                       <input
                         type="checkbox"
                         checked={lead.followUp?.[`attempt${attempt}`] || false}
+                        disabled={allow}
                         onChange={() =>
                           toggleFollowUp(
                             lead._id,
@@ -262,7 +276,7 @@ const ManageLeadTable = () => {
                             lead.followUp?.[`attempt${attempt}`]
                           )
                         }
-                        className="w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
+                        className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${allow ? "cursor-not-allowed" : "cursor-pointer"}`}
                       />
                     </td>
                   ))}
@@ -313,8 +327,13 @@ const ManageLeadTable = () => {
                   >
                     <div className="flex justify-center items-center">
                       <button
+                        disabled={allow}
                         onClick={() => handleNavigate(lead._id)}
-                        className="px-3 py-1 bg-[#E43941] text-white rounded hover:bg-red-600 cursor-pointer text-xs"
+                        className={`px-3 py-1 text-white rounded ${
+                          allow
+                            ? "bg-gray-700 cursor-not-allowed"
+                            : "bg-[#E43941] hover:bg-red-600 cursor-pointer "
+                        }  text-xs`}
                       >
                         Edit
                       </button>
