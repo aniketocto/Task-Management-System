@@ -12,6 +12,7 @@ import { UserContext } from "../../context/userContext";
 import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
+import { FiX } from "react-icons/fi";
 
 const ManageTask = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const ManageTask = () => {
   const [filterTimeframe, setFilterTimeframe] = useState("");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [searchSerial, setSearchSerial] = useState("");
+  const [debouncedSearchSerial, setDebouncedSearchSerial] = useState("");
 
   const [page, setPage] = useState(1);
   const tasksPerPage = 10;
@@ -100,6 +103,7 @@ const ManageTask = () => {
             sortOrder,
             sortBy,
             fields: "tasks,statusSummary,availableMonths",
+            serialNumber: debouncedSearchSerial || undefined,
           },
         });
 
@@ -144,8 +148,19 @@ const ManageTask = () => {
       filterEndDate,
       sortOrder,
       sortBy,
+      debouncedSearchSerial,
     ]
   );
+
+  // debounce search
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchSerial(searchSerial); // Apply after 400ms
+      // setPage(1); // Reset to page 1 on search
+    }, 1000); // adjust delay as needed
+
+    return () => clearTimeout(timeout); // Cleanup on next keystroke
+  }, [searchSerial]);
 
   useEffect(() => {
     fetchAvailableMonths();
@@ -344,6 +359,25 @@ const ManageTask = () => {
           </div>
         </div>
         {loading && <SpinLoader />}
+        <div className="mt-4 flex gap-2 items-center">
+          <label className="text-white text-sm">Search Serial:</label>
+          <div className="flex items-center">
+            <span className="text-white text-sm bg-gray-800 pl-1 py-1 border-y border-l border-gray-600 rounded-l">
+              U
+            </span>
+            <input
+              type="text"
+              value={searchSerial.replace(/^U/i, "")} // remove leading U for input field
+              onChange={(e) =>
+                setSearchSerial("U" + e.target.value.toUpperCase())
+              }
+              placeholder="001"
+              className="pl-0.5 py-1 rounded-r bg-gray-800 text-white border-t border-b border-r border-gray-600 text-sm focus:outline-none focus:ring-0"
+            />
+            <FiX />
+          </div>
+        </div>
+
         {viewType === "table" ? (
           <div className="mt-4">
             <ManageTasksTable
