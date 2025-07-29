@@ -14,6 +14,14 @@ import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
 
+import { io } from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: {
+    token: localStorage.getItem("taskManagerToken"),
+  },
+});
+
 const ManageTask = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
@@ -180,6 +188,17 @@ const ManageTask = () => {
       setPage(1);
     }
   }, [availableMonths, filterMonth, filterTimeframe]);
+
+  useEffect(() => {
+    socket.on("task:sync", () => {
+      getAllTasks(page); // silently refresh tasks
+      console.log("task:sync");
+    });
+
+    return () => {
+      socket.off("task:sync"); // clean up
+    };
+  }, [getAllTasks, page]);
 
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });

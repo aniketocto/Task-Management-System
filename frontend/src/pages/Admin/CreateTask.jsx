@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { PRIORITY_OPTIONS } from "../../utils/data";
 import axiosInstance from "../../utils/axiosInstance";
@@ -16,6 +16,14 @@ import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import TaskDueDateField from "../../components/Inputs/TaskDueDateField";
 import CompanySelect from "components/Inputs/CompanySelect";
+
+import { io } from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: {
+    token: localStorage.getItem("taskManagerToken"),
+  },
+});
 
 const CreateTask = () => {
   const { user } = useContext(UserContext);
@@ -191,7 +199,7 @@ const CreateTask = () => {
   };
 
   // get task by id
-  const getTaskById = async () => {
+  const getTaskById = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         API_PATHS.TASKS.GET_TASK_BY_ID(taskId)
@@ -225,7 +233,7 @@ const CreateTask = () => {
     } catch (error) {
       console.error("Error fetching task:", error);
     }
-  };
+  }, [taskId]);
 
   const getUserbyId = async (userId) => {
     try {
@@ -302,6 +310,17 @@ const CreateTask = () => {
     return () => {};
   }, [taskId]);
 
+  useEffect(() => {
+    socket.on("task:sync", () => {
+      getTaskById();
+      console.log("task:sync");
+    });
+
+    return () => {
+      socket.off("task:sync"); // clean up
+    };
+  }, [getTaskById]);
+
   return (
     <DashboardLayout activeMenu="Create Task">
       <div className="mt-5">
@@ -310,7 +329,8 @@ const CreateTask = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl md:text-2xl text-white font-medium">
-                  {taskId ? "Update Task" : "Create Task"} : {taskData.serialNumber}
+                  {taskId ? "Update Task" : "Create Task"} :{" "}
+                  {taskData.serialNumber}
                 </h2>
                 {taskId && (
                   <p className="text-white text-xs font-regular">
