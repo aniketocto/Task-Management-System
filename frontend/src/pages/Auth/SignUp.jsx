@@ -183,9 +183,7 @@ const SignUp = () => {
 
   return (
     <AuthLayout>
-      {loading && (
-        <SpinLoader />
-      )}
+      {loading && <SpinLoader />}
 
       <div className="lg:w-full h-screen md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-white">Create an Account</h3>
@@ -229,12 +227,12 @@ const SignUp = () => {
                 { value: "Creative", label: "Creative" },
                 { value: "Digital", label: "Digital" },
                 { value: "Social", label: "Social" },
-                { value: "Development", label: "Development" },
-                { value: "UiUx", label: "UI/UX" },
+                { value: "DevelopmentUiUx", label: "DevelopmentUiUx" },
                 { value: "Strategy", label: "Strategy" },
                 { value: "BusinessDevelopment", label: "Business Development" },
                 { value: "ClientServicing", label: "Client Servicing" },
                 { value: "Management", label: "Management" },
+                { value: "HR", label: "HR" },
                 // { value: "Influencer", label: "Influencer" },
                 // { value: "Sales", label: "Sales" },
                 // { value: "Content", label: "Content" },
