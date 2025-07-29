@@ -150,12 +150,13 @@ const getTasks = async (req, res) => {
     await Promise.all(
       tasks.map(async (taskDoc) => {
         // 1) completed vs total checklist items → progress%
-        const completedCount = taskDoc.todoChecklist.filter(
-          (i) => i.completed
+        approvedCount = taskDoc.todoChecklist.filter(
+          (i) => i.completed && i.approval?.status === "approved"
         ).length;
+
         const totalItems = taskDoc.todoChecklist.length;
         const newProgress =
-          totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+          totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
 
         // 2) determine newStatus by comparing now vs dueDate end-of-day
         const now = new Date();
@@ -1169,12 +1170,14 @@ const updateTaskChecklist = async (req, res) => {
     }
 
     // Recalculate progress
-    const completedCount = task.todoChecklist.filter(
-      (item) => item.completed
+    // ✅ Recalculate progress using task.todoChecklist
+    const approvedCount = task.todoChecklist.filter(
+      (i) => i.completed && i.approval?.status === "approved"
     ).length;
+
     const totalItems = task.todoChecklist.length;
     task.progress =
-      totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+      totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
 
     const now = new Date();
     const dueDateEnd = new Date(task.dueDate);
@@ -1601,7 +1604,130 @@ const reviewDueDateChange = async (req, res) => {
 };
 
 const approveTask = async (req, res) => {
+  try {
+    const { type, status } = req.body;
+    const user = req.user;
+    const taskId = req.params.id;
 
+    // Validate input
+    if (!["clientApproval", "superAdminApproval"].includes(type)) {
+      return res.status(400).json({ message: "Invalid approval type" });
+    }
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Get task
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    // ✅ Enforce: Only approve if all checklist items are approved
+    const allChecklistApproved = task.todoChecklist.every(
+      (item) => item.completed && item.approval?.status === "approved"
+    );
+
+    if (status === "approved" && !allChecklistApproved) {
+      return res.status(400).json({
+        message:
+          "Cannot approve main task until all checklist items are approved.",
+      });
+    }
+
+    // 📝 Apply Approval
+    task[type] = {
+      status,
+      approvedBy: user._id,
+      approvedAt: new Date(),
+    };
+
+    // 🧠 Auto-set task status if both approvals done
+    const approvalsCleared =
+      task.clientApproval?.status === "approved" &&
+      task.superAdminApproval?.status === "approved";
+
+    if (allChecklistApproved && approvalsCleared) {
+      task.status = "completed";
+      task.progress = 100;
+    }
+
+    // Save task
+    await task.save();
+
+    return res.status(200).json({
+      message: `${type} ${status} successfully`,
+      task,
+    });
+  } catch (err) {
+    console.error("❌ approveTask error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+const approveChecklistItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { status } = req.body;
+    const userId = req.user._id;
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Get task
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const checklistItem = task.todoChecklist.id(itemId);
+    if (!checklistItem) {
+      return res.status(404).json({ message: "Checklist item not found" });
+    }
+
+    // Update approval status
+    checklistItem.approval = {
+      status,
+      approvedBy: userId,
+      approvedAt: new Date(),
+    };
+
+    // If rejected, reset completion
+    if (status === "rejected") {
+      checklistItem.completed = false;
+    }
+
+    // Recalculate task progress
+    const approvedCount = task.todoChecklist.filter(
+      (i) => i.completed && i.approval?.status === "approved"
+    ).length;
+    const total = task.todoChecklist.length;
+    task.progress = total > 0 ? Math.round((approvedCount / total) * 100) : 0;
+
+    // Mark completed only if all checklist items approved AND main approvals done
+    const allChecklistApproved = task.todoChecklist.every(
+      (i) => i.completed && i.approval?.status === "approved"
+    );
+    const approvalsCleared =
+      task.clientApproval?.status === "approved" &&
+      task.superAdminApproval?.status === "approved";
+
+    if (allChecklistApproved && approvalsCleared) {
+      task.status = "completed";
+      task.progress = 100;
+    }
+
+    await task.save();
+
+    return res.status(200).json({
+      message: `Checklist item ${status} successfully`,
+      task,
+    });
+  } catch (err) {
+    console.error("❌ approveChecklistItem error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
 };
 
 module.exports = {
@@ -1618,4 +1744,5 @@ module.exports = {
   requestDueDateChange,
   reviewDueDateChange,
   approveTask,
+  approveChecklistItem,
 };

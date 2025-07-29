@@ -31,4 +31,48 @@ const updateExistingTasksWithSerials = async () => {
   }
 };
 
-module.exports = updateExistingTasksWithSerials;
+const backfillTaskApprovals = async () => {
+  const tasks = await Task.find({
+    $or: [{ status: "completed" }, { status: "delayed" }],
+  });
+
+  for (const task of tasks) {
+    // 1. Fill missing main approvals
+    if (!task.clientApproval) {
+      task.clientApproval = {
+        status: "approved",
+        approvedBy: task.createdBy || null,
+        approvedAt: task.updatedAt || new Date(),
+      };
+    }
+
+    if (!task.superAdminApproval) {
+      task.superAdminApproval = {
+        status: "approved",
+        approvedBy: task.createdBy || null,
+        approvedAt: task.updatedAt || new Date(),
+      };
+    }
+
+    // 2. Fill missing checklist approvals
+    task.todoChecklist = task.todoChecklist.map((item) => {
+      if (!item.approval) {
+        return {
+          ...item.toObject(),
+          approval: {
+            status: item.completed ? "approved" : "pending",
+            approvedBy: task.createdBy || null,
+            approvedAt: task.updatedAt || new Date(),
+          },
+        };
+      }
+      return item;
+    });
+
+    await task.save();
+  }
+
+  console.log("✅ Task approval fields backfilled.");
+};
+
+module.exports = { updateExistingTasksWithSerials, backfillTaskApprovals };

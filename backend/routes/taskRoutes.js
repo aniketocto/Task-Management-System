@@ -13,7 +13,8 @@ const {
   getAdminTasks,
   requestDueDateChange,
   reviewDueDateChange,
-  approveTask
+  approveTask,
+  approveChecklistItem,
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
@@ -76,6 +77,13 @@ router.patch(
   protect,
   allowRoleOrDept(["admin", "superAdmin"], []),
   approveTask
+);
+
+router.patch(
+  "/:id/checklist/:itemId/approve",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], []),
+  approveChecklistItem
 );
 
 module.exports = router;
