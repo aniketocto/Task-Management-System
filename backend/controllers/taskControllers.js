@@ -2,6 +2,8 @@ const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const User = require("../models/User");
 
+const mongoose = require("mongoose");
+
 const getTasks = async (req, res) => {
   try {
     const {
@@ -728,8 +730,6 @@ const getAdminTasks = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
-
-const mongoose = require("mongoose");
 
 const createTask = async (req, res) => {
   try {
@@ -1600,6 +1600,10 @@ const reviewDueDateChange = async (req, res) => {
   }
 };
 
+const approveTask = async (req, res) => {
+
+};
+
 module.exports = {
   getTasks,
   getAdminTasks,
@@ -1613,4 +1617,5 @@ module.exports = {
   getUserDashboardData,
   requestDueDateChange,
   reviewDueDateChange,
+  approveTask,
 };
