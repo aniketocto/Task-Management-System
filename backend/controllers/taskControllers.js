@@ -605,6 +605,7 @@ const getAdminTasks = async (req, res) => {
       sortBy = "createdAt",
       priority,
       fields, // e.g. "tasks,statusSummary,monthlyData,availableMonths"
+      serialNumber,
     } = req.query;
 
     // Which sections to return:
@@ -621,7 +622,9 @@ const getAdminTasks = async (req, res) => {
     // Base filter: only tasks assigned to this admin
     const skip = (page - 1) * limit;
     let filter = { assignedTo: req.user._id };
-
+    if (serialNumber) {
+      filter.serialNumber = new RegExp("^" + serialNumber, "i"); // partial match, case-insensitive
+    }
     // Apply optional filters:
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
@@ -1079,7 +1082,6 @@ const updateTaskStatus = async (req, res) => {
     const isAssigned = task.assignedTo.some(
       (user) => user.toString() === req.user._id.toString()
     );
-
 
     // *To check if this allow user to update task on click
     // if (

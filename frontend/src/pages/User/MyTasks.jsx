@@ -11,6 +11,8 @@ import ReactPaginate from "react-paginate";
 import { UserContext } from "../../context/userContext";
 import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
+import SpinLoader from "../../components/layouts/SpinLoader";
+import { FiX } from "react-icons/fi";
 
 const MyTasks = () => {
   const { user } = useContext(UserContext);
@@ -32,6 +34,11 @@ const MyTasks = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [filterPriority, setFilterPriority] = useState("");
+
+  const [searchSerial, setSearchSerial] = useState("");
+  const [debouncedSearchSerial, setDebouncedSearchSerial] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   const [viewType, setViewType] = useState("table");
 
@@ -59,6 +66,7 @@ const MyTasks = () => {
   const getAllTasks = useCallback(
     async (currentPage = 1) => {
       try {
+        setLoading(true);
         const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
           params: {
             status: filterStatus === "All" ? "" : filterStatus,
@@ -69,6 +77,7 @@ const MyTasks = () => {
             sortOrder,
             sortBy,
             fields: "tasks,statusSummary",
+            serialNumber: debouncedSearchSerial || undefined,
           },
         });
 
@@ -89,10 +98,29 @@ const MyTasks = () => {
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
       } catch (err) {
         console.error("Error fetching tasks:", err);
+      } finally {
+        setLoading(false);
       }
     },
-    [filterStatus, filterMonth, filterPriority, sortOrder, sortBy]
+    [
+      filterStatus,
+      filterMonth,
+      filterPriority,
+      sortOrder,
+      sortBy,
+      debouncedSearchSerial,
+    ]
   );
+
+  // debounce search
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchSerial(searchSerial); // Apply after 400ms
+      // setPage(1); // Reset to page 1 on search
+    }, 1000); // adjust delay as needed
+
+    return () => clearTimeout(timeout); // Cleanup on next keystroke
+  }, [searchSerial]);
 
   // load months on mount
   useEffect(() => {
@@ -191,11 +219,31 @@ const MyTasks = () => {
           )}
         </div>
 
+        {loading && <SpinLoader />}
+        <div className="mt-4 flex gap-2 items-center">
+          <label className="text-white text-sm">Search Serial:</label>
+          <div className="flex items-center">
+            <span className="text-white text-sm bg-gray-800 pl-1 py-1 border-y border-l border-gray-600 rounded-l">
+              U
+            </span>
+            <input
+              type="text"
+              value={searchSerial.replace(/^U/i, "")} // remove leading U for input field
+              onChange={(e) =>
+                setSearchSerial("U" + e.target.value.toUpperCase())
+              }
+              placeholder="001"
+              className="pl-0.5 py-1 rounded-r bg-gray-800 text-white border-t border-b border-r border-gray-600 text-sm focus:outline-none focus:ring-0"
+            />
+            <FiX />
+          </div>
+        </div>
+
         {viewType === "table" ? (
           <div className="mt-4">
             {/* Always render the table (it will render only the <thead> if no rows) */}
             <ManageTasksTable
-            userRole={userRole}
+              userRole={userRole}
               allTasks={allTasks}
               sortOrder={sortOrder}
               sortBy={sortBy}
