@@ -23,7 +23,7 @@ const MyTasks = () => {
   const [tabs, setTabs] = useState([]);
 
   const [page, setPage] = useState(1);
-  const tasksPerPage = 12;
+  const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
 
   const [filterStatus, setFilterStatus] = useState("All");

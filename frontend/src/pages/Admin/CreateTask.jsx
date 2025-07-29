@@ -34,6 +34,7 @@ const CreateTask = () => {
     todoChecklist: [],
     attachments: [],
     createdAt: null,
+    serialNumber: null,
   });
 
   const [currentTask, setCurrentTask] = useState(null);
@@ -216,6 +217,7 @@ const CreateTask = () => {
           todoChecklist: taskInfo.todoChecklist || [],
           attachments: taskInfo.attachments || [],
           createdAt: taskInfo.createdAt,
+          serialNumber: taskInfo.serialNumber,
         }));
 
         getUserbyId(taskInfo.createdBy);
@@ -308,7 +310,7 @@ const CreateTask = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl md:text-2xl text-white font-medium">
-                  {taskId ? "Update Task" : "Create Task"}
+                  {taskId ? "Update Task" : "Create Task"} : {taskData.serialNumber}
                 </h2>
                 {taskId && (
                   <p className="text-white text-xs font-regular">

@@ -93,6 +93,9 @@ const ManageTasksTable = ({
         <thead>
           <tr className="border-b border-gray-700">
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
+              Sr. No
+            </th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Company
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
@@ -155,6 +158,9 @@ const ManageTasksTable = ({
               key={task._id}
               className="border-b border-gray-800 hover:bg-gray-800"
             >
+              <td className="px-4 py-2 text-[13px] text-white whitespace-nowrap overflow-hidden text-ellipsis ">
+                {task.serialNumber}
+              </td>
               <td className="px-4 py-2 text-[13px] max-w-[160px] text-white whitespace-nowrap overflow-hidden text-ellipsis ">
                 {task.companyName}
               </td>
