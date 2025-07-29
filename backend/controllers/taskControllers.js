@@ -17,6 +17,7 @@ const getTasks = async (req, res) => {
       sortBy = "createdAt",
       priority,
       fields,
+      serialNumber,
     } = req.query;
 
     // === figure out which sections to include ===
@@ -124,6 +125,10 @@ const getTasks = async (req, res) => {
       }
     } else {
       filter = { ...filter, ...baseFilter };
+    }
+
+    if (serialNumber) {
+      filter.serialNumber = new RegExp("^" + serialNumber, "i"); // case-insensitive search
     }
 
     // === fetch the raw Task documents ===
@@ -789,6 +794,18 @@ const createTask = async (req, res) => {
       }
     }
 
+    // Get latest task by serialNumber
+    const lastTask = await Task.findOne({ serialNumber: { $exists: true } })
+      .sort({ createdAt: -1 })
+      .select("serialNumber");
+
+    let nextSerial = "U001"; // default for the first task
+    if (lastTask && lastTask.serialNumber) {
+      const lastNum = parseInt(lastTask.serialNumber.slice(1)); // strip 'U'
+      const newNum = lastNum + 1;
+      nextSerial = `U${String(newNum).padStart(3, "0")}`;
+    }
+
     // ✅ Create the task
     const task = await Task.create({
       title,
@@ -800,6 +817,7 @@ const createTask = async (req, res) => {
       attachments,
       todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
+      serialNumber: nextSerial,
     });
 
     // 🔔 Notify all unique users (main assignees + checklist assignees)
@@ -1062,15 +1080,17 @@ const updateTaskStatus = async (req, res) => {
       (user) => user.toString() === req.user._id.toString()
     );
 
-    if (
-      !isAssigned &&
-      req.user.role !== "superAdmin" &&
-      req.user.role !== "admin"
-    ) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to update this task." });
-    }
+
+    // *To check if this allow user to update task on click
+    // if (
+    // !isAssigned &&
+    //   req.user.role !== "superAdmin" &&
+    //   req.user.role !== "admin"
+    // ) {
+    //   return res
+    //     .status(403)
+    //     .json({ message: "You are not authorized to update this task." });
+    // }
 
     task.status = req.body.status;
 
