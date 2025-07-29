@@ -83,7 +83,7 @@ io.on("connection", (socket) => {
 });
 
 //  TODO: uncomment this before going live
-updateExistingTasksWithSerials();
+// updateExistingTasksWithSerials();
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
