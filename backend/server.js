@@ -47,7 +47,6 @@ app.use("/api/company", companyRoutes);
 
 // Static Server upload folder
 const path = require("path");
-const Leads = require("./models/Leads");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Socket IO Setup

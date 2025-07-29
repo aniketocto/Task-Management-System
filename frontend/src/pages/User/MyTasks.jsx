@@ -14,6 +14,14 @@ import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
 
+import { io } from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: {
+    token: localStorage.getItem("taskManagerToken"),
+  },
+});
+
 const MyTasks = () => {
   const { user } = useContext(UserContext);
   const userRole = user?.role;
@@ -130,6 +138,17 @@ const MyTasks = () => {
   // reload tasks whenever filters or page change
   useEffect(() => {
     getAllTasks(page);
+  }, [getAllTasks, page]);
+
+  useEffect(() => {
+    socket.on("task:sync", () => {
+      getAllTasks(page); // silently refresh tasks
+      console.log("tasks synced");  
+    });
+
+    return () => {
+      socket.off("task:sync"); // clean up
+    };
   }, [getAllTasks, page]);
 
   const handleRowClick = (taskData) => {

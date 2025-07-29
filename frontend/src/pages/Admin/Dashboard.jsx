@@ -2,7 +2,13 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
 import { useUserAuth } from "../../hooks/useUserAuth";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import {
@@ -18,6 +24,14 @@ import CustomPieChart from "../../components/Charts/CustomPieChart";
 import CustomBarChart from "../../components/Charts/CustomBarChart";
 import { infoCard, officeQuotes } from "../../utils/data";
 import SpinLoader from "../../components/layouts/SpinLoader";
+
+import { io } from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: {
+    token: localStorage.getItem("taskManagerToken"),
+  },
+});
 
 const getDailyQuote = () => {
   const today = new Date().toISOString().slice(0, 10);
@@ -49,7 +63,7 @@ const Dashboard = () => {
   const dailyQuote = useMemo(() => getDailyQuote(), []);
 
   // Prepare chart Data
-  const prepareChartData = (data) => {
+  const prepareChartData = useCallback((data) => {
     const taskDistribution = data?.taskDistribution || {};
     const taskPriority = data?.taskPrioritiesLevels || {};
 
@@ -59,9 +73,7 @@ const Dashboard = () => {
       { status: "completed", count: taskDistribution?.completed || 0 },
       { status: "pending", count: taskDistribution?.pending || 0 },
       { status: "delayed", count: taskDistribution?.delayed || 0 },
-      // { status: "working", count: taskDistribution?.startedWork || 0 },
     ];
-
     setPieChartData(taskDistributionData);
 
     const taskPriorityData = [
@@ -69,11 +81,10 @@ const Dashboard = () => {
       { priority: "medium", count: taskPriority?.medium || 0 },
       { priority: "low", count: taskPriority?.low || 0 },
     ];
-
     setBarChartData(taskPriorityData);
-  };
+  }, []);
 
-  const getDashboardData = async () => {
+  const getDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axiosInstance.get(API_PATHS.TASKS.GET_DASHBOARD_DATA);
@@ -101,7 +112,13 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    setLoading,
+    setDashboardData,
+    setAvailableMonths,
+    setDepartments,
+    prepareChartData,
+  ]);
 
   useEffect(() => {
     getDashboardData();
@@ -167,8 +184,6 @@ const Dashboard = () => {
       setFilterDepartment,
     }) || {};
 
-  
-
   useEffect(() => {
     if (filterMonth) {
       const count = departmentTotals[filterDepartment] || 0;
@@ -177,6 +192,17 @@ const Dashboard = () => {
       }
     }
   }, [filterMonth, filterDepartment, departmentTotals]);
+
+  useEffect(() => {
+    socket.on("task:sync", () => {
+      console.log("📊 Task changed — refreshing dashboard...");
+      getDashboardData(); // your existing function to refetch data
+    });
+
+    return () => {
+      socket.off("task:sync");
+    };
+  }, [getDashboardData]);
 
   return (
     <DashboardLayout activeMenu="Dashboard">
@@ -254,7 +280,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-7 gap-3 md:gap-4 mt-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
           {infoCard.map(({ label, key, color }) => (
             <InfoCard
               key={key}

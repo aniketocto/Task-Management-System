@@ -11,6 +11,15 @@ const todoSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  approval: {
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    approvedAt: Date,
+  },
 });
 
 const taskSchema = new mongoose.Schema(
@@ -57,6 +66,25 @@ const taskSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
+    },
+    clientApproval: {
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      approvedAt: Date,
+    },
+
+    superAdminApproval: {
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      approvedAt: Date,
     },
   },
   { timestamps: true }

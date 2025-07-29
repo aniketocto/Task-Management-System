@@ -2,6 +2,8 @@ const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const User = require("../models/User");
 
+const mongoose = require("mongoose");
+
 const getTasks = async (req, res) => {
   try {
     const {
@@ -587,7 +589,6 @@ const getTask = async (req, res) => {
       .populate("todoChecklist.assignedTo", "name email profileImageUrl");
 
     if (!task) return res.status(404).json({ message: "Task not found" });
-
     res.status(200).json({ task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -730,8 +731,6 @@ const getAdminTasks = async (req, res) => {
   }
 };
 
-const mongoose = require("mongoose");
-
 const createTask = async (req, res) => {
   try {
     const {
@@ -830,6 +829,7 @@ const createTask = async (req, res) => {
     ]);
 
     const io = req.app.get("io");
+    io.emit("task:sync"); // after task is saved
 
     const notifications = await Promise.all(
       Array.from(allUsersToNotify).map(async (userId) => {
@@ -974,14 +974,15 @@ const updateTask = async (req, res) => {
     // ✅ Save and notify newly added users (same logic as before)
     const updatedTask = await task.save();
 
+    const io = req.app.get("io");
+    io.emit("task:sync"); // after task is saved
+
     // ✅ Notify newly assigned users
     if (req.body.assignedTo) {
       const newAssigned = updatedTask.assignedTo.map((id) => id.toString());
       const addedUsers = newAssigned.filter((id) => !oldAssigned.includes(id));
 
       if (addedUsers.length > 0) {
-        const io = req.app.get("io");
-
         const notifications = await Promise.all(
           addedUsers.map(async (userId) => {
             if (!userId) return null;
@@ -1064,8 +1065,11 @@ const deleteTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-
     await task.deleteOne();
+
+    const io = req.app.get("io");
+    io.emit("task:sync"); // after task is saved
+
     res.json({ message: "Task Delete Successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -1102,8 +1106,11 @@ const updateTaskStatus = async (req, res) => {
       });
       task.progress = 100;
     }
-
     await task.save();
+
+    const io = req.app.get("io");
+    io.emit("task:sync"); // after task is saved
+
     res.status(200).json({ message: "Task status updated successfully", task });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -1182,8 +1189,10 @@ const updateTaskChecklist = async (req, res) => {
     } else {
       task.status = "new";
     }
-
     await task.save();
+
+    const io = req.app.get("io");
+    io.emit("task:sync"); // after task is saved
 
     const updatedTask = await Task.findById(task._id)
       .populate("assignedTo", "name email profileImageUrl")
@@ -1591,6 +1600,10 @@ const reviewDueDateChange = async (req, res) => {
   }
 };
 
+const approveTask = async (req, res) => {
+
+};
+
 module.exports = {
   getTasks,
   getAdminTasks,
@@ -1604,4 +1617,5 @@ module.exports = {
   getUserDashboardData,
   requestDueDateChange,
   reviewDueDateChange,
+  approveTask,
 };
