@@ -1,4 +1,4 @@
-import React, { use, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -276,7 +276,9 @@ const ManageLeadTable = () => {
                             lead.followUp?.[`attempt${attempt}`]
                           )
                         }
-                        className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${allow ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${
+                          allow ? "cursor-not-allowed" : "cursor-pointer"
+                        }`}
                       />
                     </td>
                   ))}
