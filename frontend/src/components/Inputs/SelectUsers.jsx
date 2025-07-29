@@ -31,9 +31,16 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
   const toggleUserSelection = (userId) => {
     setTempSelectedUsers((prev) => {
       const ids = prev.map((u) => (typeof u === "string" ? u : u._id));
-      return ids.includes(userId)
-        ? prev.filter((u) => (typeof u === "string" ? u : u._id) !== userId)
-        : [...prev, userId];
+
+      if (role === "admin") {
+        // Allow multiple selection
+        return ids.includes(userId)
+          ? prev.filter((u) => (typeof u === "string" ? u : u._id) !== userId)
+          : [...prev, userId];
+      } else {
+        // Allow only one selection
+        return ids.includes(userId) ? [] : [userId];
+      }
     });
   };
 
@@ -140,7 +147,7 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
                   )}
                   readOnly
                   className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none"
-                  onClick={(e) => e.stopPropagation()} // optional: if you still want to prevent bubbling
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
             ))}
