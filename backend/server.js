@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
-const {backfillTaskApprovals} = require("./config/helper");
+const { backfillTaskApprovals, backfillPitchAndPresentation } = require("./config/helper");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -53,7 +53,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:5173", "http://crm.getunstoppable.in"],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
 });
@@ -83,6 +83,7 @@ io.on("connection", (socket) => {
 
 //  TODO: uncomment this before going live
 // backfillTaskApprovals();
+// backfillPitchAndPresentation();
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
