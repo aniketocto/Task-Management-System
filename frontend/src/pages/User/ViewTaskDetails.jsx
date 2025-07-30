@@ -138,6 +138,7 @@ const ViewTaskDetails = () => {
               <div className="flex items-center justify-center gap-2">
                 {task?.status === "new" && (
                   <button
+                    type="button"
                     className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
                     onClick={setTaskToWorking}
                   >

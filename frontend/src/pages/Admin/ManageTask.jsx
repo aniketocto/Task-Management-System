@@ -55,6 +55,9 @@ const ManageTask = () => {
     return localStorage.getItem("taskSortOrder") || "desc";
   });
 
+  const [availableCompanies, setAvailableCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState("");
+
   const [viewType, setViewType] = useState("table");
 
   const [loading, setLoading] = useState(false);
@@ -93,6 +96,15 @@ const ManageTask = () => {
     }
   }, [filterDepartment]);
 
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const resp = await axiosInstance.get(API_PATHS.COMPANY.GET_COMPANY);
+      setAvailableCompanies(resp.data || []);
+    } catch (err) {
+      console.error("Failed to load companies:", err);
+    }
+  }, []);
+
   const getAllTasks = useCallback(
     async (currentPage = 1) => {
       try {
@@ -112,6 +124,7 @@ const ManageTask = () => {
             sortBy,
             fields: "tasks,statusSummary,availableMonths",
             serialNumber: debouncedSearchSerial || undefined,
+            companyName: selectedCompany || undefined,
           },
         });
 
@@ -119,14 +132,17 @@ const ManageTask = () => {
         setAllTasks(tasks);
         setStatusSummary(resp.data.statusSummary || {});
 
-        const uniqDepts = Array.from(
-          new Set(
-            tasks.flatMap((t) =>
-              t.assignedTo?.map((u) => u.department).filter(Boolean)
-            )
-          )
-        );
-        setDepartments(uniqDepts);
+        const staticDepartments = [
+          "Creative",
+          "Digital",
+          "Social",
+          "DevelopmentUiUx",
+          "Strategy",
+          "BusinessDevelopment",
+          "ClientServicing",
+          "HR",
+        ];
+        setDepartments(staticDepartments);
 
         const s = resp.data.statusSummary || {};
         setTabs([
@@ -157,6 +173,7 @@ const ManageTask = () => {
       sortOrder,
       sortBy,
       debouncedSearchSerial,
+      selectedCompany,
     ]
   );
 
@@ -172,7 +189,8 @@ const ManageTask = () => {
 
   useEffect(() => {
     fetchAvailableMonths();
-  }, [fetchAvailableMonths]);
+    fetchCompanies();
+  }, [fetchAvailableMonths, fetchCompanies]);
   useEffect(() => {
     getAllTasks(page);
   }, [getAllTasks, page]);
@@ -199,6 +217,13 @@ const ManageTask = () => {
       socket.off("task:sync"); // clean up
     };
   }, [getAllTasks, page]);
+
+  useEffect(() => {
+    if (allTasks.length === 0 && selectedCompany) {
+      // clear the filter back to “All companies”
+      setSelectedCompany("");
+    }
+  }, [allTasks, selectedCompany]);
 
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
@@ -239,7 +264,7 @@ const ManageTask = () => {
           <div className="flex flex-wrap items-center gap-4">
             {/* Timeframe */}
             <>
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-100">
                 Timeframe:
               </label>
               <select
@@ -251,7 +276,7 @@ const ManageTask = () => {
                 className="border rounded px-3 py-2 text-sm text-white"
               >
                 <option className="text-black" value="">
-                  All Time
+                  This Month
                 </option>
                 <option className="text-black" value="today">
                   Today
@@ -268,7 +293,7 @@ const ManageTask = () => {
               </select>
               {filterTimeframe === "custom" && (
                 <>
-                  <label className="text-sm font-medium text-gray-600">
+                  <label className="text-sm font-medium text-gray-100">
                     From:
                   </label>
                   <input
@@ -281,7 +306,7 @@ const ManageTask = () => {
                     max={new Date().toISOString().split("T")[0]}
                     className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
                   />
-                  <label className="text-sm font-medium text-gray-600">
+                  <label className="text-sm font-medium text-gray-100">
                     To:
                   </label>
                   <input
@@ -298,10 +323,33 @@ const ManageTask = () => {
                 </>
               )}
             </>
-            {/* Department */}
-
+            {/* Company */}
             <>
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-100">
+                Company:
+              </label>
+              <select
+                value={selectedCompany}
+                onChange={(e) => {
+                  setSelectedCompany(e.target.value);
+                  setPage(1);
+                }}
+                className="border rounded px-3 py-2 text-sm text-white"
+              >
+                <option value="" className="text-black">
+                  All
+                </option>
+                {availableCompanies.map((c) => (
+                  <option key={c._id} value={c.name} className="text-black">
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </>
+
+            {/* Department */}
+            <>
+              <label className="text-sm font-medium text-gray-100">
                 Department:
               </label>
               <select
@@ -313,7 +361,7 @@ const ManageTask = () => {
                 className="border rounded px-3 py-2 text-sm text-white"
               >
                 <option value="" className="text-black">
-                  All Departments
+                  All
                 </option>
                 {departments.map((d) => (
                   <option key={d} value={d} className="text-black">
@@ -322,10 +370,11 @@ const ManageTask = () => {
                 ))}
               </select>
             </>
+
             {/* Month */}
             {availableMonths.length > 0 && (
               <>
-                <label className="text-sm font-medium text-gray-600">
+                <label className="text-sm font-medium text-gray-100">
                   Month:
                 </label>
                 <select
@@ -358,7 +407,7 @@ const ManageTask = () => {
             {/* User
               {users.length > 0 && (
                 <>
-                  <label className="text-sm font-medium text-gray-600">User:</label>
+                  <label className="text-sm font-medium text-gray-100">User:</label>
                   <select value={filterUser} onChange={(e) => { setFilterUser(e.target.value); setPage(1); }} className="border rounded px-3 py-2 text-sm text-white">
                     <option value="">All Users</option>
                     {users.map((u) => (<option key={u._id} value={u._id} className="text-black">{u.name}</option>))}

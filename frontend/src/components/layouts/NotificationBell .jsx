@@ -88,11 +88,11 @@ const NotificationBell = () => {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleClick = (taskData) => {
-    if (user?.role === "user") {
-      navigate(`/user/task-detail/${taskData}`);
+    if (user?.role === "superAdmin") {
+      navigate("/admin/create-task", { state: { taskId: taskData } });
       markAllAsReadAndDelete();
     } else {
-      navigate("/admin/create-task", { state: { taskId: taskData } });
+      navigate(`/user/task-detail/${taskData}`);
       markAllAsReadAndDelete();
     }
   };

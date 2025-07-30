@@ -128,6 +128,8 @@ const CreateTask = () => {
               Array.isArray(item.assignedTo) && item.assignedTo.length > 0
                 ? item.assignedTo
                 : matchedTask?.assignedTo || [],
+            approval: item.approval ||
+              matchedTask?.approval || { status: "pending" },
           };
         });
 
@@ -310,6 +312,23 @@ const CreateTask = () => {
     return () => {};
   }, [taskId]);
 
+  const handleChecklistApprove = async (taskId, checklistId, currentStatus) => {
+    // const newStatus = currentStatus === "approved" ? "rejected" : "approved";
+    try {
+      const res = await axiosInstance.patch(
+        API_PATHS.APPROVAL.CHECKLIST_APPROVAL(taskId, checklistId),
+        { status: currentStatus }
+      );
+      // Update local taskData.todoChecklist with the API’s response
+      setTaskData((prev) => ({
+        ...prev,
+        todoChecklist: res.data.task.todoChecklist,
+      }));
+    } catch (err) {
+      console.error("Checklist approval failed:", err);
+    }
+  };
+
   useEffect(() => {
     socket.on("task:sync", () => {
       getTaskById();
@@ -479,6 +498,7 @@ const CreateTask = () => {
 
                   handleValueChange("todoChecklist", value);
                 }}
+                onChecklistApprove={handleChecklistApprove}
               />
             </div>
 

@@ -12,6 +12,7 @@ router.get(
   protect,
   getCompany
 );
+
 router.post(
   "/",
   protect,

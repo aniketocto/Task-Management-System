@@ -97,7 +97,7 @@ export const SIDE_MENU_BE_USER_DATA = [
     id: "01",
     label: "Dashboard",
     icon: LuLayoutDashboard,
-    path: "/user/dashboard",
+    path: "/admin/dashboard",
   },
   {
     id: "04",
@@ -107,9 +107,21 @@ export const SIDE_MENU_BE_USER_DATA = [
   },
   {
     id: "02",
-    label: "View Tasks",
+    label: "Manage Tasks",
+    icon: LuClipboardCheck,
+    path: "/admin/tasks",
+  },
+  {
+    id: "02",
+    label: "My Tasks",
     icon: LuClipboardCheck,
     path: "/user/tasks",
+  },
+  {
+    id: "03",
+    label: "Create Task",
+    icon: LuSquare,
+    path: "/admin/create-task",
   },
   {
     id: "04",
