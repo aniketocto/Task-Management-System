@@ -24,12 +24,23 @@ const PRIORITY_OPTIONS = [
   { label: "High", value: "high" },
 ];
 
+const STATUS_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "New", value: "new" },
+  { label: "Delayed", value: "delayed" },
+  { label: "Pending", value: "pending" },
+  { label: "In Progress", value: "in-progress" },
+  { label: "Completed", value: "completed" },
+];
+
 const ManageTasksTable = ({
   allTasks,
   sortOrder,
   sortBy,
   onToggleSort,
   filterPriority,
+  filterStatus,
+  onStatusChange,
   onPriorityChange,
   userRole,
 }) => {
@@ -157,7 +168,6 @@ const ManageTasksTable = ({
   ) => {
     const status = approvalObj?.status || "pending";
     const disable = userRole !== "superAdmin" || !allSubTasksApproved(task);
-    // console.log("disable", disable);
     if (status === "pending") {
       return userRole !== "superAdmin" ? (
         <p className="text-gray-500 text-sm">Pending</p>
@@ -227,10 +237,21 @@ const ManageTasksTable = ({
               Company
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
-              Title
+              Task
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Status
+              <select
+                value={filterStatus}
+                onChange={(e) => onStatusChange(e.target.value)}
+                className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Priority

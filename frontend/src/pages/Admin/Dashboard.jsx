@@ -385,55 +385,61 @@ const Dashboard = () => {
               </div>
               {/* Timeframe filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
-                <label className="text-sm font-medium text-gray-100">
+                <label className="text-sm font-medium text-gray-600">
                   Timeframe:
                 </label>
-                <select
-                  value={filterTimeframe}
-                  onChange={(e) => setFilterTimeframe(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm text-white"
-                >
-                  <option className="text-black" value="">
-                    This Month
-                  </option>
-                  <option className="text-black" value="today">
-                    Today
-                  </option>
-                  <option className="text-black" value="yesterday">
-                    Yesterday
-                  </option>
-                  <option className="text-black" value="last7Days">
-                    Last 7 Days
-                  </option>
-                  <option className="text-black" value="custom">
-                    Custom
-                  </option>
-                </select>
-                {filterTimeframe === "custom" && (
-                  <>
-                    <label className="text-sm font-medium text-gray-100">
-                      From:
-                    </label>
-                    <input
-                      type="date"
-                      value={filterStartDate}
-                      onChange={(e) => setFilterStartDate(e.target.value)}
-                      max={new Date().toISOString().split("T")[0]}
-                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                    />
-                    <label className="text-sm font-medium text-gray-100">
-                      To:
-                    </label>
-                    <input
-                      type="date"
-                      value={filterEndDate}
-                      onChange={(e) => setFilterEndDate(e.target.value)}
-                      min={filterStartDate}
-                      max={new Date().toISOString().split("T")[0]}
-                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                    />
-                  </>
-                )}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={filterTimeframe}
+                    onChange={(e) => setFilterTimeframe(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option className="text-black" value="">
+                      This Month
+                    </option>
+                    <option className="text-black" value="today">
+                      Today
+                    </option>
+                    <option className="text-black" value="yesterday">
+                      Yesterday
+                    </option>
+                    <option className="text-black" value="last7Days">
+                      Last 7 Days
+                    </option>
+                    <option className="text-black" value="custom">
+                      Custom
+                    </option>
+                  </select>
+                  {filterTimeframe === "custom" && (
+                    <div className="flex gap-4">
+                      <div className="flex flex-col  justify-center">
+                        <label className="text-sm font-medium text-gray-100">
+                          From:
+                        </label>
+                        <input
+                          type="date"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          max={new Date().toISOString().split("T")[0]}
+                          className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                        />
+                      </div>
+                      <div className="flex flex-col  justify-center">
+                        <label className="text-sm font-medium text-gray-100">
+                          To:
+                        </label>
+                        <input
+                          type="date"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          min={filterStartDate}
+                          max={new Date().toISOString().split("T")[0]}
+                          className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
