@@ -87,10 +87,12 @@ const taskSchema = new mongoose.Schema(
       approvedAt: Date,
     },
 
+    // Additional Filled ---------------
+
     taskCategory: {
       type: String,
-      enum: ["operational", "Creative"],
-      default: "task",
+      enum: ["operational", "creative"],
+      default: "operational",
     },
     objective: { type: String },
     targetAudience: { type: String },
@@ -98,8 +100,10 @@ const taskSchema = new mongoose.Schema(
     competetors: {type: String},
     channels: {type: String},
     smp: {type: String},
-    referance: {type: String},
+    referance: [{type: String}],
     remarks: [{ type: String }],
+
+    // ---------------------------
   },
   { timestamps: true }
 );

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import { PRIORITY_OPTIONS } from "../../utils/data";
+import { PRIORITY_OPTIONS, TASK_TYPE } from "../../utils/data";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import toast from "react-hot-toast";
@@ -16,6 +16,9 @@ import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import TaskDueDateField from "../../components/Inputs/TaskDueDateField";
 import CompanySelect from "components/Inputs/CompanySelect";
+import AddReference from "components/Inputs/AddReference";
+import AddRemarks from "components/Inputs/AddRemarks";
+import { GrPowerReset } from "react-icons/gr";
 
 import { io } from "socket.io-client";
 
@@ -43,6 +46,15 @@ const CreateTask = () => {
     attachments: [],
     createdAt: null,
     serialNumber: null,
+    taskCategory: "",
+    objective: "",
+    targetAudience: "",
+    usps: "",
+    competetors: "",
+    channels: "",
+    smp: "",
+    referance: [],
+    remarks: [],
   });
 
   const [currentTask, setCurrentTask] = useState(null);
@@ -68,12 +80,20 @@ const CreateTask = () => {
       assignedTo: [],
       todoChecklist: [],
       attachments: [],
+      taskCategory: "",
+      objective: "",
+      targetAudience: "",
+      usps: "",
+      competetors: "",
+      channels: "",
+      smp: "",
+      referance: [],
+      remarks: [],
     });
   };
 
   // Create Tasks
   const createTask = async () => {
-    console.log(taskData);
     setLoading(true);
     clearData();
 
@@ -104,11 +124,7 @@ const CreateTask = () => {
 
   // Update Tasks
   const updateTask = async () => {
-    console.log(taskData);
-    console.log("Updating");
-
     setLoading(true);
-
     try {
       const todoList = taskData.todoChecklist
         ?.filter((item) => item?.text?.trim())
@@ -141,7 +157,6 @@ const CreateTask = () => {
       if (user?.role !== "superAdmin") {
         delete payload.dueDate;
       }
-      console.log(payload, "payload");
 
       const response = await axiosInstance.put(
         API_PATHS.TASKS.UPDATE_TASK_BY_ID(taskId),
@@ -173,10 +188,6 @@ const CreateTask = () => {
 
     if (!taskData.title.trim()) {
       setError((prevError) => [...prevError, "Please enter task title"]);
-      return;
-    }
-    if (!taskData.description.trim()) {
-      setError((prevError) => [...prevError, "Please enter task description"]);
       return;
     }
     if (!taskData.dueDate) {
@@ -228,6 +239,15 @@ const CreateTask = () => {
           attachments: taskInfo.attachments || [],
           createdAt: taskInfo.createdAt,
           serialNumber: taskInfo.serialNumber,
+          taskCategory: taskInfo.taskCategory,
+          objective: taskInfo.objective,
+          targetAudience: taskInfo.targetAudience,
+          usps: taskInfo.usps,
+          competetors: taskInfo.competetors,
+          channels: taskInfo.channels,
+          smp: taskInfo.smp,
+          referance: taskInfo.referance || [],
+          remarks: taskInfo.remarks || [],
         }));
 
         getUserbyId(taskInfo.createdBy);
@@ -411,22 +431,150 @@ const CreateTask = () => {
               />
             </div>
 
-            {/* Descrption */}
-            <div className="mt-3">
-              <label className="text-xs font-medium text-slate-200">
-                Description
-              </label>
+            <div className="col-span-12 md:col-span-4 mt-4">
+              <label className="text-xs font-medium text-slate-200">Type</label>
 
-              <textarea
-                placeholder="Describe Task"
-                className="form-input"
-                rows={4}
-                value={taskData.description}
-                onChange={({ target }) => {
-                  handleValueChange("description", target.value);
-                }}
-              />
+              <div className="flex gap-2">
+                <SelectOption
+                  options={TASK_TYPE}
+                  value={taskData.taskCategory}
+                  onChange={(value) => handleValueChange("taskCategory", value)}
+                  placeholder="Select Type"
+                  disabled={!!taskData.taskCategory}
+                />
+                {taskData.taskCategory && (
+                  <button
+                    type="button"
+                    onClick={() => handleValueChange("taskCategory", "")}
+                  >
+                    <GrPowerReset className="text-2xl text-gray-200 rounded cursor-pointer" />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {taskData.taskCategory === "operational" ? (
+              <div className="mt-3">
+                <label className="text-xs font-medium text-slate-200">
+                  Brief
+                </label>
+                <textarea
+                  placeholder="Descripe Brief"
+                  className="form-input"
+                  rows={4}
+                  value={taskData.description}
+                  onChange={({ target }) => {
+                    handleValueChange("description", target.value);
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Objective / Goal
+                  </label>
+                  <textarea
+                    placeholder="Whats the goal of this task?"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.objective}
+                    onChange={({ target }) => {
+                      handleValueChange("objective", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Target Audience
+                  </label>
+                  <textarea
+                    placeholder="Who is the target audience?"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.targetAudience}
+                    onChange={({ target }) => {
+                      handleValueChange("targetAudience", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Unique Selling Points
+                  </label>
+                  <textarea
+                    placeholder="What are the unique selling points?"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.usps}
+                    onChange={({ target }) => {
+                      handleValueChange("usps", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Competetors
+                  </label>
+                  <textarea
+                    placeholder="Who are our competetors?"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.competetors}
+                    onChange={({ target }) => {
+                      handleValueChange("competetors", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Channels
+                  </label>
+                  <textarea
+                    placeholder="Channels"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.channels}
+                    onChange={({ target }) => {
+                      handleValueChange("channels", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    SMPs
+                  </label>
+                  <textarea
+                    placeholder="SMPs"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.smp}
+                    onChange={({ target }) => {
+                      handleValueChange("smp", target.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-3">
+                  <label className="text-xs font-medium text-slate-200">
+                    Reference
+                  </label>
+                  <AddReference
+                    referance={taskData?.referance}
+                    setReference={(value) => {
+                      if (!Array.isArray(value)) {
+                        console.error(
+                          `Invalid value for referance:`,
+                          value,
+                          typeof value
+                        );
+                        throw new Error("referance must be array");
+                      }
+                      handleValueChange("referance", value);
+                    }}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Priority DueDate AssignTo */}
             <div className="grid grid-cols-12 gap-4 mt-2">
@@ -452,7 +600,7 @@ const CreateTask = () => {
               {/* Assigned To */}
               <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-200">
-                  Assign To
+                  Assign Owner
                 </label>
 
                 <SelectUsers
@@ -534,6 +682,28 @@ const CreateTask = () => {
                     throw new Error("attachments must be array");
                   }
                   handleValueChange("attachments", value);
+                }}
+              />
+            </div>
+
+            {/* Remarks */}
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-200">
+                Remarks
+              </label>
+
+              <AddRemarks
+                remarks={taskData?.remarks}
+                setRemarks={(value) => {
+                  if (!Array.isArray(value)) {
+                    console.error(
+                      `Invalid value for attachments:`,
+                      value,
+                      typeof value
+                    );
+                    throw new Error("attachments must be array");
+                  }
+                  handleValueChange("remarks", value);
                 }}
               />
             </div>

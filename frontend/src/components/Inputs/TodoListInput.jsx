@@ -27,6 +27,9 @@ const TodoListInput = ({
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
+  const [editIndex, setEditIndex] = useState(null);
+  const [editText, setEditText] = useState("");
+
   useEffect(() => {
     setLoadingUsers(true);
     axiosInstance
@@ -48,8 +51,6 @@ const TodoListInput = ({
   const handleRemoveOption = (index) => {
     setTodoList(todoList.filter((_, i) => i !== index));
   };
-
-  console.log(todoList);
 
   const renderApprovalButtons = (item) => {
     const status = item.approval?.status || "pending";
@@ -102,12 +103,51 @@ const TodoListInput = ({
                 : "bg-red-100 border-red-100"
             }`}
         >
-          <p className="flex-1 text-sm text-gray-800">
-            <span className="text-red-500 font-semibold mr-2">
-              {index < 9 ? `0${index + 1}` : index + 1}
+          {editIndex === index ? (
+            <input
+              className="flex-1 text-sm text-black border border-gray-200 px-2 py-1 rounded"
+              value={editText}
+              autoFocus
+              onChange={(e) => setEditText(e.target.value)}
+              onBlur={() => {
+                const updated = [...todoList];
+                updated[index].text = editText;
+                setTodoList(updated);
+                setEditIndex(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const updated = [...todoList];
+                  updated[index].text = editText;
+                  setTodoList(updated);
+                  setEditIndex(null);
+                }
+                if (e.key === "Escape") {
+                  setEditIndex(null);
+                }
+              }}
+            />
+          ) : (
+            <span className="flex-1 text-sm text-gray-800 flex items-center">
+              <span className="text-red-500 font-semibold mr-2">
+                {index < 9 ? `0${index + 1}` : index + 1}
+              </span>
+              {item.text}
+              {user?.role === "superAdmin" && (
+                <button
+                  className="ml-2 text-blue-500 hover:text-blue-700 text-xs cursor-pointer"
+                  onClick={() => {
+                    setEditIndex(index);
+                    setEditText(item.text);
+                  }}
+                  type="button"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+              )}
             </span>
-            {item.text}
-          </p>
+          )}
 
           <div className="flex items-center gap-4">
             <SelectUsers
@@ -180,7 +220,7 @@ const TodoListInput = ({
         </div>
       ))}
 
-      <div className="flex items-center gap-5 mt-4">
+      <div className="flex items-center gap-5 ">
         <input
           type="text"
           placeholder="Enter Task"

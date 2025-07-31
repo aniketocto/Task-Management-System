@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import DashboardLayout from "components/layouts/DashboardLayout";
 import AvatarGroup from "components/layouts/AvatarGroup";
 import moment from "moment";
-import { LuSquareArrowOutUpRight } from "react-icons/lu";
+import { LuFileUp, LuPaperclip, LuSquareArrowOutUpRight } from "react-icons/lu";
 import toast from "react-hot-toast";
+import { UserContext } from "../../context/userContext";
+import { FaBookmark } from "react-icons/fa";
 
 const ViewTaskDetails = () => {
+  const { user } = useContext(UserContext);
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [createdBy, setCreatedBy] = useState(false);
+  const [remarks, setRemarks] = useState([]);
 
   const getStatusTagColor = (status) => {
     switch (status) {
@@ -42,6 +46,7 @@ const ViewTaskDetails = () => {
       if (response.data) {
         const taskInfo = response.data?.task;
         setTask(taskInfo);
+        setRemarks(taskInfo.remarks || []);
         getUserbyId(taskInfo?.createdBy);
       }
     } catch (error) {
@@ -104,6 +109,22 @@ const ViewTaskDetails = () => {
     }
   };
 
+  const addRemark = async (text) => {
+    if (!text.trim()) return;
+    try {
+      const newRemarks = [text.trim(), ...remarks]; // add newest first, or [...remarks, text.trim()] for bottom
+      // Update backend
+      await axiosInstance.put(API_PATHS.TASKS.UPDATE_TASK_BY_ID(task._id), {
+        remarks: newRemarks,
+      });
+      setRemarks(newRemarks);
+      setTask({ ...task, remarks: newRemarks }); // keep task in sync
+    } catch (e) {
+      toast.error("Could not add remark");
+      console.error(e);
+    }
+  };
+
   //handle attachment link
   const handleLinkClick = (link) => {
     if (!/^https?:\/\//i.test(link)) {
@@ -132,7 +153,7 @@ const ViewTaskDetails = () => {
                 </h2>
 
                 <p className="text-white text-xs font-regular">
-                  Created By: {createdBy}
+                  Owner: {createdBy}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2">
@@ -159,9 +180,63 @@ const ViewTaskDetails = () => {
             <div className="mt-4">
               <InfoBox label="Title" value={task?.title} />
             </div>
-            <div className="mt-4">
-              <InfoBox label="Description" value={task?.description} />
-            </div>
+            {task?.taskCategory === "operational" ? (
+              <div className="mt-4">
+                <InfoBox label="Brief" value={task?.description} />
+              </div>
+            ) : (
+              <>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Whats our objective?"
+                    value={task?.objective}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Who is our target audience here?"
+                    value={task?.targetAudience}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="What is the unique selling point?"
+                    value={task?.usps}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Who are we competing with?"
+                    value={task?.competetors}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox label="Channels" value={task?.channels} />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Single Minded Preposition"
+                    value={task?.smp}
+                  />
+                </div>
+              </>
+            )}
+            {task?.referance?.length > 0 && (
+              <div className="mt-2">
+                <label className="text-xs font-medium text-slate-500">
+                  Referance
+                </label>
+
+                {task?.referance?.map((link, index) => (
+                  <ReferenceLink
+                    key={`link_${index}`}
+                    link={link}
+                    index={index}
+                    onClick={() => handleLinkClick(link)}
+                  />
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-12 gap-4 mt-4">
               <div className="col-span-6 md:col-span-4">
                 <InfoBox label="Priority" value={task?.priority} />
@@ -229,6 +304,28 @@ const ViewTaskDetails = () => {
                 ))}
               </div>
             )}
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-500">
+                Remarks
+              </label>
+              <ul className="space-y-2 mt-2">
+                {remarks.length === 0 && (
+                  <li className="text-gray-400 text-xs">No remarks yet</li>
+                )}
+                {remarks.map((r, idx) => (
+                  <li
+                    key={idx}
+                    className="bg-blue-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
+                  >
+                    <FaBookmark className="text-red-500 mr-2" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+
+              {/* Only allow user role to add */}
+              {user?.role === "user" && <AddRemarkInput onAdd={addRemark} />}
+            </div>
           </div>
         </div>
       </div>
@@ -241,7 +338,7 @@ export default ViewTaskDetails;
 const InfoBox = ({ label, value }) => {
   return (
     <>
-      <label className="text-xs font-medium text-slate-50">{label}</label>
+      <label className="text-xs font-medium text-gray-600">{label}</label>
       <p className="text-[12px] md:text-[15px] capitalize font-medium text-gray-50 mt-0.5">
         {value}
       </p>
@@ -344,6 +441,22 @@ const Attachment = ({ link, index, onClick }) => {
   );
 };
 
+const ReferenceLink = ({ link, onClick }) => {
+  return (
+    <div
+      className="flex justify-between bg-gray-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2 cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="flex-1 flex items-center gap-3">
+        <LuPaperclip className="text-blue-500" />
+        <p className="text-xs text-black">{link}</p>
+      </div>
+
+      <LuSquareArrowOutUpRight className="text-blue-500" />
+    </div>
+  );
+};
+
 const Tooltip = ({ children, content }) => {
   const [show, setShow] = useState(false);
 
@@ -363,5 +476,35 @@ const Tooltip = ({ children, content }) => {
         </div>
       )}
     </span>
+  );
+};
+
+const AddRemarkInput = ({ onAdd }) => {
+  const [value, setValue] = useState("");
+  return (
+    <div className="flex-1 flex items-center gap-3 bg-gray-50  border border-gray-100 rounded-md mt-3 px-3">
+      <input
+        className="w-full text-[13px] text-black outline-none bg-white py-2"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Add a remark..."
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onAdd(value);
+            setValue("");
+          }
+        }}
+      />
+      <button
+        className="bg-blue-600 text-white px-4 py-1 rounded"
+        onClick={() => {
+          onAdd(value);
+          setValue("");
+        }}
+        type="button"
+      >
+        Add
+      </button>
+    </div>
   );
 };

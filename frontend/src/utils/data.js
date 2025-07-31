@@ -164,6 +164,11 @@ export const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
 ];
 
+export const TASK_TYPE = [
+  { value: "operational", label: "Operational" },
+  { value: "creative", label: "Creative" },
+];
+
 export const STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "delayed", label: "Delayed" },

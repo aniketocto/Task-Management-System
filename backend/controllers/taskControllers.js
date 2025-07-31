@@ -780,6 +780,15 @@ const createTask = async (req, res) => {
       priority,
       attachments,
       todoChecklist,
+      taskCategory,
+      objective,
+      targetAudience,
+      usps,
+      competetors,
+      channels,
+      smp,
+      referance,
+      remarks,
     } = req.body;
 
     // Ensure main task assignees is an array
@@ -858,6 +867,15 @@ const createTask = async (req, res) => {
       todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
       serialNumber: nextSerial,
+      taskCategory,
+      objective,
+      targetAudience,
+      usps,
+      competetors,
+      channels,
+      smp,
+      referance,
+      remarks,
     });
 
     // 🔔 Notify all unique users (main assignees + checklist assignees)
@@ -930,21 +948,38 @@ const updateTask = async (req, res) => {
 
     // ✅ Only allow users to update their checklist
     if (role === "user") {
+      let changed = false;
+
+      // Allow update of remarks
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = req.body.remarks;
+        changed = true;
+      }
+
+      // Allow update of todoChecklist
       if (req.body.todoChecklist) {
         req.body.todoChecklist = normalizeChecklist(req.body.todoChecklist);
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
           req.body.todoChecklist
         );
+        changed = true;
+      }
+
+      if (changed) {
         const updatedTask = await task.save();
         return res.status(200).json({
-          message: "Task updated successfully (todo checklist only)",
+          message: "Task updated successfully (user fields)",
           task: updatedTask,
         });
       }
+
+      // If neither, deny
       return res
         .status(403)
-        .json({ message: "Users can only update the todo checklist." });
+        .json({
+          message: "Users can only update the todo checklist or remarks.",
+        });
     }
 
     // ✅ Validate and normalize checklist
@@ -959,6 +994,15 @@ const updateTask = async (req, res) => {
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+      task.taskCategory = req.body.taskCategory || task.taskCategory;
+      task.objective = req.body.objective || task.objective;
+      task.targetAudience = req.body.targetAudience || task.targetAudience;
+      task.usps = req.body.usps || task.usps;
+      task.competetors = req.body.competetors || task.competetors;
+      task.channels = req.body.channels || task.channels;
+      task.smp = req.body.smp || task.smp;
+      task.referance = req.body.referance || task.referance;
+      task.remarks = req.body.remarks || task.remarks;
 
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
@@ -991,6 +1035,15 @@ const updateTask = async (req, res) => {
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+      task.taskCategory = req.body.taskCategory || task.taskCategory;
+      task.objective = req.body.objective || task.objective;
+      task.targetAudience = req.body.targetAudience || task.targetAudience;
+      task.usps = req.body.usps || task.usps;
+      task.competetors = req.body.competetors || task.competetors;
+      task.channels = req.body.channels || task.channels;
+      task.smp = req.body.smp || task.smp;
+      task.referance = req.body.referance || task.referance;
+      task.remarks = req.body.remarks || task.remarks;
 
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
@@ -1265,7 +1318,7 @@ const updateTaskChecklist = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
-    const { timeframe, startDate, endDate, companyName  } = req.query;
+    const { timeframe, startDate, endDate, companyName } = req.query;
     const now = new Date();
 
     // === DATE FILTER ===
@@ -1323,7 +1376,7 @@ const getDashboardData = async (req, res) => {
         { assignedTo: { $exists: true, $ne: [] } },
         { "todoChecklist.assignedTo": { $exists: true } },
       ],
-      ...(companyName ? {companyName: new RegExp(companyName, "i")} : {}),  
+      ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
     };
 
     // === BASIC STATS ===

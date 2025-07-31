@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { LuChevronDown, LuChevronUp } from "react-icons/lu";
 
-const SelectOption = ({ options, value, onChange, placeholder }) => {
+const SelectOption = ({ options, value, onChange, placeholder, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (option) => {
@@ -11,8 +11,12 @@ const SelectOption = ({ options, value, onChange, placeholder }) => {
   return (
     <div className="relative w-full">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md  flex justify-between items-center cursor-pointer"
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+        className={`w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md flex justify-between items-center ${
+          disabled ? "cursor-not-allowed" : "cursor-pointer"
+        }`}
       >
         {value
           ? options.find((opt) => opt.value === value)?.label
