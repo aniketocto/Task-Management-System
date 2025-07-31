@@ -33,47 +33,70 @@ const updateExistingTasksWithSerials = async () => {
 };
 
 const backfillTaskApprovals = async () => {
-  const tasks = await Task.find({
-    $or: [{ status: "completed" }, { status: "delayed" }],
-  });
+  const tasks = await Task.find();
+
+  let updatedTasksCount = 0;
+  let updatedChecklistItemsCount = 0;
 
   for (const task of tasks) {
-    // 1. Fill missing main approvals
+    let taskUpdated = false;
+
+    const isCompletedOrDelayed =
+      task.status === "completed" || task.status === "delayed";
+
+    // ---- Main approvals ----
     if (!task.clientApproval) {
-      task.clientApproval = {
-        status: "approved",
-        approvedBy: task.createdBy || null,
-        approvedAt: task.updatedAt || new Date(),
-      };
+      task.clientApproval = isCompletedOrDelayed
+        ? {
+            status: "approved",
+            approvedBy: task.createdBy || null,
+            approvedAt: task.updatedAt || new Date(),
+          }
+        : { status: "pending" };
+      taskUpdated = true;
     }
 
     if (!task.superAdminApproval) {
-      task.superAdminApproval = {
-        status: "approved",
-        approvedBy: task.createdBy || null,
-        approvedAt: task.updatedAt || new Date(),
-      };
-    }
-
-    // 2. Fill missing checklist approvals
-    task.todoChecklist = task.todoChecklist.map((item) => {
-      if (!item.approval) {
-        return {
-          ...item.toObject(),
-          approval: {
-            status: item.completed ? "approved" : "pending",
+      task.superAdminApproval = isCompletedOrDelayed
+        ? {
+            status: "approved",
             approvedBy: task.createdBy || null,
             approvedAt: task.updatedAt || new Date(),
-          },
+          }
+        : { status: "pending" };
+      taskUpdated = true;
+    }
+
+    // ---- Checklist approvals ----
+    let updatedChecklist = task.todoChecklist.map((item) => {
+      if (!item.approval) {
+        updatedChecklistItemsCount++;
+        taskUpdated = true;
+        return {
+          ...item.toObject(),
+          approval: isCompletedOrDelayed
+            ? {
+                status: item.completed ? "approved" : "pending",
+                approvedBy: task.createdBy || null,
+                approvedAt: task.updatedAt || new Date(),
+              }
+            : { status: "pending" },
         };
       }
       return item;
     });
 
-    await task.save();
+    task.todoChecklist = updatedChecklist;
+
+    if (taskUpdated) {
+      await task.save();
+      updatedTasksCount++;
+    }
   }
 
-  console.log("✅ Task approval fields backfilled.");
+  console.log(`✅ Task approval fields backfilled.`);
+  console.log(`🔢 Total tasks updated: ${updatedTasksCount}`);
+  console.log(`🧾 Checklist items updated: ${updatedChecklistItemsCount}`);
 };
 
 const backfillPitchAndPresentation = async () => {
