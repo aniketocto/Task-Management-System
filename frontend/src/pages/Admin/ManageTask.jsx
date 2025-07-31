@@ -212,7 +212,7 @@ const ManageTask = () => {
   useEffect(() => {
     socket.on("task:sync", () => {
       getAllTasks(page); // silently refresh tasks
-      console.log("task:sync");
+      // console.log("task:sync");
     });
 
     return () => {
@@ -231,7 +231,7 @@ const ManageTask = () => {
     navigate("/admin/create-task", { state: { taskId } });
   };
 
-  console.log(statusSummary["all"]);
+  // console.log(statusSummary["all"]);
 
   return (
     <DashboardLayout activeMenu="Manage Tasks">

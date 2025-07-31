@@ -1,8 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { HiOutlineTrash, HiPlus } from "react-icons/hi";
 import { LuCheck, LuX } from "react-icons/lu";
 import SelectUsers from "./SelectUsers";
 import { UserContext } from "../../context/userContext";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
+import moment from "moment";
 
 /**
  * Renders a list of todo checklist items with assignment and a single admin approval toggle.
@@ -21,6 +24,18 @@ const TodoListInput = ({
   const { user } = useContext(UserContext);
   const [option, setOption] = useState("");
 
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    setLoadingUsers(true);
+    axiosInstance
+      .get(API_PATHS.USERS.GET_ALL_USERS)
+      .then((res) => setAllUsers(res.data || []))
+      .catch((err) => console.error("Failed to load users", err))
+      .finally(() => setLoadingUsers(false));
+  }, []);
+
   const handleAddOption = () => {
     if (!option.trim()) return;
     setTodoList([
@@ -33,6 +48,8 @@ const TodoListInput = ({
   const handleRemoveOption = (index) => {
     setTodoList(todoList.filter((_, i) => i !== index));
   };
+
+  console.log(todoList);
 
   const renderApprovalButtons = (item) => {
     const status = item.approval?.status || "pending";
@@ -100,8 +117,47 @@ const TodoListInput = ({
                 updated[index].assignedTo = newUsers;
                 setTodoList(updated);
               }}
+              allUsers={allUsers}
+              loading={loadingUsers}
               role="user"
             />
+
+            {item.approval?.status && (
+              <Tooltip
+                content={(() => {
+                  const approver = allUsers.find(
+                    (u) => u._id === item.approval.approvedBy
+                  );
+                  if (!approver) return <span>Pending</span>;
+                  return (
+                    <div>
+                      <div className="font-bold text-lg mb-1 capitalize">
+                        {item.approval.status}
+                      </div>
+                      <div className="text-base">
+                        by{" "}
+                        <span className="font-semibold">{approver.name}</span>
+                      </div>
+                      <div className="text-sm mt-1 opacity-80">
+                        {moment(item.approval.approvedAt).format("llll")}
+                      </div>
+                    </div>
+                  );
+                })()}
+              >
+                <span
+                  className={
+                    item.approval.status === "approved"
+                      ? "text-green-600 underline cursor-pointer font-semibold"
+                      : "text-red-600 underline cursor-pointer font-semibold"
+                  }
+                  style={{ marginLeft: 8 }}
+                >
+                  {item.approval.status.charAt(0).toUpperCase() +
+                    item.approval.status.slice(1)}
+                </span>
+              </Tooltip>
+            )}
 
             {/* Approval controls for admin roles */}
             {item._id && user?.role !== "user" && (
@@ -146,3 +202,25 @@ const TodoListInput = ({
 };
 
 export default TodoListInput;
+
+const Tooltip = ({ children, content }) => {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="absolute z-50 left-1/2 -translate-x-1/2 mt-2 px-4 py-3 bg-gray-800 text-white text-base rounded-xl shadow-lg border border-gray-100 whitespace-nowrap"
+          style={{ minWidth: 240 }}
+        >
+          {content}
+        </div>
+      )}
+    </span>
+  );
+};

@@ -27,7 +27,7 @@ const ViewTaskDetails = () => {
         return "bg-red-100 text-[#E43941] border border-red-200";
       case "All":
         return "bg-purple-100 text-[#B439E4] border border-purple-200";
-      
+
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -207,6 +207,8 @@ const ViewTaskDetails = () => {
                   isChecked={item?.completed}
                   onChange={() => updateTodoChecklist(index)}
                   assignedTo={item?.assignedTo}
+                  approval={item.approval}
+                  allUsers={task?.assignedTo || []} // assuming assignedTo contains all possible users, or fetch as needed
                 />
               ))}
             </div>
@@ -247,7 +249,28 @@ const InfoBox = ({ label, value }) => {
   );
 };
 
-const TodoCheckList = ({ text, isChecked, onChange, assignedTo = [] }) => {
+const TodoCheckList = ({
+  text,
+  isChecked,
+  onChange,
+  assignedTo = [],
+  approval,
+  allUsers = [],
+}) => {
+  // Find approver name
+  const approver =
+    approval?.approvedBy && allUsers.find((u) => u._id === approval.approvedBy);
+
+  let badgeColor = "bg-yellow-200 text-yellow-800 border-yellow-400";
+  let label = "Pending";
+  if (approval?.status === "approved") {
+    badgeColor = "bg-green-200 text-green-800 border-green-400";
+    label = "Approved";
+  } else if (approval?.status === "rejected") {
+    badgeColor = "bg-red-200 text-red-800 border-red-400";
+    label = "Rejected";
+  }
+
   return (
     <div className="flex items-center justify-between border px-3 py-2 rounded-md mb-3 mt-2 border-gray-100 gap-2">
       <div className="flex justify-center items-center gap-2">
@@ -261,6 +284,34 @@ const TodoCheckList = ({ text, isChecked, onChange, assignedTo = [] }) => {
         <label htmlFor="taskCheck" className="text-[15px] text-gray-50">
           {text}
         </label>
+        {/* Approval badge with tooltip */}
+        <Tooltip
+          content={
+            approval?.status ? (
+              <div>
+                <div className="font-bold text-lg mb-1 capitalize">{label}</div>
+                {approver && (
+                  <div className="text-base">
+                    by <span className="font-semibold">{approver.name}</span>
+                  </div>
+                )}
+                {approval?.approvedAt && (
+                  <div className="text-sm mt-1 opacity-80">
+                    {moment(approval.approvedAt).format("llll")}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span>Not yet approved</span>
+            )
+          }
+        >
+          <span
+            className={`ml-3 px-3 py-1 rounded-full border text-[12px] font-semibold cursor-pointer ${badgeColor}`}
+          >
+            {label}
+          </span>
+        </Tooltip>
       </div>
       <AvatarGroup
         avatars={
@@ -290,5 +341,27 @@ const Attachment = ({ link, index, onClick }) => {
 
       <LuSquareArrowOutUpRight className="text-gray-400" />
     </div>
+  );
+};
+
+const Tooltip = ({ children, content }) => {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="absolute z-50 left-1/2 -translate-x-1/2 mt-2 px-4 py-3 bg-gray-900 text-white text-base rounded-xl shadow-lg border border-gray-800 whitespace-nowrap"
+          style={{ minWidth: 240 }}
+        >
+          {content}
+        </div>
+      )}
+    </span>
   );
 };

@@ -1,32 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { API_PATHS } from "../../utils/apiPaths";
-import axiosInstance from "../../utils/axiosInstance";
+// import { API_PATHS } from "../../utils/apiPaths";
+// import axiosInstance from "../../utils/axiosInstance";
 import { LuUser } from "react-icons/lu";
 import Modal from "../../components/layouts/Modal";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
 import { SyncLoader } from "react-spinners";
 
-const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
-  const [allUsers, setAllUsers] = useState([]);
+const SelectUsers = ({
+  selectedUsers,
+  setSelectedUsers,
+  role,
+  allUsers = [],
+  loading = false,
+}) => {
+  // const [allUsers, setAllUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempSelectedUsers, setTempSelectedUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
-  const getAllUser = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
+  // const getAllUser = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
 
-      if (response.data?.length > 0) {
-        setAllUsers(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (response.data?.length > 0) {
+  //       setAllUsers(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching users:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const toggleUserSelection = (userId) => {
     setTempSelectedUsers((prev) => {
@@ -65,9 +71,9 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers, role }) => {
     })
     .filter(Boolean);
 
-  useEffect(() => {
-    getAllUser();
-  }, []);
+  // useEffect(() => {
+  //   getAllUser();
+  // }, []);
 
   useEffect(() => {
     if (selectedUsers.length === 0) {

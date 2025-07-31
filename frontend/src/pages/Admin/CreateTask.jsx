@@ -249,6 +249,18 @@ const CreateTask = () => {
     }
   };
 
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    setLoadingUsers(true);
+    axiosInstance
+      .get(API_PATHS.USERS.GET_ALL_USERS)
+      .then((res) => setAllUsers(res.data || []))
+      .catch((err) => console.error("Failed to load users", err))
+      .finally(() => setLoadingUsers(false));
+  }, []);
+
   const handleReview = async (approve) => {
     setLoading(true);
     try {
@@ -448,6 +460,8 @@ const CreateTask = () => {
                   setSelectedUsers={(selectedUsers) =>
                     handleValueChange("assignedTo", selectedUsers)
                   }
+                  allUsers={allUsers}
+                  loading={loadingUsers}
                   role="admin"
                 />
               </div>
