@@ -386,9 +386,9 @@ const ManageTask = () => {
                   disabled={statusSummary?.all === 0}
                   className="border rounded px-3 py-2 text-sm text-white"
                 >
-                  <option value="" className="text-black">
+                  {/* <option value="" className="text-black">
                     All Months
-                  </option>
+                  </option> */}
                   {availableMonths
                     .sort((a, b) => b.value.localeCompare(a.value))
                     .slice(0, 12)

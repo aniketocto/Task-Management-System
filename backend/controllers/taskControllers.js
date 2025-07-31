@@ -1265,7 +1265,7 @@ const updateTaskChecklist = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
-    const { timeframe, startDate, endDate } = req.query;
+    const { timeframe, startDate, endDate, companyName  } = req.query;
     const now = new Date();
 
     // === DATE FILTER ===
@@ -1323,6 +1323,7 @@ const getDashboardData = async (req, res) => {
         { assignedTo: { $exists: true, $ne: [] } },
         { "todoChecklist.assignedTo": { $exists: true } },
       ],
+      ...(companyName ? {companyName: new RegExp(companyName, "i")} : {}),  
     };
 
     // === BASIC STATS ===
@@ -1387,10 +1388,10 @@ const getDashboardData = async (req, res) => {
     }, {});
 
     // === RECENT TASKS ===
-    const recentTasks = await Task.find(matchFilter)
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("companyName title status priority dueDate createdAt");
+    // const recentTasks = await Task.find(matchFilter)
+    //   .sort({ createdAt: -1 })
+    //   .limit(10)
+    //   .select("companyName title status priority dueDate createdAt");
 
     // === MONTHLY DATA (pass matchFilter)
     const monthlyData = await getEnhancedMonthlyTaskData(matchFilter);
@@ -1410,7 +1411,7 @@ const getDashboardData = async (req, res) => {
         taskDistribution,
         taskPrioritiesLevels,
       },
-      recentTasks,
+      // recentTasks,
       monthlyData,
     });
   } catch (error) {

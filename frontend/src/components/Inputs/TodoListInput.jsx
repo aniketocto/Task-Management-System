@@ -47,8 +47,8 @@ const TodoListInput = ({
             disabled
               ? "cursor-not-allowed text-gray-600 "
               : status === "approved"
-              ? "text-green-600"
-              : "text-gray-900 hover:text-gray-900"
+              ? "text-green-600 cursor-pointer"
+              : "text-gray-900 hover:text-gray-900 cursor-pointer"
           }`}
         >
           <LuCheck />
@@ -63,8 +63,8 @@ const TodoListInput = ({
             disabled
               ? "cursor-not-allowed text-gray-600 "
               : status === "rejected"
-              ? "text-red-600"
-              : "text-gray-900 hover:text-gray-900"
+              ? "text-red-600 cursor-pointer"
+              : "text-gray-900 hover:text-gray-900 cursor-pointer"
           }`}
         >
           <LuX />
