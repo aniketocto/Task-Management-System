@@ -15,6 +15,7 @@ export const API_PATHS = {
     CREATE_USER: "/api/users", // create a new user admin only
     UPDATE_USER_BY_ID: (userId) => `/api/users/${userId}`, // update user by id admin only
     DELETE_USER_BY_ID: (userId) => `/api/users/${userId}`, // delete user by id admin only
+    GET_DEPARTMENT: "/api/users/department",
   },
   COMPANY: {
     GET_COMPANY: "/api/company",
@@ -60,4 +61,8 @@ export const API_PATHS = {
     DELETE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     GET_DASHBOARD_DATA: "/api/leads/dashboard-data",
   },
+  APPROVAL: {
+    TASK_APPROVAL: (taskId) => `/api/tasks/${taskId}/approve`,
+    CHECKLIST_APPROVAL: (taskId, checklistId) => `/api/tasks/${taskId}/checklist/${checklistId}/approve`,
+  }
 };

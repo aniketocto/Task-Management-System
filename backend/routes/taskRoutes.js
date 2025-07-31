@@ -13,7 +13,8 @@ const {
   getAdminTasks,
   requestDueDateChange,
   reviewDueDateChange,
-  approveTask
+  approveTask,
+  approveChecklistItem,
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
@@ -22,7 +23,7 @@ const router = express.Router();
 router.get(
   "/dashboard-data",
   protect,
-  allowRoleOrDept(["admin", "superAdmin"], []),
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getDashboardData
 ); // All data dashboard for admin
 
@@ -76,6 +77,13 @@ router.patch(
   protect,
   allowRoleOrDept(["admin", "superAdmin"], []),
   approveTask
+);
+
+router.patch(
+  "/:id/checklist/:itemId/approve",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], []),
+  approveChecklistItem
 );
 
 module.exports = router;

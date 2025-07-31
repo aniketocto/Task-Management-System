@@ -41,7 +41,7 @@ function App() {
 
             {/* Admin Routes */}
             <Route
-              element={<PrivateRoute allowedRoles={["admin", "superAdmin"]} />}
+              element={<PrivateRoute allowedRoles={["admin", "superAdmin"]}  allowedDepts={["BusinessDevelopment"]}  />}
             >
               <Route path="/admin/dashboard" element={<Dashboard />} />
               <Route path="/admin/tasks" element={<ManageTask />} />

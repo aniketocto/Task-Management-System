@@ -23,6 +23,11 @@ const leadSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    contact: {
+      type: String,
+      // required: true,
+      trim: true,
+    },
 
     // ——— Lifecycle enums ———
     status: {
@@ -63,14 +68,22 @@ const leadSchema = new mongoose.Schema(
     pitchDate: {
       type: Date,
     },
+    pitchDates: [
+      {
+        type: Date,
+      },
+    ],
 
     // ——— Attachments ———
     attachments: {
       briefUrl: { type: String, trim: true },
       presentationUrl: { type: String, trim: true },
+      presentationUrls: [{ type: String, trim: true }],
       agreementUrl: { type: String, trim: true },
       invoiceUrl: { type: String, trim: true },
       websiteUrl: { type: String, trim: true },
+      linkedinUrl: { type: String, trim: true },
+      instagramUrl: { type: String, trim: true },
     },
 
     remark: {
