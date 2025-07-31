@@ -268,8 +268,8 @@ const ManageTask = () => {
 
             <div className="flex flex-wrap items-center gap-4">
               {/* Timeframe */}
-              <>
-                <label className="text-sm font-medium text-gray-100">
+              <div className="flex gap-1 flex-col">
+                <label className="text-sm font-medium text-gray-600">
                   Timeframe:
                 </label>
                 <select
@@ -327,10 +327,10 @@ const ManageTask = () => {
                     />
                   </>
                 )}
-              </>
+              </div>
               {/* Company */}
-              <>
-                <label className="text-sm font-medium text-gray-100">
+              <div className="flex gap-1 flex-col">
+                <label className="text-sm font-medium text-gray-600">
                   Company:
                 </label>
                 <select
@@ -350,11 +350,11 @@ const ManageTask = () => {
                     </option>
                   ))}
                 </select>
-              </>
+              </ div>
 
               {/* Department */}
-              <>
-                <label className="text-sm font-medium text-gray-100">
+              <div className="flex gap-1 flex-col">
+                <label className="text-sm font-medium text-gray-600">
                   Department:
                 </label>
                 <select
@@ -374,12 +374,12 @@ const ManageTask = () => {
                     </option>
                   ))}
                 </select>
-              </>
+              </ div>
 
               {/* Month */}
               {availableMonths.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-100">
+               <div className="flex gap-1 flex-col">
+                  <label className="text-sm font-medium text-gray-600">
                     Month:
                   </label>
                   <select
@@ -407,7 +407,7 @@ const ManageTask = () => {
                         </option>
                       ))}
                   </select>
-                </>
+                </ div>
               )}
               {/* User
               {users.length > 0 && (
@@ -487,7 +487,7 @@ const ManageTask = () => {
               onPriorityChange={(p) => {
                 setFilterPriority(p);
               }}
-              filterStatus = {filterStatus}
+              filterStatus={filterStatus}
               onStatusChange={(s) => {
                 setFilterStatus(s);
               }}
