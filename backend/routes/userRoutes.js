@@ -4,6 +4,7 @@ const {
   getUsers,
   getUser,
   deleteUser,
+  getDepartment,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get(
   allowRoleOrDept(["admin", "superAdmin"], []),
   getUsers
 );
+router.get("/department", protect, getDepartment);
 router.get("/:id", protect, getUser);
 router.delete("/:id", protect, allowRoleOrDept(["superAdmin"], []), deleteUser);
 

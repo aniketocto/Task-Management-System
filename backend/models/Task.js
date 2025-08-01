@@ -86,6 +86,24 @@ const taskSchema = new mongoose.Schema(
       approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       approvedAt: Date,
     },
+
+    // Additional Filled ---------------
+
+    taskCategory: {
+      type: String,
+      enum: ["operational", "creative"],
+      default: "operational",
+    },
+    objective: { type: String },
+    targetAudience: { type: String },
+    usps: {type: String},
+    competetors: {type: String},
+    channels: {type: String},
+    smp: {type: String},
+    referance: [{type: String}],
+    remarks: [{ type: String }],
+
+    // ---------------------------
   },
   { timestamps: true }
 );

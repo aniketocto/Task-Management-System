@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import DashboardLayout from "components/layouts/DashboardLayout";
 import AvatarGroup from "components/layouts/AvatarGroup";
 import moment from "moment";
-import { LuSquareArrowOutUpRight } from "react-icons/lu";
+import { LuFileUp, LuPaperclip, LuSquareArrowOutUpRight } from "react-icons/lu";
 import toast from "react-hot-toast";
+import { UserContext } from "../../context/userContext";
+import { FaBookmark } from "react-icons/fa";
 
 const ViewTaskDetails = () => {
+  const { user } = useContext(UserContext);
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [createdBy, setCreatedBy] = useState(false);
+  const [remarks, setRemarks] = useState([]);
 
   const getStatusTagColor = (status) => {
     switch (status) {
@@ -27,7 +31,7 @@ const ViewTaskDetails = () => {
         return "bg-red-100 text-[#E43941] border border-red-200";
       case "All":
         return "bg-purple-100 text-[#B439E4] border border-purple-200";
-      
+
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -42,6 +46,7 @@ const ViewTaskDetails = () => {
       if (response.data) {
         const taskInfo = response.data?.task;
         setTask(taskInfo);
+        setRemarks(taskInfo.remarks || []);
         getUserbyId(taskInfo?.createdBy);
       }
     } catch (error) {
@@ -104,6 +109,22 @@ const ViewTaskDetails = () => {
     }
   };
 
+  const addRemark = async (text) => {
+    if (!text.trim()) return;
+    try {
+      const newRemarks = [text.trim(), ...remarks]; // add newest first, or [...remarks, text.trim()] for bottom
+      // Update backend
+      await axiosInstance.put(API_PATHS.TASKS.UPDATE_TASK_BY_ID(task._id), {
+        remarks: newRemarks,
+      });
+      setRemarks(newRemarks);
+      setTask({ ...task, remarks: newRemarks }); // keep task in sync
+    } catch (e) {
+      toast.error("Could not add remark");
+      console.error(e);
+    }
+  };
+
   //handle attachment link
   const handleLinkClick = (link) => {
     if (!/^https?:\/\//i.test(link)) {
@@ -132,12 +153,13 @@ const ViewTaskDetails = () => {
                 </h2>
 
                 <p className="text-white text-xs font-regular">
-                  Created By: {createdBy}
+                  Owner: {createdBy}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2">
                 {task?.status === "new" && (
                   <button
+                    type="button"
                     className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
                     onClick={setTaskToWorking}
                   >
@@ -158,9 +180,63 @@ const ViewTaskDetails = () => {
             <div className="mt-4">
               <InfoBox label="Title" value={task?.title} />
             </div>
-            <div className="mt-4">
-              <InfoBox label="Description" value={task?.description} />
-            </div>
+            {task?.taskCategory === "operational" ? (
+              <div className="mt-4">
+                <InfoBox label="Brief" value={task?.description} />
+              </div>
+            ) : (
+              <>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Whats our objective?"
+                    value={task?.objective}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Who is our target audience here?"
+                    value={task?.targetAudience}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="What is the unique selling point?"
+                    value={task?.usps}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Who are we competing with?"
+                    value={task?.competetors}
+                  />
+                </div>
+                <div className="mt-4">
+                  <InfoBox label="Channels" value={task?.channels} />
+                </div>
+                <div className="mt-4">
+                  <InfoBox
+                    label="Single Minded Preposition"
+                    value={task?.smp}
+                  />
+                </div>
+              </>
+            )}
+            {task?.referance?.length > 0 && (
+              <div className="mt-2">
+                <label className="text-xs font-medium text-slate-500">
+                  Referance
+                </label>
+
+                {task?.referance?.map((link, index) => (
+                  <ReferenceLink
+                    key={`link_${index}`}
+                    link={link}
+                    index={index}
+                    onClick={() => handleLinkClick(link)}
+                  />
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-12 gap-4 mt-4">
               <div className="col-span-6 md:col-span-4">
                 <InfoBox label="Priority" value={task?.priority} />
@@ -206,6 +282,8 @@ const ViewTaskDetails = () => {
                   isChecked={item?.completed}
                   onChange={() => updateTodoChecklist(index)}
                   assignedTo={item?.assignedTo}
+                  approval={item.approval}
+                  allUsers={task?.assignedTo || []} // assuming assignedTo contains all possible users, or fetch as needed
                 />
               ))}
             </div>
@@ -226,6 +304,28 @@ const ViewTaskDetails = () => {
                 ))}
               </div>
             )}
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-500">
+                Remarks
+              </label>
+              <ul className="space-y-2 mt-2">
+                {remarks.length === 0 && (
+                  <li className="text-gray-400 text-xs">No remarks yet</li>
+                )}
+                {remarks.map((r, idx) => (
+                  <li
+                    key={idx}
+                    className="bg-blue-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
+                  >
+                    <FaBookmark className="text-red-500 mr-2" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+
+              {/* Only allow user role to add */}
+              {user?.role === "user" && <AddRemarkInput onAdd={addRemark} />}
+            </div>
           </div>
         </div>
       </div>
@@ -238,7 +338,7 @@ export default ViewTaskDetails;
 const InfoBox = ({ label, value }) => {
   return (
     <>
-      <label className="text-xs font-medium text-slate-50">{label}</label>
+      <label className="text-xs font-medium text-gray-600">{label}</label>
       <p className="text-[12px] md:text-[15px] capitalize font-medium text-gray-50 mt-0.5">
         {value}
       </p>
@@ -246,7 +346,28 @@ const InfoBox = ({ label, value }) => {
   );
 };
 
-const TodoCheckList = ({ text, isChecked, onChange, assignedTo = [] }) => {
+const TodoCheckList = ({
+  text,
+  isChecked,
+  onChange,
+  assignedTo = [],
+  approval,
+  allUsers = [],
+}) => {
+  // Find approver name
+  const approver =
+    approval?.approvedBy && allUsers.find((u) => u._id === approval.approvedBy);
+
+  let badgeColor = "bg-yellow-200 text-yellow-800 border-yellow-400";
+  let label = "Pending";
+  if (approval?.status === "approved") {
+    badgeColor = "bg-green-200 text-green-800 border-green-400";
+    label = "Approved";
+  } else if (approval?.status === "rejected") {
+    badgeColor = "bg-red-200 text-red-800 border-red-400";
+    label = "Rejected";
+  }
+
   return (
     <div className="flex items-center justify-between border px-3 py-2 rounded-md mb-3 mt-2 border-gray-100 gap-2">
       <div className="flex justify-center items-center gap-2">
@@ -260,6 +381,34 @@ const TodoCheckList = ({ text, isChecked, onChange, assignedTo = [] }) => {
         <label htmlFor="taskCheck" className="text-[15px] text-gray-50">
           {text}
         </label>
+        {/* Approval badge with tooltip */}
+        <Tooltip
+          content={
+            approval?.status ? (
+              <div>
+                <div className="font-bold text-lg mb-1 capitalize">{label}</div>
+                {approver && (
+                  <div className="text-base">
+                    by <span className="font-semibold">{approver.name}</span>
+                  </div>
+                )}
+                {approval?.approvedAt && (
+                  <div className="text-sm mt-1 opacity-80">
+                    {moment(approval.approvedAt).format("llll")}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span>Not yet approved</span>
+            )
+          }
+        >
+          <span
+            className={`ml-3 px-3 py-1 rounded-full border text-[12px] font-semibold cursor-pointer ${badgeColor}`}
+          >
+            {label}
+          </span>
+        </Tooltip>
       </div>
       <AvatarGroup
         avatars={
@@ -288,6 +437,74 @@ const Attachment = ({ link, index, onClick }) => {
       </div>
 
       <LuSquareArrowOutUpRight className="text-gray-400" />
+    </div>
+  );
+};
+
+const ReferenceLink = ({ link, onClick }) => {
+  return (
+    <div
+      className="flex justify-between bg-gray-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2 cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="flex-1 flex items-center gap-3">
+        <LuPaperclip className="text-blue-500" />
+        <p className="text-xs text-black">{link}</p>
+      </div>
+
+      <LuSquareArrowOutUpRight className="text-blue-500" />
+    </div>
+  );
+};
+
+const Tooltip = ({ children, content }) => {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div
+          className="absolute z-50 left-1/2 -translate-x-1/2 mt-2 px-4 py-3 bg-gray-900 text-white text-base rounded-xl shadow-lg border border-gray-800 whitespace-nowrap"
+          style={{ minWidth: 240 }}
+        >
+          {content}
+        </div>
+      )}
+    </span>
+  );
+};
+
+const AddRemarkInput = ({ onAdd }) => {
+  const [value, setValue] = useState("");
+  return (
+    <div className="flex-1 flex items-center gap-3 bg-gray-50  border border-gray-100 rounded-md mt-3 px-3">
+      <input
+        className="w-full text-[13px] text-black outline-none bg-white py-2"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Add a remark..."
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onAdd(value);
+            setValue("");
+          }
+        }}
+      />
+      <button
+        className="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
+        onClick={() => {
+          onAdd(value);
+          setValue("");
+        }}
+        type="button"
+      >
+        Add
+      </button>
     </div>
   );
 };

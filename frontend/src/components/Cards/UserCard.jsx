@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { LuTrash } from "react-icons/lu";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
-import { useNavigate } from "react-router-dom";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 
 const UserCard = ({ userInfo, onUserDeleted }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
-  const navigate = useNavigate();
 
   // Delete Task
   const deleteUser = async () => {
@@ -55,14 +53,27 @@ const UserCard = ({ userInfo, onUserDeleted }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 border-t border-gray-200 py-3 mt-5">
-          <StatCard label="Total" count={userInfo?.totalTask} />
-          <StatCard label="New" count={userInfo?.newTask} />
-          <StatCard label="InProgress" count={userInfo?.inProgressTask} />
-          <StatCard label="Completed" count={userInfo?.completedTask} />
-          <StatCard label="Delayed" count={userInfo?.delayedTask} />
-          <StatCard label="Pending" count={userInfo?.pendingTask} />
-        </div>
+        {userInfo?.role === "admin" ? (
+          <div className="grid grid-cols-4 gap-3 border-t border-gray-200 py-3 mt-5">
+            <StatCard label="Total" count={userInfo?.totalTask} />
+            <StatCard label="New" count={userInfo?.newTask} />
+            <StatCard label="InProgress" count={userInfo?.inProgressTask} />
+            <StatCard label="Sub Tasks" count={userInfo?.subTotal} />
+            <StatCard label="Completed" count={userInfo?.completedTask} />
+            <StatCard label="Delayed" count={userInfo?.delayedTask} />
+            <StatCard label="Pending" count={userInfo?.pendingTask} />
+            <StatCard label="Sub Comp" count={userInfo?.subCompleted} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 border-t border-gray-200 py-3 mt-5">
+            <StatCard label="Total" count={userInfo?.subTotal} />
+            <StatCard label="New" count={userInfo?.subNew} />
+            <StatCard label="InProgress" count={userInfo?.subInProgress} />
+            <StatCard label="Completed" count={userInfo?.subCompleted} />
+            <StatCard label="Delayed" count={userInfo?.subDelayed} />
+            <StatCard label="Pending" count={userInfo?.subPending} />
+          </div>
+        )}
       </div>
       <Modal
         isOpen={openDeleteAlert}

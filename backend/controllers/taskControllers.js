@@ -9,6 +9,7 @@ const getTasks = async (req, res) => {
     const {
       department,
       status,
+      companyName,
       month, // e.g. "2025-06"
       timeframe, // new: "today" | "yesterday" | "last7Days" | "custom"
       startDate, // new: ISO date string, e.g. "2025-07-20"
@@ -40,6 +41,7 @@ const getTasks = async (req, res) => {
     let filter = {};
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
+    if (companyName) filter.companyName = new RegExp(companyName, "i");
 
     const now = new Date();
     if (timeframe) {
@@ -150,25 +152,41 @@ const getTasks = async (req, res) => {
     await Promise.all(
       tasks.map(async (taskDoc) => {
         // 1) completed vs total checklist items → progress%
-        const completedCount = taskDoc.todoChecklist.filter(
-          (i) => i.completed
+        approvedCount = taskDoc.todoChecklist.filter(
+          (i) => i.completed && i.approval?.status === "approved"
         ).length;
+
         const totalItems = taskDoc.todoChecklist.length;
         const newProgress =
-          totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+          totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
 
         // 2) determine newStatus by comparing now vs dueDate end-of-day
         const now = new Date();
         const dueDateEnd = new Date(taskDoc.dueDate);
         dueDateEnd.setHours(23, 59, 59, 999);
 
-        let newStatus;
+        //  Compute approval
+        const allChecklistApproved =
+          totalItems > 0 &&
+          taskDoc.todoChecklist.every(
+            (i) => i.completed && i.approval?.status === "approved"
+          );
 
-        // ✅ Preserve manually set "inProgress" if progress is still 0
+        const approvalsCleared =
+          taskDoc.clientApproval.status === "approved" &&
+          taskDoc.superAdminApproval.status === "approved";
+
+        let newStatus;
         if (taskDoc.status === "inProgress" && newProgress === 0) {
           newStatus = "inProgress";
         } else if (newProgress === 100) {
-          newStatus = now > dueDateEnd ? "delayed" : "completed";
+          if (allChecklistApproved && approvalsCleared) {
+            newStatus = now > dueDateEnd ? "delayed" : "completed";
+          } else if (now > dueDateEnd) {
+            newStatus = "pending";
+          } else {
+            newStatus = "inProgress";
+          }
         } else if (now > dueDateEnd) {
           newStatus = "pending";
         } else if (newProgress > 0) {
@@ -597,19 +615,24 @@ const getTask = async (req, res) => {
 
 const getAdminTasks = async (req, res) => {
   try {
+    // 1) Destructure and set defaults for query parameters
     const {
-      status,
+      status, // filter by task status
       month, // e.g. "2025-06"
-      page = 1,
-      limit = 12,
-      sortOrder = "desc",
-      sortBy = "createdAt",
-      priority,
-      fields, // e.g. "tasks,statusSummary,monthlyData,availableMonths"
-      serialNumber,
+      companyName,
+      page = 1, // pagination: which page
+      limit = 12, // pagination: items per page
+      sortOrder = "desc", // "asc" or "desc"
+      sortBy = "createdAt", // field to sort by
+      priority, // filter by task priority
+      fields, // which sections to return, e.g. "tasks,statusSummary"
+      serialNumber, // partial serial number match
     } = req.query;
 
-    // Which sections to return:
+    // 2) Capture the admin’s ObjectId once
+    const userId = req.user._id;
+
+    // 3) Determine which response sections to include
     const allSections = [
       "tasks",
       "statusSummary",
@@ -620,28 +643,43 @@ const getAdminTasks = async (req, res) => {
       ? fields.split(",").map((f) => f.trim())
       : allSections;
 
-    // Base filter: only tasks assigned to this admin
-    const skip = (page - 1) * limit;
-    let filter = { assignedTo: req.user._id };
+    // 4) Build the base MongoDB filter:
+    //    match tasks where the admin is assigned at top level OR in any checklist item
+    const matchFilter = {
+      $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
+    };
+
+    // 5) Apply optional filters onto the same `matchFilter` object
     if (serialNumber) {
-      filter.serialNumber = new RegExp("^" + serialNumber, "i"); // partial match, case-insensitive
+      matchFilter.serialNumber = new RegExp("^" + serialNumber, "i");
     }
-    // Apply optional filters:
-    if (status) filter.status = status;
-    if (priority) filter.priority = priority;
+    if (status) {
+      matchFilter.status = status;
+    }
+    if (priority) {
+      matchFilter.priority = priority;
+    }
     if (month) {
-      const [y, m] = month.split("-");
-      filter.createdAt = {
-        $gte: new Date(y, m - 1, 1),
-        $lte: new Date(y, m, 0, 23, 59, 59, 999),
+      const [year, mon] = month.split("-");
+      matchFilter.createdAt = {
+        $gte: new Date(year, mon - 1, 1),
+        $lte: new Date(year, mon, 0, 23, 59, 59, 999),
       };
     }
 
+    if (companyName) {
+      matchFilter.companyName = new RegExp("^" + companyName, "i");
+    }
+
+    // 6) Calculate pagination offset
+    const skip = (page - 1) * limit;
+
+    // 7) Initialize the result container
     const result = {};
 
-    // 1) tasks + pagination
+    // 8) Fetch paginated tasks if requested
     if (include.includes("tasks")) {
-      const tasks = await Task.find(filter)
+      const tasks = await Task.find(matchFilter)
         .populate("assignedTo", "name email profileImageUrl department")
         .sort(
           sortBy === "dueDate"
@@ -651,55 +689,56 @@ const getAdminTasks = async (req, res) => {
         .skip(skip)
         .limit(Number(limit));
 
-      // add completedTodoCount
+      // 9) Map each task to include a completed-todo count
       result.tasks = tasks.map((t) => ({
         ...t._doc,
         completedTodoCount: t.todoChecklist.filter((c) => c.completed).length,
       }));
-      result.totalCount = await Task.countDocuments(filter);
+
+      // 10) Total count for pagination UI
+      result.totalCount = await Task.countDocuments(matchFilter);
     }
 
-    // 2) status summary
+    // 11) Compute status summary if requested
     if (include.includes("statusSummary")) {
-      const countWith = (s) => Task.countDocuments({ ...filter, status: s });
+      const countByStatus = (s) =>
+        Task.countDocuments({ ...matchFilter, status: s });
+
       const [
         allTasks,
         newTasks,
-        // startedWorkTasks,
         pendingTasks,
         inProgressTasks,
         completedTasks,
         delayedTasks,
       ] = await Promise.all([
-        Task.countDocuments(filter),
-        countWith("new"),
-        countWith("pending"),
-        countWith("inProgress"),
-        countWith("completed"),
-        countWith("delayed"),
-        // countWith("working"),
+        Task.countDocuments(matchFilter),
+        countByStatus("new"),
+        countByStatus("pending"),
+        countByStatus("inProgress"),
+        countByStatus("completed"),
+        countByStatus("delayed"),
       ]);
 
       result.statusSummary = {
         all: allTasks,
-        newTasks,
-        pendingTasks,
-        inProgressTasks,
-        completedTasks,
-        delayedTasks,
-        // startedWorkTasks,
+        new: newTasks,
+        pending: pendingTasks,
+        inProgress: inProgressTasks,
+        completed: completedTasks,
+        delayed: delayedTasks,
       };
     }
 
-    // 3) monthlyData & 4) availableMonths
-    let fullMonthlyData;
+    // 12) Fetch monthly data and available months if requested
+    let fullMonthlyData = null;
     if (
       include.includes("monthlyData") ||
       include.includes("availableMonths")
     ) {
       fullMonthlyData = await getEnhancedMonthlyTaskData(
-        { assignedTo: req.user._id },
-        /* department = */ null
+        { assignedTo: userId },
+        null
       );
     }
 
@@ -712,21 +751,20 @@ const getAdminTasks = async (req, res) => {
 
     if (include.includes("monthlyData")) {
       if (month) {
-        const only = fullMonthlyData.monthsData.filter(
+        const monthsData = fullMonthlyData.monthsData.filter(
           (m) => m.value === month
         );
-        const totalForMonth = only.reduce((sum, m) => sum + m.count, 0);
-        result.monthlyData = {
-          monthsData: only,
-          allTimeTotal: totalForMonth,
-        };
+        const allTimeTotal = monthsData.reduce((sum, m) => sum + m.count, 0);
+        result.monthlyData = { monthsData, allTimeTotal };
       } else {
         result.monthlyData = fullMonthlyData;
       }
     }
 
+    // 13) Return the assembled response
     return res.status(200).json(result);
   } catch (error) {
+    // 14) Handle any unexpected errors
     return res.status(500).json({ error: error.message });
   }
 };
@@ -742,6 +780,15 @@ const createTask = async (req, res) => {
       priority,
       attachments,
       todoChecklist,
+      taskCategory,
+      objective,
+      targetAudience,
+      usps,
+      competetors,
+      channels,
+      smp,
+      referance,
+      remarks,
     } = req.body;
 
     // Ensure main task assignees is an array
@@ -820,6 +867,15 @@ const createTask = async (req, res) => {
       todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
       serialNumber: nextSerial,
+      taskCategory,
+      objective,
+      targetAudience,
+      usps,
+      competetors,
+      channels,
+      smp,
+      referance,
+      remarks,
     });
 
     // 🔔 Notify all unique users (main assignees + checklist assignees)
@@ -892,21 +948,38 @@ const updateTask = async (req, res) => {
 
     // ✅ Only allow users to update their checklist
     if (role === "user") {
+      let changed = false;
+
+      // Allow update of remarks
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = req.body.remarks;
+        changed = true;
+      }
+
+      // Allow update of todoChecklist
       if (req.body.todoChecklist) {
         req.body.todoChecklist = normalizeChecklist(req.body.todoChecklist);
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
           req.body.todoChecklist
         );
+        changed = true;
+      }
+
+      if (changed) {
         const updatedTask = await task.save();
         return res.status(200).json({
-          message: "Task updated successfully (todo checklist only)",
+          message: "Task updated successfully (user fields)",
           task: updatedTask,
         });
       }
+
+      // If neither, deny
       return res
         .status(403)
-        .json({ message: "Users can only update the todo checklist." });
+        .json({
+          message: "Users can only update the todo checklist or remarks.",
+        });
     }
 
     // ✅ Validate and normalize checklist
@@ -921,6 +994,15 @@ const updateTask = async (req, res) => {
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+      task.taskCategory = req.body.taskCategory || task.taskCategory;
+      task.objective = req.body.objective || task.objective;
+      task.targetAudience = req.body.targetAudience || task.targetAudience;
+      task.usps = req.body.usps || task.usps;
+      task.competetors = req.body.competetors || task.competetors;
+      task.channels = req.body.channels || task.channels;
+      task.smp = req.body.smp || task.smp;
+      task.referance = req.body.referance || task.referance;
+      task.remarks = req.body.remarks || task.remarks;
 
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
@@ -953,6 +1035,15 @@ const updateTask = async (req, res) => {
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
       task.attachments = req.body.attachments || task.attachments;
+      task.taskCategory = req.body.taskCategory || task.taskCategory;
+      task.objective = req.body.objective || task.objective;
+      task.targetAudience = req.body.targetAudience || task.targetAudience;
+      task.usps = req.body.usps || task.usps;
+      task.competetors = req.body.competetors || task.competetors;
+      task.channels = req.body.channels || task.channels;
+      task.smp = req.body.smp || task.smp;
+      task.referance = req.body.referance || task.referance;
+      task.remarks = req.body.remarks || task.remarks;
 
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
@@ -1169,26 +1260,44 @@ const updateTaskChecklist = async (req, res) => {
     }
 
     // Recalculate progress
-    const completedCount = task.todoChecklist.filter(
-      (item) => item.completed
+    // ✅ Recalculate progress using task.todoChecklist
+    const approvedCount = task.todoChecklist.filter(
+      (i) => i.completed && i.approval?.status === "approved"
     ).length;
+
     const totalItems = task.todoChecklist.length;
     task.progress =
-      totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+      totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
 
     const now = new Date();
     const dueDateEnd = new Date(task.dueDate);
     dueDateEnd.setHours(23, 59, 59, 999);
 
-    if (task.progress === 100) {
-      task.status = now > dueDateEnd ? "delayed" : "completed";
-    } else if (now > dueDateEnd) {
-      task.status = "pending";
-    } else if (task.progress > 0) {
-      task.status = "inProgress";
-    } else {
-      task.status = "new";
+    if (["new", "pending"].includes(task.status)) {
+      const allChecklistApproved =
+        totalItems > 0 &&
+        task.todoChecklist.every(
+          (i) => i.completed && i.approval?.status === "approved"
+        );
+      const approvalsCleared =
+        task.clientApproval?.status === "approved" &&
+        task.superAdminApproval?.status === "approved";
+
+      if (task.progress === 100) {
+        if (allChecklistApproved && approvalsCleared) {
+          task.status = now > dueDateEnd ? "delayed" : "completed";
+        } else {
+          task.status = "pending";
+        }
+      } else if (now > dueDateEnd) {
+        task.status = "pending";
+      } else if (task.progress > 0) {
+        task.status = "inProgress";
+      } else {
+        task.status = "new";
+      }
     }
+
     await task.save();
 
     const io = req.app.get("io");
@@ -1209,7 +1318,7 @@ const updateTaskChecklist = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
-    const { timeframe, startDate, endDate } = req.query;
+    const { timeframe, startDate, endDate, companyName } = req.query;
     const now = new Date();
 
     // === DATE FILTER ===
@@ -1267,6 +1376,7 @@ const getDashboardData = async (req, res) => {
         { assignedTo: { $exists: true, $ne: [] } },
         { "todoChecklist.assignedTo": { $exists: true } },
       ],
+      ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
     };
 
     // === BASIC STATS ===
@@ -1434,11 +1544,13 @@ const getUserDashboardData = async (req, res) => {
       return acc;
     }, {});
 
+    // === RECENT TASKS ===
+
     // Fetch recent 10 tasks
-    const recentTasks = await Task.find({ assignedTo: userId })
+    const recentTasks = await Task.find(matchFilter)
       .sort({ createdAt: -1 })
       .limit(10)
-      .select("title status priority dueDate createdAt");
+      .select("title status priority dueDate createdAt companyName");
 
     const monthlyData = await getEnhancedMonthlyTaskData({});
 
@@ -1601,7 +1713,133 @@ const reviewDueDateChange = async (req, res) => {
 };
 
 const approveTask = async (req, res) => {
+  try {
+    const { type, status } = req.body;
+    const user = req.user;
+    const taskId = req.params.id;
 
+    // Validate input
+    if (!["clientApproval", "superAdminApproval"].includes(type)) {
+      return res.status(400).json({ message: "Invalid approval type" });
+    }
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Get task
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    // ✅ Enforce: Only approve if all checklist items are approved
+    const allChecklistApproved = task.todoChecklist.every(
+      (item) => item.completed && item.approval?.status === "approved"
+    );
+
+    if (
+      (status === "approved" || status === "rejected") &&
+      !allChecklistApproved
+    ) {
+      return res.status(400).json({
+        message:
+          "Cannot change main approval until all checklist items are approved.",
+      });
+    }
+
+    // 📝 Apply Approval
+    task[type] = {
+      status,
+      approvedBy: user._id,
+      approvedAt: new Date(),
+    };
+
+    // 🧠 Auto-set task status if both approvals done
+    const approvalsCleared =
+      task.clientApproval?.status === "approved" &&
+      task.superAdminApproval?.status === "approved";
+
+    if (allChecklistApproved && approvalsCleared) {
+      task.status = "completed";
+      task.progress = 100;
+    }
+
+    // Save task
+    await task.save();
+
+    return res.status(200).json({
+      message: `${type} ${status} successfully`,
+      task,
+    });
+  } catch (err) {
+    console.error("❌ approveTask error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+const approveChecklistItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { status } = req.body;
+    const userId = req.user._id;
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Get task
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const checklistItem = task.todoChecklist.id(itemId);
+    if (!checklistItem) {
+      return res.status(404).json({ message: "Checklist item not found" });
+    }
+
+    // Update approval status
+    checklistItem.approval = {
+      status,
+      approvedBy: userId,
+      approvedAt: new Date(),
+    };
+
+    // If rejected, reset completion
+    if (status === "rejected") {
+      checklistItem.completed = false;
+    }
+
+    // Recalculate task progress
+    const approvedCount = task.todoChecklist.filter(
+      (i) => i.completed && i.approval?.status === "approved"
+    ).length;
+    const total = task.todoChecklist.length;
+    task.progress = total > 0 ? Math.round((approvedCount / total) * 100) : 0;
+
+    // Mark completed only if all checklist items approved AND main approvals done
+    const allChecklistApproved = task.todoChecklist.every(
+      (i) => i.completed && i.approval?.status === "approved"
+    );
+    const approvalsCleared =
+      task.clientApproval?.status === "approved" &&
+      task.superAdminApproval?.status === "approved";
+
+    if (allChecklistApproved && approvalsCleared) {
+      task.status = "completed";
+      task.progress = 100;
+    }
+
+    await task.save();
+
+    return res.status(200).json({
+      message: `Checklist item ${status} successfully`,
+      task,
+    });
+  } catch (err) {
+    console.error("❌ approveChecklistItem error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
 };
 
 module.exports = {
@@ -1618,4 +1856,5 @@ module.exports = {
   requestDueDateChange,
   reviewDueDateChange,
   approveTask,
+  approveChecklistItem,
 };

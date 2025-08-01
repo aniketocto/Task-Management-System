@@ -98,3 +98,43 @@ export const findChartsOrFallback = ({
 
   return null;
 };
+
+export const getInfoCardChartData = ({
+  dashboardData,
+  filterMonth,
+  filterDepartment,
+}) => {
+  // Department+Month selected: use breakdown
+  if (
+    filterMonth &&
+    filterDepartment &&
+    dashboardData?.monthlyData?.monthsData?.length
+  ) {
+    const monthObj = dashboardData.monthlyData.monthsData.find(
+      (m) => m.value === filterMonth
+    );
+    if (
+      monthObj &&
+      monthObj.departmentBreakdown &&
+      monthObj.departmentBreakdown[filterDepartment] &&
+      monthObj.departmentBreakdown[filterDepartment].charts &&
+      monthObj.departmentBreakdown[filterDepartment].charts.taskDistribution
+    ) {
+      return monthObj.departmentBreakdown[filterDepartment].charts
+        .taskDistribution;
+    }
+  }
+
+  // Month only: use month's main chart
+  if (filterMonth && dashboardData?.monthlyData?.monthsData?.length) {
+    const monthObj = dashboardData.monthlyData.monthsData.find(
+      (m) => m.value === filterMonth
+    );
+    if (monthObj && monthObj.charts && monthObj.charts.taskDistribution) {
+      return monthObj.charts.taskDistribution;
+    }
+  }
+
+  // Default: use top-level charts
+  return dashboardData?.charts?.taskDistribution || {};
+}

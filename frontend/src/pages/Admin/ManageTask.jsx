@@ -15,6 +15,9 @@ import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
 
 import { io } from "socket.io-client";
+import { addThousandsSeperator } from "../../utils/helper";
+import { infoCard } from "../../utils/data";
+import InfoCard from "../../components/Cards/InfoCard";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: {
@@ -55,6 +58,9 @@ const ManageTask = () => {
     return localStorage.getItem("taskSortOrder") || "desc";
   });
 
+  const [availableCompanies, setAvailableCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState("");
+
   const [viewType, setViewType] = useState("table");
 
   const [loading, setLoading] = useState(false);
@@ -93,6 +99,15 @@ const ManageTask = () => {
     }
   }, [filterDepartment]);
 
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const resp = await axiosInstance.get(API_PATHS.COMPANY.GET_COMPANY);
+      setAvailableCompanies(resp.data || []);
+    } catch (err) {
+      console.error("Failed to load companies:", err);
+    }
+  }, []);
+
   const getAllTasks = useCallback(
     async (currentPage = 1) => {
       try {
@@ -112,6 +127,7 @@ const ManageTask = () => {
             sortBy,
             fields: "tasks,statusSummary,availableMonths",
             serialNumber: debouncedSearchSerial || undefined,
+            companyName: selectedCompany || undefined,
           },
         });
 
@@ -119,14 +135,17 @@ const ManageTask = () => {
         setAllTasks(tasks);
         setStatusSummary(resp.data.statusSummary || {});
 
-        const uniqDepts = Array.from(
-          new Set(
-            tasks.flatMap((t) =>
-              t.assignedTo?.map((u) => u.department).filter(Boolean)
-            )
-          )
-        );
-        setDepartments(uniqDepts);
+        const staticDepartments = [
+          "Creative",
+          "Digital",
+          "Social",
+          "DevelopmentUiUx",
+          "Strategy",
+          "BusinessDevelopment",
+          "ClientServicing",
+          "HR",
+        ];
+        setDepartments(staticDepartments);
 
         const s = resp.data.statusSummary || {};
         setTabs([
@@ -136,7 +155,6 @@ const ManageTask = () => {
           { label: "completed", count: s.completedTasks || 0 },
           { label: "pending", count: s.pendingTasks || 0 },
           { label: "delayed", count: s.delayedTasks || 0 },
-          { label: "working", count: s.startedWorkTasks || 0 },
         ]);
 
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
@@ -157,6 +175,7 @@ const ManageTask = () => {
       sortOrder,
       sortBy,
       debouncedSearchSerial,
+      selectedCompany,
     ]
   );
 
@@ -172,27 +191,32 @@ const ManageTask = () => {
 
   useEffect(() => {
     fetchAvailableMonths();
-  }, [fetchAvailableMonths]);
+    fetchCompanies();
+  }, [fetchAvailableMonths, fetchCompanies]);
   useEffect(() => {
     getAllTasks(page);
   }, [getAllTasks, page]);
 
-  useEffect(() => {
-    if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
-      const sorted = [...availableMonths].sort((a, b) =>
-        b.value.localeCompare(a.value)
-      );
-      const curr = new Date().toISOString().slice(0, 7);
-      const hasCurrent = sorted.some((m) => m.value === curr);
-      setFilterMonth(hasCurrent ? curr : sorted[0].value);
-      setPage(1);
-    }
-  }, [availableMonths, filterMonth, filterTimeframe]);
+  // useEffect(() => {
+  //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
+  //     // Sort months in descending order (latest first)
+  //     const sorted = [...availableMonths].sort((a, b) =>
+  //       b.value.localeCompare(a.value)
+  //     );
+  //     // Try to find the most recent month with count > 0
+  //     const recentWithData = sorted.find((m) => (m.count || 0) > 0);
+  //     // Set that as filterMonth, otherwise default to the first (most recent) month
+  //     setFilterMonth(recentWithData ? recentWithData.value : sorted[0].value);
+  //     setPage(1);
+  //   }
+  // }, [availableMonths, filterMonth, filterTimeframe]);
+
+  console.log("availableMonths", availableMonths);
 
   useEffect(() => {
     socket.on("task:sync", () => {
       getAllTasks(page); // silently refresh tasks
-      console.log("task:sync");
+      // console.log("task:sync");
     });
 
     return () => {
@@ -200,165 +224,198 @@ const ManageTask = () => {
     };
   }, [getAllTasks, page]);
 
+  useEffect(() => {
+    if (allTasks.length === 0 && selectedCompany) {
+      // clear the filter back to “All companies”
+      setSelectedCompany("");
+    }
+  }, [allTasks, selectedCompany]);
+
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
   };
 
+  // console.log(statusSummary["all"]);
+
   return (
     <DashboardLayout activeMenu="Manage Tasks">
       <div className="my-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg text-white md:text-xl font-medium">
-              My Tasks
-            </h2>
-            <div className="flex items-center border rounded overflow-hidden">
-              <button
-                onClick={() => setViewType("table")}
-                className={`p-2 ${
-                  viewType === "table"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuFileSpreadsheet size={20} />
-              </button>
-              <button
-                onClick={() => setViewType("grid")}
-                className={`p-2 ${
-                  viewType === "grid"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuLayoutGrid size={20} />
-              </button>
+        <div className="flex flex-col gap-5 card justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg text-white md:text-xl font-medium">
+                My Tasks
+              </h2>
+              <div className="flex items-center border rounded overflow-hidden">
+                <button
+                  onClick={() => setViewType("table")}
+                  className={`p-2 ${
+                    viewType === "table"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  <LuFileSpreadsheet size={20} />
+                </button>
+                <button
+                  onClick={() => setViewType("grid")}
+                  className={`p-2 ${
+                    viewType === "grid"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  <LuLayoutGrid size={20} />
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Timeframe */}
-            <>
-              <label className="text-sm font-medium text-gray-600">
-                Timeframe:
-              </label>
-              <select
-                value={filterTimeframe}
-                onChange={(e) => {
-                  setFilterTimeframe(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded px-3 py-2 text-sm text-white"
-              >
-                <option className="text-black" value="">
-                  All Time
-                </option>
-                <option className="text-black" value="today">
-                  Today
-                </option>
-                <option className="text-black" value="yesterday">
-                  Yesterday
-                </option>
-                <option className="text-black" value="last7Days">
-                  Last 7 Days
-                </option>
-                <option className="text-black" value="custom">
-                  Custom
-                </option>
-              </select>
-              {filterTimeframe === "custom" && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    From:
-                  </label>
-                  <input
-                    type="date"
-                    value={filterStartDate}
-                    onChange={(e) => {
-                      setFilterStartDate(e.target.value);
-                      setPage(1);
-                    }}
-                    max={new Date().toISOString().split("T")[0]}
-                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                  />
-                  <label className="text-sm font-medium text-gray-600">
-                    To:
-                  </label>
-                  <input
-                    type="date"
-                    value={filterEndDate}
-                    onChange={(e) => {
-                      setFilterEndDate(e.target.value);
-                      setPage(1);
-                    }}
-                    min={filterStartDate}
-                    max={new Date().toISOString().split("T")[0]}
-                    className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
-                  />
-                </>
-              )}
-            </>
-            {/* Department */}
-
-            <>
-              <label className="text-sm font-medium text-gray-600">
-                Department:
-              </label>
-              <select
-                value={filterDepartment}
-                onChange={(e) => {
-                  setFilterDepartment(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded px-3 py-2 text-sm text-white"
-              >
-                <option value="" className="text-black">
-                  All Departments
-                </option>
-                {departments.map((d) => (
-                  <option key={d} value={d} className="text-black">
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </>
-            {/* Month */}
-            {availableMonths.length > 0 && (
-              <>
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Timeframe */}
+              <div className="flex gap-1 flex-col">
                 <label className="text-sm font-medium text-gray-600">
-                  Month:
+                  Timeframe:
                 </label>
                 <select
-                  value={filterMonth}
+                  value={filterTimeframe}
                   onChange={(e) => {
-                    setFilterMonth(e.target.value);
+                    setFilterTimeframe(e.target.value);
                     setPage(1);
                   }}
-                  disabled={statusSummary?.all === 0}
+                  className="border rounded px-3 py-2 text-sm text-white"
+                >
+                  <option className="text-black" value="">
+                    This Month
+                  </option>
+                  <option className="text-black" value="today">
+                    Today
+                  </option>
+                  <option className="text-black" value="yesterday">
+                    Yesterday
+                  </option>
+                  <option className="text-black" value="last7Days">
+                    Last 7 Days
+                  </option>
+                  <option className="text-black" value="custom">
+                    Custom
+                  </option>
+                </select>
+                {filterTimeframe === "custom" && (
+                  <>
+                    <label className="text-sm font-medium text-gray-100">
+                      From:
+                    </label>
+                    <input
+                      type="date"
+                      value={filterStartDate}
+                      onChange={(e) => {
+                        setFilterStartDate(e.target.value);
+                        setPage(1);
+                      }}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                    />
+                    <label className="text-sm font-medium text-gray-100">
+                      To:
+                    </label>
+                    <input
+                      type="date"
+                      value={filterEndDate}
+                      onChange={(e) => {
+                        setFilterEndDate(e.target.value);
+                        setPage(1);
+                      }}
+                      min={filterStartDate}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="border rounded px-3 py-2 text-sm text-white bg-gray-800"
+                    />
+                  </>
+                )}
+              </div>
+              {/* Company */}
+              <div className="flex gap-1 flex-col">
+                <label className="text-sm font-medium text-gray-600">
+                  Company:
+                </label>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => {
+                    setSelectedCompany(e.target.value);
+                    setPage(1);
+                  }}
                   className="border rounded px-3 py-2 text-sm text-white"
                 >
                   <option value="" className="text-black">
-                    All Months
+                    All
                   </option>
-                  {availableMonths
-                    .sort((a, b) => b.value.localeCompare(a.value))
-                    .slice(0, 12)
-                    .map((m) => (
-                      <option
-                        key={m.value}
-                        value={m.value}
-                        className="text-black"
-                      >
-                        {m.label}
-                      </option>
-                    ))}
+                  {availableCompanies.map((c) => (
+                    <option key={c._id} value={c.name} className="text-black">
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
-              </>
-            )}
-            {/* User
+              </div>
+
+              {/* Department */}
+              <div className="flex gap-1 flex-col">
+                <label className="text-sm font-medium text-gray-600">
+                  Department:
+                </label>
+                <select
+                  value={filterDepartment}
+                  onChange={(e) => {
+                    setFilterDepartment(e.target.value);
+                    setPage(1);
+                  }}
+                  className="border rounded px-3 py-2 text-sm text-white"
+                >
+                  <option value="" className="text-black">
+                    All
+                  </option>
+                  {departments.map((d) => (
+                    <option key={d} value={d} className="text-black">
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Month */}
+              {availableMonths.length > 0 && (
+                <div className="flex gap-1 flex-col">
+                  <label className="text-sm font-medium text-gray-600">
+                    Month:
+                  </label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="" className="text-black">
+                      All Months
+                    </option>
+                    {availableMonths
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .slice(0, 12)
+                      .map((m) => (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          className="text-black"
+                        >
+                          {m.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+              {/* User
               {users.length > 0 && (
                 <>
-                  <label className="text-sm font-medium text-gray-600">User:</label>
+                  <label className="text-sm font-medium text-gray-100">User:</label>
                   <select value={filterUser} onChange={(e) => { setFilterUser(e.target.value); setPage(1); }} className="border rounded px-3 py-2 text-sm text-white">
                     <option value="">All Users</option>
                     {users.map((u) => (<option key={u._id} value={u._id} className="text-black">{u.name}</option>))}
@@ -366,15 +423,27 @@ const ManageTask = () => {
                 </>
               )} */}
 
-            {/* Status Tabs */}
-            <TaskStatusTabs
-              tabs={tabs}
-              activeTab={filterStatus}
-              setActiveTab={(newStatus) => {
-                setFilterStatus(newStatus);
-                setPage(1);
-              }}
-            />
+              {/* Status Tabs */}
+              {/* <TaskStatusTabs
+                tabs={tabs}
+                activeTab={filterStatus}
+                setActiveTab={(newStatus) => {
+                  setFilterStatus(newStatus);
+                  setPage(1);
+                }}
+              /> */}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+            {infoCard.map(({ label, key1, color }) => (
+              <InfoCard
+                key={key1}
+                label={label}
+                value={addThousandsSeperator(statusSummary[key1] || 0)}
+                color={color}
+              />
+            ))}
           </div>
         </div>
         {loading && <SpinLoader />}
@@ -420,7 +489,10 @@ const ManageTask = () => {
               filterPriority={filterPriority}
               onPriorityChange={(p) => {
                 setFilterPriority(p);
-                setPage(1);
+              }}
+              filterStatus={filterStatus}
+              onStatusChange={(s) => {
+                setFilterStatus(s);
               }}
             />
             {allTasks.length === 0 && (
