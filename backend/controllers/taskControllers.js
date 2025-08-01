@@ -302,8 +302,9 @@ const getEnhancedMonthlyTaskData = async (
 ) => {
   const monthsData = [];
 
-  const earliestTask = await Task.findOne(baseFilter).sort({ createdAt: 1 });
-  const startDate = earliestTask?.createdAt || new Date();
+  const firstTaskEver = await Task.findOne().sort({ createdAt: 1 });
+  const startDate = firstTaskEver?.createdAt || new Date();
+
   const now = new Date();
 
   const totalMonths =
@@ -975,11 +976,9 @@ const updateTask = async (req, res) => {
       }
 
       // If neither, deny
-      return res
-        .status(403)
-        .json({
-          message: "Users can only update the todo checklist or remarks.",
-        });
+      return res.status(403).json({
+        message: "Users can only update the todo checklist or remarks.",
+      });
     }
 
     // ✅ Validate and normalize checklist
