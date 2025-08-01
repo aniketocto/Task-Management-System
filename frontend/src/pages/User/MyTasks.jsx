@@ -59,16 +59,20 @@ const MyTasks = () => {
       const months = resp.data.availableMonths || [];
       setAvailableMonths(months);
 
-      // auto-select: current month if present, else latest
       if (months.length && !filterMonth) {
-        const curr = new Date().toISOString().slice(0, 7);
-        const hasCurr = months.some((m) => m.value === curr);
-        setFilterMonth(hasCurr ? curr : months[0].value);
+        // If there's ANY month with data, auto-select it; else select "All Months" (empty string)
+        const sorted = [...months].sort((a, b) =>
+          b.value.localeCompare(a.value)
+        );
+        const recentWithData = sorted.find((m) => (m.count || 0) > 0);
+        setFilterMonth(recentWithData ? recentWithData.value : "");
       }
     } catch (err) {
       console.error("Error loading months:", err);
     }
   }, [filterMonth]);
+
+  console.log("Months from API:", availableMonths);
 
   // --- fetch tasks for the selected month/status/etc ---
   const getAllTasks = useCallback(
@@ -143,7 +147,7 @@ const MyTasks = () => {
   useEffect(() => {
     socket.on("task:sync", () => {
       getAllTasks(page); // silently refresh tasks
-      console.log("tasks synced");  
+      console.log("tasks synced");
     });
 
     return () => {
@@ -192,50 +196,48 @@ const MyTasks = () => {
             </div>
           </div>
 
-          {tabs[0]?.count > 0 && (
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Month dropdown driven by availableMonths */}
-              {availableMonths.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-600">
-                    Month:
-                  </label>
-                  <select
-                    value={filterMonth}
-                    onChange={(e) => {
-                      setFilterMonth(e.target.value);
-                      setPage(1);
-                    }}
-                    className="border rounded px-3 py-2 text-sm text-gray-50"
-                  >
-                    <option value="">All Months</option>
-                    {availableMonths
-                      .sort((a, b) => b.value.localeCompare(a.value))
-                      .slice(0, 12)
-                      .map((m) => (
-                        <option
-                          key={m.value}
-                          value={m.value}
-                          className="text-black"
-                        >
-                          {m.label}
-                        </option>
-                      ))}
-                  </select>
-                </>
-              )}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Month dropdown driven by availableMonths */}
+            {availableMonths.length > 0 && (
+              <>
+                <label className="text-sm font-medium text-gray-600">
+                  Month:
+                </label>
+                <select
+                  value={filterMonth}
+                  onChange={(e) => {
+                    setFilterMonth(e.target.value);
+                    setPage(1);
+                  }}
+                  className="border rounded px-3 py-2 text-sm text-gray-50"
+                >
+                  <option value="">All Months</option>
+                  {availableMonths
+                    .sort((a, b) => b.value.localeCompare(a.value))
+                    .slice(0, 12)
+                    .map((m) => (
+                      <option
+                        key={m.value}
+                        value={m.value}
+                        className="text-black"
+                      >
+                        {m.label}
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
 
-              {/* Status tabs */}
-              <TaskStatusTabs
-                tabs={tabs}
-                activeTab={filterStatus}
-                setActiveTab={(tab) => {
-                  setFilterStatus(tab);
-                  setPage(1);
-                }}
-              />
-            </div>
-          )}
+            {/* Status tabs */}
+            <TaskStatusTabs
+              tabs={tabs}
+              activeTab={filterStatus}
+              setActiveTab={(tab) => {
+                setFilterStatus(tab);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
 
         {loading && <SpinLoader />}
