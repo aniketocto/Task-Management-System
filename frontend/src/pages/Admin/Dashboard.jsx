@@ -217,16 +217,16 @@ const Dashboard = () => {
   }, []);
 
   // Set current month if available
-  useEffect(() => {
-    if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
-      const sorted = [...availableMonths].sort((a, b) =>
-        b.value.localeCompare(a.value)
-      );
-      const curr = new Date().toISOString().slice(0, 7);
-      const hasCurrent = sorted.some((m) => m.value === curr);
-      setFilterMonth(hasCurrent ? curr : sorted[0].value);
-    }
-  }, [availableMonths, filterMonth, filterTimeframe]);
+  // useEffect(() => {
+  //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
+  //     const sorted = [...availableMonths].sort((a, b) =>
+  //       b.value.localeCompare(a.value)
+  //     );
+  //     const curr = new Date().toISOString().slice(0, 7);
+  //     const hasCurrent = sorted.some((m) => m.value === curr);
+  //     setFilterMonth(hasCurrent ? curr : sorted[0].value);
+  //   }
+  // }, [availableMonths, filterMonth, filterTimeframe]);
 
   // Filter chart data (do not spam network)
   useEffect(() => {
@@ -319,6 +319,9 @@ const Dashboard = () => {
                   onChange={(e) => setFilterMonth(e.target.value)}
                   className="border rounded px-3 py-2 text-sm text-white"
                 >
+                  <option value="" className="text-black">
+                    All Months
+                  </option>
                   {availableMonths
                     .sort((a, b) => b.value.localeCompare(a.value))
                     .map((m) => (

@@ -197,17 +197,21 @@ const ManageTask = () => {
     getAllTasks(page);
   }, [getAllTasks, page]);
 
-  useEffect(() => {
-    if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
-      const sorted = [...availableMonths].sort((a, b) =>
-        b.value.localeCompare(a.value)
-      );
-      const curr = new Date().toISOString().slice(0, 7);
-      const hasCurrent = sorted.some((m) => m.value === curr);
-      setFilterMonth(hasCurrent ? curr : sorted[0].value);
-      setPage(1);
-    }
-  }, [availableMonths, filterMonth, filterTimeframe]);
+  // useEffect(() => {
+  //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
+  //     // Sort months in descending order (latest first)
+  //     const sorted = [...availableMonths].sort((a, b) =>
+  //       b.value.localeCompare(a.value)
+  //     );
+  //     // Try to find the most recent month with count > 0
+  //     const recentWithData = sorted.find((m) => (m.count || 0) > 0);
+  //     // Set that as filterMonth, otherwise default to the first (most recent) month
+  //     setFilterMonth(recentWithData ? recentWithData.value : sorted[0].value);
+  //     setPage(1);
+  //   }
+  // }, [availableMonths, filterMonth, filterTimeframe]);
+
+  console.log("availableMonths", availableMonths);
 
   useEffect(() => {
     socket.on("task:sync", () => {
@@ -350,7 +354,7 @@ const ManageTask = () => {
                     </option>
                   ))}
                 </select>
-              </ div>
+              </div>
 
               {/* Department */}
               <div className="flex gap-1 flex-col">
@@ -374,11 +378,11 @@ const ManageTask = () => {
                     </option>
                   ))}
                 </select>
-              </ div>
+              </div>
 
               {/* Month */}
               {availableMonths.length > 0 && (
-               <div className="flex gap-1 flex-col">
+                <div className="flex gap-1 flex-col">
                   <label className="text-sm font-medium text-gray-600">
                     Month:
                   </label>
@@ -388,12 +392,11 @@ const ManageTask = () => {
                       setFilterMonth(e.target.value);
                       setPage(1);
                     }}
-                    disabled={statusSummary?.all === 0}
                     className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    {/* <option value="" className="text-black">
-                    All Months
-                  </option> */}
+                    <option value="" className="text-black">
+                      All Months
+                    </option>
                     {availableMonths
                       .sort((a, b) => b.value.localeCompare(a.value))
                       .slice(0, 12)
@@ -407,7 +410,7 @@ const ManageTask = () => {
                         </option>
                       ))}
                   </select>
-                </ div>
+                </div>
               )}
               {/* User
               {users.length > 0 && (
