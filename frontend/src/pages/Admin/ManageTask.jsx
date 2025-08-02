@@ -357,7 +357,7 @@ const ManageTask = () => {
               </div>
 
               {/* Department */}
-              <div className="flex gap-1 flex-col">
+            { user.role === "superAdmin" &&  <div className="flex gap-1 flex-col">
                 <label className="text-sm font-medium text-gray-600">
                   Department:
                 </label>
@@ -378,7 +378,7 @@ const ManageTask = () => {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div>}
 
               {/* Month */}
               {availableMonths.length > 0 && (
@@ -525,8 +525,8 @@ const ManageTask = () => {
         )}
 
         <ReactPaginate
-          previousLabel={"← Prev"}
-          nextLabel={"Next →"}
+          previousLabel={"Previous"}
+          nextLabel={"Next"}
           breakLabel={"..."}
           pageCount={totalPages}
           forcePage={page - 1}

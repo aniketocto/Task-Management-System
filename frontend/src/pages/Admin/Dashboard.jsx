@@ -337,7 +337,7 @@ const Dashboard = () => {
                 </select>
               </div>
               {/* Department filter */}
-              <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+              {user?.role === "superAdmin" && <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">
                   Department:
                 </label>
@@ -351,7 +351,8 @@ const Dashboard = () => {
                     .sort((a, b) => b.value.localeCompare(a.value))
                     .map((m) => {
                       const isDisabled =
-                        !departmentTotals[m.value] ||
+                        (user?.role !== "superAdmin" &&
+                          !departmentTotals[m.value]) ||
                         departmentTotals[m.value] === 0;
                       return (
                         <option
@@ -367,7 +368,7 @@ const Dashboard = () => {
                       );
                     })}
                 </select>
-              </div>
+              </div>}
               {/* Company filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">

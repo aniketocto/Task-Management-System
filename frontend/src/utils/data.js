@@ -180,10 +180,30 @@ export const STATUS_OPTIONS = [
 export const infoCard = [
   { label: "New Tasks", key: "new", color: "bg-[#3956E4]", key1: "newTasks" },
   // { label: "Working Tasks", key: "startedWork", color: "bg-[#E4CA39]", key1: "" },
-  { label: "InProgress Tasks", key: "inProgress", color: "bg-[#E48E39]", key1: "inProgressTasks" },
-  { label: "Completed Tasks", key: "completed", color: "bg-[#6FE439]", key1: "completedTasks" },
-  { label: "Pending Tasks", key: "pending", color: "bg-[#39C5E4]", key1: "pendingTasks" },
-  { label: "Delayed Tasks", key: "delayed", color: "bg-[#E43941]", key1: "delayedTasks" },
+  {
+    label: "InProgress Tasks",
+    key: "inProgress",
+    color: "bg-[#E48E39]",
+    key1: "inProgressTasks",
+  },
+  {
+    label: "Completed Tasks",
+    key: "completed",
+    color: "bg-[#6FE439]",
+    key1: "completedTasks",
+  },
+  {
+    label: "Pending Tasks",
+    key: "pending",
+    color: "bg-[#39C5E4]",
+    key1: "pendingTasks",
+  },
+  {
+    label: "Delayed Tasks",
+    key: "delayed",
+    color: "bg-[#E43941]",
+    key1: "delayedTasks",
+  },
   { label: "Total Tasks", key: "All", color: "bg-[#B439E4]", key1: "all" },
 ];
 
@@ -305,6 +325,7 @@ export const officeQuotes = {
 };
 
 export const OPPO_STATUS = [
+  { value: "new", label: "New" },
   { value: "followUp", label: "Follow Up" },
   { value: "dead", label: "Dead" },
   { value: "onboarded", label: "Onboarded" },
@@ -313,10 +334,57 @@ export const OPPO_STATUS = [
   { value: "pitch", label: "Pitch" },
 ];
 
-export const OPPO_Type = [
-  { value: "retainer", label: "Retainer" },
+export const OPPO_TYPE = [
+  { value: "realEstate", label: "Retainer" },
   { value: "project", label: "Project" },
 ];
+
+export const LEAD_TYPE = [
+  { value: "realEstate", label: "Real Estate" },
+  { value: "hospitality", label: "Hospitality" },
+  { value: "bsfi", label: "BSFI" },
+  { value: "healthcare", label: "Healthcare" },
+  { value: "wellness", label: "Wellness" },
+  { value: "fnb", label: "F&B" },
+  { value: "agency", label: "Agency" },
+  { value: "fashion", label: "Fashion" },
+  { value: "others", label: "Others" },
+];
+
+export const LEAD_SERVICE = [
+  {value: "logoDesign", label: "Logo Design"},
+  {value: "socialMediaManagement", label: "Social Media Management"},
+  {value: "leadGeneration", label: "Lead Generation"},
+  {value: "webDesignNDev", label: "Web Design & Development"},
+  {value: "appDesignNDev", label: "App Design & Development"},
+  {value: "videoProduction", label: "Video Production"},
+  {value: "branding", label: "Branding"},
+  {value: "visualIdentity", label: "Visual Identity"},
+  {value: "coffeeTableBook", label: "Coffee Table Book"},
+  {value: "brochures", label: "Brochures"},
+  {value: "merchandise", label: "Merchandise"},
+  {value: "stallDesign", label: "Stall Design"},
+  {value: "influencerMarketing", label: "Influencer Marketing"},
+  {value: "siteBranding", label: "Site Branding"},
+  {value: "packaging", label: "Packaging"},
+  {value: "energy", label: "Energy"},
+  {value: "others", label: "Others"},
+];
+
+export const LEAD_SOURCE = [
+  {value: "website", label: "Website"},
+  {value: "inboundWhatsApp", label: "Inbound Whatsapp"},
+  {value: "outboundWhatsApp", label: "Outbound Whatsapp"},
+  {value: "inboundCall", label: "Inbound Call"},
+  {value: "outboundCall", label: "Outbound Call"},
+  {value: "inboundEmail", label: "Inbound Email"},
+  {value: "outboundEmail", label: "Outbound Email"},
+  {value: "metaAds", label: "Meta Ads"},
+  {value: "googleAds", label: "Google Ads"},
+  {value: "events", label: "Events"},
+  {value: "referral", label: "Referral"},
+  {value: "others", label: "Others"},
+]
 
 export const statsColors = [
   "#6366F1", // indigo for Total

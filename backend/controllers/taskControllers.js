@@ -107,7 +107,7 @@ const getTasks = async (req, res) => {
     }
 
     // === department ACL ===
-    const isPrivileged = ["admin", "superAdmin"].includes(req.user.role);
+    const isPrivileged = req.user.role === "superAdmin";
     let baseFilter = isPrivileged
       ? {}
       : {
@@ -1368,15 +1368,30 @@ const getDashboardData = async (req, res) => {
       }
     }
 
-    // === ENHANCED FILTER (assignedTo or todoChecklist.assignedTo) ===
-    const matchFilter = {
-      ...dateFilter,
-      $or: [
-        { assignedTo: { $exists: true, $ne: [] } },
-        { "todoChecklist.assignedTo": { $exists: true } },
-      ],
-      ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
-    };
+    // **why  it's not showing to the dashboard all tasks like pending, new and delayed
+    // **what   [used to  show the managed tasks to the dashboard ]
+
+    const isPrivileged = req.user.role === "superAdmin";
+    const userId = req.user._id;
+
+    let matchFilter;
+
+    if (isPrivileged) {
+      matchFilter = {
+        ...dateFilter,
+        ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
+        $or: [
+          { assignedTo: { $exists: true, $ne: [] } },
+          { "todoChecklist.assignedTo": userId },
+        ],
+      };
+    } else {
+      matchFilter = {
+        ...dateFilter,
+        ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
+        $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
+      };
+    }
 
     // === BASIC STATS ===
     const totalTasks = await Task.countDocuments(matchFilter);

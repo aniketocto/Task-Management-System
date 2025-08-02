@@ -49,6 +49,8 @@ export const API_PATHS = {
       `/api/tasks/${task_id}/due-date-request`,
     REVIEW_DUE_DATE_CHANGE: (task_id) =>
       `/api/tasks/${task_id}/due-date-approval`,
+    DECIDE_DATE_CHANGE_REQUEST: (leadId, requestId) =>
+      `/api/leads/${leadId}/date-change-request/${requestId}`,
   },
   CATEGORY: {
     GET_CATEGORIES: "/api/category",
@@ -63,6 +65,7 @@ export const API_PATHS = {
   },
   APPROVAL: {
     TASK_APPROVAL: (taskId) => `/api/tasks/${taskId}/approve`,
-    CHECKLIST_APPROVAL: (taskId, checklistId) => `/api/tasks/${taskId}/checklist/${checklistId}/approve`,
-  }
+    CHECKLIST_APPROVAL: (taskId, checklistId) =>
+      `/api/tasks/${taskId}/checklist/${checklistId}/approve`,
+  },
 };

@@ -9,7 +9,7 @@ const SelectOption = ({ options, value, onChange, placeholder, disabled }) => {
     setIsOpen(false);
   };
   return (
-    <div className="relative w-full">
+    <div className="relative w-full mt-2">
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -26,7 +26,7 @@ const SelectOption = ({ options, value, onChange, placeholder, disabled }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute w-full bg-white border-slate-100 rounded-md mt-1 shadow-md">
+        <div className="absolute w-full max-h-[250px] overflow-auto bg-white border-slate-100 rounded-md mt-1 shadow-md">
           {options.map((opt) => (
             <div
               key={opt.value}
