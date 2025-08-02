@@ -137,4 +137,33 @@ export const getInfoCardChartData = ({
 
   // Default: use top-level charts
   return dashboardData?.charts?.taskDistribution || {};
-}
+};
+
+export const addBusinessDays = (dateStr, numDays) => {
+  if (!dateStr) return "";
+  let date = new Date(dateStr);
+  let added = 0;
+  while (added < numDays) {
+    date.setDate(date.getDate() + 1); // Go to next day
+    if (date.getDay() !== 0) {
+      // If NOT Sunday
+      added++; // Count this as a "business" day
+    }
+    // If it is Sunday (date.getDay() === 0), do nothing (don’t increment added)
+  }
+  // Format for datetime-local input
+  return date.toISOString().slice(0, 16);
+};
+
+export const beautify = (text) => {
+  if (!text) return "-";
+  // Replace underscores/dashes with space, then insert space before capital letters
+  return text
+    .replace(/[_-]/g, " ") // snake_case or kebab-case to spaces
+    .replace(/([a-z])([A-Z])/g, "$1 $2") // camelCase to space
+    .replace(/\s+/g, " ") // remove extra spaces
+    .replace(/^\w/, (c) => c.toUpperCase()) // capitalize first letter
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};

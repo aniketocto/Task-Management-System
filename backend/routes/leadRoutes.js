@@ -7,6 +7,7 @@ const {
   getLead,
   deleteLead,
   getLeadDashboardData,
+  decideDateChangeRequest,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
@@ -16,7 +17,7 @@ router.get(
   protect,
   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getLeadDashboardData
-)
+);
 
 router.post(
   "/create-lead",
@@ -31,8 +32,6 @@ router.get(
   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getLeads
 );
-
-
 
 router.get(
   "/:id",
@@ -55,6 +54,11 @@ router.delete(
   deleteLead
 );
 
-
+router.patch(
+  "/:id/date-change-request/:requestId",
+  protect,
+  allowRoleOrDept(["superAdmin"]),
+  decideDateChangeRequest
+);
 
 module.exports = router;

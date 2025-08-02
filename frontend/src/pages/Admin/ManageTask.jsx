@@ -525,8 +525,8 @@ const ManageTask = () => {
         )}
 
         <ReactPaginate
-          previousLabel={"← Prev"}
-          nextLabel={"Next →"}
+          previousLabel={"Previous"}
+          nextLabel={"Next"}
           breakLabel={"..."}
           pageCount={totalPages}
           forcePage={page - 1}

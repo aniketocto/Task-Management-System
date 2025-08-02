@@ -1,5 +1,7 @@
-const categoryModel = require("../models/categoryModel");
+const Notification = require("../models/Notification");
 const Leads = require("../models/Leads");
+const moment = require("moment");
+const User = require("../models/User");
 
 const createLead = async (req, res) => {
   try {
@@ -8,9 +10,15 @@ const createLead = async (req, res) => {
       email,
       jobProfile,
       companyName,
+      contact,
+      social,
+      leadSource,
+      referral,
       status,
       type,
       category,
+      services,
+      brief,
       leadCameDate,
       credentialDeckDate,
       discoveryCallDate,
@@ -25,9 +33,15 @@ const createLead = async (req, res) => {
       email,
       jobProfile,
       companyName,
+      contact,
+      social,
+      leadSource,
+      referral,
       status,
       type,
       category,
+      services,
+      brief,
       leadCameDate,
       credentialDeckDate,
       discoveryCallDate,
@@ -95,45 +109,6 @@ const getLead = async (req, res) => {
   }
 };
 
-const updateLead = async (req, res) => {
-  try {
-    const updateFields = {
-      cName: req.body.cName,
-      jobProfile: req.body.jobProfile,
-      companyName: req.body.companyName,
-      email: req.body.email,
-      status: req.body.status,
-      type: req.body.type,
-      category: req.body.category,
-      leadCameDate: req.body.leadCameDate,
-      credentialDeckDate: req.body.credentialDeckDate,
-      discoveryCallDate: req.body.discoveryCallDate,
-      pitchDate: req.body.pitchDate,
-      attachments: req.body.attachments,
-      remark: req.body.remark,
-    };
-
-    if (req.body.followUp) {
-      updateFields.followUp = req.body.followUp;
-    }
-
-    const lead = await Leads.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateFields },
-      { new: true }
-    );
-
-    if (!lead) {
-      return res.status(404).json({ message: "Lead not found" });
-    }
-
-    return res.json({ message: "Lead updated successfully", lead });
-  } catch (error) {
-    console.error("Error updating lead:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
 const deleteLead = async (req, res) => {
   try {
     const lead = await Leads.findById(req.params.id);
@@ -157,9 +132,18 @@ const getLeadDashboardData = async (req, res) => {
     const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
     const argumentLeads = await Leads.countDocuments({ status: "argument" });
     const pitchLeads = await Leads.countDocuments({ status: "pitch" });
-    const negotiationLeads = await Leads.countDocuments({ status: "negotiation" });
+    const negotiationLeads = await Leads.countDocuments({
+      status: "negotiation",
+    });
 
-    const leadStatuses = ["followUp", "dead", "onboarded", "argument", "pitch", "negotiation" ];
+    const leadStatuses = [
+      "followUp",
+      "dead",
+      "onboarded",
+      "argument",
+      "pitch",
+      "negotiation",
+    ];
 
     const leadDistributionRaw = await Leads.aggregate([
       {
@@ -176,7 +160,6 @@ const getLeadDashboardData = async (req, res) => {
         leadDistributionRaw.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
-    
 
     const recentLeads = await Leads.find()
       .sort({ createdAt: -1 })
@@ -193,13 +176,155 @@ const getLeadDashboardData = async (req, res) => {
         onboardedLeads,
         argumentLeads,
         pitchLeads,
-        negotiationLeads
+        negotiationLeads,
       },
       charts: {
         leadDistribution,
       },
       recentLeads,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const updateLead = async (req, res) => {
+  try {
+    const { role, _id: userId, name } = req.user;
+    const lead = await Leads.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+
+    const dateFields = [
+      "leadCameDate",
+      "credentialDeckDate",
+      "discoveryCallDate",
+      "pitchDate",
+    ];
+    let updateFields = {};
+    let requestsMade = [];
+    const globalReason = req.body.changeReason;
+
+    for (let field of dateFields) {
+      if (req.body[field] !== undefined && req.body[field] !== null) {
+        const newDate = new Date(req.body[field]);
+        const prevDate = lead[field];
+
+        if (role === "admin") {
+          // Correct date check!
+          if (prevDate && moment().isAfter(moment(prevDate), "day")) {
+            lead.dateChangeRequests = lead.dateChangeRequests || [];
+            lead.dateChangeRequests.push({
+              field,
+              oldDate: prevDate,
+              newDate, // <--- You missed this! Store the new date being requested
+              status: "pending",
+              requestedBy: userId,
+              requestedAt: new Date(),
+              reason: globalReason,
+            });
+
+            // Notify all superadmins
+            const superAdmins = await User.find({ role: "superAdmin" });
+            const notifications = await Promise.all(
+              superAdmins.map((sa) =>
+                Notification.create({
+                  user: sa._id,
+                  message: `${name} requested to change ${field} for lead "${
+                    lead.cName
+                  }" from ${
+                    prevDate ? prevDate.toLocaleDateString() : "N/A"
+                  } to ${newDate.toLocaleDateString()}.`,
+                  leadId: lead._id,
+                  type: "info",
+                })
+              )
+            );
+            const io = req.app.get("io");
+            notifications.forEach((notification) => {
+              io.to(notification.user.toString()).emit(
+                "new-notification",
+                notification
+              );
+            });
+            requestsMade.push(field);
+          } else {
+            updateFields[field] = newDate;
+          }
+        } else if (role === "superAdmin") {
+          // superadmin can always update directly
+          updateFields[field] = newDate;
+        }
+      }
+    }
+
+    // Regular allowed fields
+    const allowedFields = [
+      "cName",
+      "jobProfile",
+      "companyName",
+      "email",
+      "contact",
+      "socials",
+      "leadSource",
+      "referral",
+      "status",
+      "type",
+      "category",
+      "services",
+      "brief",
+      "attachments",
+      "remark",
+    ];
+    for (let field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateFields[field] = req.body[field];
+      }
+    }
+    if (req.body.followUp) updateFields.followUp = req.body.followUp;
+
+    Object.assign(lead, updateFields);
+    await lead.save();
+
+    if (requestsMade.length) {
+      return res.json({
+        message: `Update requested for ${requestsMade.join(
+          ", "
+        )}. Awaiting superadmin approval.`,
+        lead,
+      });
+    } else {
+      return res.json({ message: "Lead updated successfully", lead });
+    }
+  } catch (error) {
+    console.error("Error updating lead:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const decideDateChangeRequest = async (req, res) => {
+  try {
+    const { id, requestId } = req.params;
+    const { decision } = req.body;
+
+    const lead = await Leads.findById(id);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+
+    const request = lead.dateChangeRequests.id(requestId);
+    if (!request || request.status !== "pending")
+      return res.status(404).json({ message: "No pending request found" });
+
+    if (decision === "approved") {
+      lead[request.field] = request.newDate;
+      request.status = "approved";
+    } else {
+      request.status = "rejected";
+    }
+    request.decidedBy = req.user._id;
+    request.decidedAt = new Date();
+
+    await lead.save();
+
+    return res.json({ message: "Decision updated", lead });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -212,4 +337,5 @@ module.exports = {
   getLead,
   deleteLead,
   getLeadDashboardData,
+  decideDateChangeRequest,
 };
