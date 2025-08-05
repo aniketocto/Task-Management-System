@@ -44,6 +44,7 @@ const SideMenu = ({ activeMenu }) => {
     localStorage.removeItem("taskManagerToken");
     localStorage.removeItem("taskTableSortBy");
     localStorage.removeItem("taskTableSortOrder");
+    localStorage.removeItem("lastPage");
 
     clearUser();
     navigate("/login");

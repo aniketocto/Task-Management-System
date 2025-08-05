@@ -9,33 +9,40 @@ import {
   XAxis,
 } from "recharts";
 
-const CustomBarChart = ({
-  data,
-  dataKey   , 
-  valueKey  = "count",    
-}) => {
+const CustomBarChart = ({ data, dataKey, valueKey = "count" }) => {
   const getBarColor = (entry) => {
-    const keyVal = entry[dataKey];           
+    const keyVal = entry[dataKey];
 
     if (dataKey === "status") {
       switch (keyVal) {
-        case "followUp":  return "#FBBF24"; // amber
-        case "dead":      return "#EF4444"; // red
-        case "onboarded": return "#10B981"; // green
-        case "argument":  return "#3B82F6"; // blue
-        case "pitch":     return "#8B5CF6"; // purple
-        case "negotiation":     return "#8B5CF6"; // purple
-        default:               return "#8884d8"; // fallback gray
+        case "followUp":
+          return "#FBBF24"; // amber
+        case "dead":
+          return "#EF4444"; // red
+        case "onboarded":
+          return "#10B981"; // green
+        case "argument":
+          return "#3B82F6"; // blue
+        case "pitch":
+          return "#8B5CF6"; // purple
+        case "negotiation":
+          return "#8B5CF6"; // purple
+        default:
+          return "#8884d8"; // fallback gray
       }
     }
 
     if (dataKey === "priority") {
       // 3️⃣ priority → low/medium/high logic
       switch (keyVal) {
-        case "low":    return "#6FE439";
-        case "medium": return "#E48E39";
-        case "high":   return "#E43941";
-        default:       return "#22c55e";
+        case "low":
+          return "#6FE439";
+        case "medium":
+          return "#E48E39";
+        case "high":
+          return "#E43941";
+        default:
+          return "#22c55e";
       }
     }
 
@@ -75,9 +82,8 @@ const CustomBarChart = ({
             tick={{ fontSize: 12, fill: "#fff" }}
             stroke="#fff"
           /> */}
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
 
-         
           <Bar
             dataKey={valueKey}
             nameKey={dataKey}

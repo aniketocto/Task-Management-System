@@ -59,7 +59,6 @@ const UserDashboard = () => {
       { status: "completed", count: taskDistribution?.completed || 0 },
       { status: "pending", count: taskDistribution?.pending || 0 },
       { status: "delayed", count: taskDistribution?.delayed || 0 },
-      { status: "working", count: taskDistribution?.working || 0 },
     ];
 
     setPieChartData(taskDistributionData);
@@ -153,7 +152,7 @@ const UserDashboard = () => {
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
-          {infoCard.map(({ label, key, color }) => (
+          {infoCard.map(({ label, key, color, description }) => (
             <InfoCard
               key={key}
               label={label}
@@ -161,6 +160,7 @@ const UserDashboard = () => {
                 chartsToUse.taskDistribution?.[key] || 0
               )}
               color={color}
+              description={description}
             />
           ))}
         </div>
