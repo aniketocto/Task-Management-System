@@ -5,7 +5,6 @@ import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { useEffect, useState, useCallback, useContext } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
-import TaskStatusTabs from "../../components/layouts/TaskStatusTabs";
 import ManageTasksTable from "../../components/layouts/ManageTasksTable";
 import ReactPaginate from "react-paginate";
 import { UserContext } from "../../context/userContext";
@@ -40,7 +39,9 @@ const ManageTask = () => {
   const [searchSerial, setSearchSerial] = useState("");
   const [debouncedSearchSerial, setDebouncedSearchSerial] = useState("");
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    return parseInt(localStorage.getItem("lastPage")) || 1;
+  });
   const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
@@ -193,8 +194,10 @@ const ManageTask = () => {
     fetchAvailableMonths();
     fetchCompanies();
   }, [fetchAvailableMonths, fetchCompanies]);
+
   useEffect(() => {
     getAllTasks(page);
+    localStorage.setItem("lastPage", page);
   }, [getAllTasks, page]);
 
   // useEffect(() => {
@@ -357,28 +360,30 @@ const ManageTask = () => {
               </div>
 
               {/* Department */}
-            { user.role === "superAdmin" &&  <div className="flex gap-1 flex-col">
-                <label className="text-sm font-medium text-gray-600">
-                  Department:
-                </label>
-                <select
-                  value={filterDepartment}
-                  onChange={(e) => {
-                    setFilterDepartment(e.target.value);
-                    setPage(1);
-                  }}
-                  className="border rounded px-3 py-2 text-sm text-white"
-                >
-                  <option value="" className="text-black">
-                    All
-                  </option>
-                  {departments.map((d) => (
-                    <option key={d} value={d} className="text-black">
-                      {d}
+              {user.role === "superAdmin" && (
+                <div className="flex gap-1 flex-col">
+                  <label className="text-sm font-medium text-gray-600">
+                    Department:
+                  </label>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => {
+                      setFilterDepartment(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="" className="text-black">
+                      All
                     </option>
-                  ))}
-                </select>
-              </div>}
+                    {departments.map((d) => (
+                      <option key={d} value={d} className="text-black">
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Month */}
               {availableMonths.length > 0 && (

@@ -155,8 +155,58 @@ const backfillPitchAndPresentation = async () => {
   }
 };
 
+const migrateApprovalToLogs = async () => {
+  await mongoose.connect(process.env.MONGO_URI);
+
+  const tasks = await Task.find({});
+  let updatedCount = 0;
+
+  for (const task of tasks) {
+    let changed = false;
+
+    for (const item of task.todoChecklist) {
+      if (
+        item.approval &&
+        ["approved", "rejected"].includes(item.approval.status) &&
+        item.approval.approvedBy
+      ) {
+        item.approvalLogs = item.approvalLogs || [];
+        // Check if this approval is already in logs (avoid duplicates)
+        const alreadyLogged = item.approvalLogs.some(
+          (log) =>
+            log.status === item.approval.status &&
+            log.admin?.toString() === item.approval.approvedBy.toString() &&
+            new Date(log.date).getTime() ===
+              new Date(item.approval.approvedAt).getTime()
+        );
+
+        if (!alreadyLogged) {
+          // Add this as the "first" log
+          item.approvalLogs.unshift({
+            status: item.approval.status,
+            admin: item.approval.approvedBy,
+            date: item.approval.approvedAt || new Date(),
+          });
+          // Optionally trim to 3 latest
+          if (item.approvalLogs.length > 3) {
+            item.approvalLogs = item.approvalLogs.slice(-3);
+          }
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      await task.save({ validateBeforeSave: false });
+      updatedCount++;
+    }
+  }
+  console.log(`✅ Approval migration complete. Updated ${updatedCount} tasks.`);
+  mongoose.disconnect();
+};
+
 module.exports = {
   updateExistingTasksWithSerials,
   backfillTaskApprovals,
   backfillPitchAndPresentation,
+  migrateApprovalToLogs,
 };

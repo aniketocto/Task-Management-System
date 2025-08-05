@@ -1,9 +1,28 @@
 const mongoose = require("mongoose");
 
-const todoSchema = new mongoose.Schema({
-  text: {
-    type: String,
+const completionLogSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    date: { type: Date, default: Date.now, required: true },
   },
+  { _id: false }
+);
+
+const approvalLogSchema = new mongoose.Schema(
+  {
+    status: { type: String, enum: ["approved", "rejected"], required: true },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    date: { type: Date, default: Date.now, required: true },
+  },
+  { _id: false }
+);
+
+const todoSchema = new mongoose.Schema({
+  text: { type: String },
   completed: { type: Boolean, default: false },
   assignedTo: [
     {
@@ -20,12 +39,14 @@ const todoSchema = new mongoose.Schema({
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approvedAt: Date,
   },
+  completionLogs: [completionLogSchema], // User checks off completion
+  approvalLogs: [approvalLogSchema], // Admin approves/rejects
 });
 
 const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    description: { type: String },
+    description: { type: String },  
     companyName: { type: String, required: true, trim: true },
     priority: {
       type: String,
@@ -55,6 +76,7 @@ const taskSchema = new mongoose.Schema(
       ref: "User",
     },
     dueDateReviewedAt: { type: Date },
+    reason: { type: String },
     // ---------------------------------------
 
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -95,12 +117,13 @@ const taskSchema = new mongoose.Schema(
       default: "operational",
     },
     objective: { type: String },
+    creativeSizes: { type: String },
     targetAudience: { type: String },
-    usps: {type: String},
-    competetors: {type: String},
-    channels: {type: String},
-    smp: {type: String},
-    referance: [{type: String}],
+    usps: { type: String },
+    competetors: { type: String },
+    channels: { type: String },
+    smp: { type: String },
+    referance: [{ type: String }],
     remarks: [{ type: String }],
 
     // ---------------------------

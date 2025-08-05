@@ -158,6 +158,7 @@ const Dashboard = () => {
             allDepartments.add(dept);
           });
         });
+
         setDepartments(
           Array.from(allDepartments).map((d) => ({ label: d, value: d }))
         );
@@ -337,38 +338,40 @@ const Dashboard = () => {
                 </select>
               </div>
               {/* Department filter */}
-              {user?.role === "superAdmin" && <div className="flex gap-1 mb-4 items-start flex-col justify-start">
-                <label className="text-sm font-medium text-gray-600">
-                  Department:
-                </label>
-                <select
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm text-white"
-                >
-                  <option value="">All</option>
-                  {departments
-                    .sort((a, b) => b.value.localeCompare(a.value))
-                    .map((m) => {
-                      const isDisabled =
-                        (user?.role !== "superAdmin" &&
-                          !departmentTotals[m.value]) ||
-                        departmentTotals[m.value] === 0;
-                      return (
-                        <option
-                          className={
-                            isDisabled ? "text-gray-400" : "text-black"
-                          }
-                          key={m.value}
-                          value={m.value}
-                          disabled={isDisabled}
-                        >
-                          {m.label}
-                        </option>
-                      );
-                    })}
-                </select>
-              </div>}
+              {user?.role === "superAdmin" && (
+                <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+                  <label className="text-sm font-medium text-gray-600">
+                    Department:
+                  </label>
+                  <select
+                    value={filterDepartment}
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">All</option>
+                    {departments
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .map((m) => {
+                        const isDisabled =
+                          (user?.role !== "superAdmin" &&
+                            !departmentTotals[m.value]) ||
+                          departmentTotals[m.value] === 0;
+                        return (
+                          <option
+                            className={
+                              isDisabled ? "text-gray-400" : "text-black"
+                            }
+                            key={m.value}
+                            value={m.value}
+                            disabled={isDisabled}
+                          >
+                            {m.label}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
+              )}
               {/* Company filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">

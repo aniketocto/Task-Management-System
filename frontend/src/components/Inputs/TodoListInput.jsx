@@ -6,6 +6,8 @@ import { UserContext } from "../../context/userContext";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import moment from "moment";
+import { IoCheckmarkDoneCircle } from "react-icons/io5";
+import { CiMemoPad } from "react-icons/ci";
 
 /**
  * Renders a list of todo checklist items with assignment and a single admin approval toggle.
@@ -133,6 +135,8 @@ const TodoListInput = ({
                 {index < 9 ? `0${index + 1}` : index + 1}
               </span>
               {item.text}
+
+              {/* Edit Button for SuperAdmin */}
               {user?.role === "superAdmin" && (
                 <button
                   className="ml-2 text-blue-500 hover:text-blue-700 text-xs cursor-pointer"
@@ -150,6 +154,99 @@ const TodoListInput = ({
           )}
 
           <div className="flex items-center gap-4">
+            {/* Completion Log Tooltip (🕑) */}
+            <div className="flex items-center">
+              <Tooltip
+                content={
+                  <div className="flex flex-col gap-2">
+                    <div className="font-semibold text-base mb-1">
+                      Completion Log
+                    </div>
+                    {Array.isArray(item.completionLogs) &&
+                    item.completionLogs.length > 0 ? (
+                      item.completionLogs
+                        .slice()
+                        .reverse()
+                        .map((log, idx) => {
+                          const u = allUsers.find(
+                            (usr) => usr._id === log.user
+                          );
+                          return (
+                            <div
+                              key={idx}
+                              className="border-b border-gray-700 pb-1 mb-1 last:border-b-0 last:mb-0"
+                            >
+                              <span className="font-semibold">
+                                {u ? u.name : "Unknown"}
+                              </span>
+                              {" marked as completed "}
+                              <br />
+                              <span className="text-xs opacity-70">
+                                {moment(log.date).format("lll")}
+                              </span>
+                            </div>
+                          );
+                        })
+                    ) : (
+                      <span className="text-gray-300">Not completed yet</span>
+                    )}
+                  </div>
+                }
+              >
+                {item.completionLogs.length > 0 && (
+                  <span title="Show completion log" tabIndex={0}>
+                    <IoCheckmarkDoneCircle className="text-green-400 text-3xl cursor-pointer" />
+                  </span>
+                )}
+              </Tooltip>
+
+              {/* Approval Log Tooltip (📋) */}
+              <Tooltip
+                content={
+                  <div className="flex flex-col gap-2">
+                    <div className="font-semibold text-base mb-1">
+                      Approval Log
+                    </div>
+                    {Array.isArray(item.approvalLogs) &&
+                    item.approvalLogs.length > 0 ? (
+                      item.approvalLogs
+                        .slice()
+                        .reverse()
+                        .map((log, idx) => {
+                          const admin = allUsers.find(
+                            (u) => u._id === log.admin
+                          );
+                          return (
+                            <div
+                              key={idx}
+                              className="border-b border-gray-700 pb-1 mb-1 last:border-b-0 last:mb-0"
+                            >
+                              <span className="capitalize font-medium">
+                                {log.status}
+                              </span>
+                              {" by "}
+                              <span className="font-semibold">
+                                {admin ? admin.name : "Unknown"}
+                              </span>
+                              <br />
+                              <span className="text-xs opacity-70">
+                                {moment(log.date).format("lll")}
+                              </span>
+                            </div>
+                          );
+                        })
+                    ) : (
+                      <span className="text-gray-300">No approvals yet</span>
+                    )}
+                  </div>
+                }
+              >
+                <span title="Show approval log" tabIndex={0}>
+                  <CiMemoPad className="text-gray-400 text-3xl cursor-pointer" />
+                </span>
+              </Tooltip>
+            </div>
+
             <SelectUsers
               selectedUsers={item.assignedTo || []}
               setSelectedUsers={(newUsers) => {
@@ -161,43 +258,6 @@ const TodoListInput = ({
               loading={loadingUsers}
               role="user"
             />
-
-            {item.approval?.status && (
-              <Tooltip
-                content={(() => {
-                  const approver = allUsers.find(
-                    (u) => u._id === item.approval.approvedBy
-                  );
-                  if (!approver) return <span>Pending</span>;
-                  return (
-                    <div>
-                      <div className="font-bold text-lg mb-1 capitalize">
-                        {item.approval.status}
-                      </div>
-                      <div className="text-base">
-                        by{" "}
-                        <span className="font-semibold">{approver.name}</span>
-                      </div>
-                      <div className="text-sm mt-1 opacity-80">
-                        {moment(item.approval.approvedAt).format("llll")}
-                      </div>
-                    </div>
-                  );
-                })()}
-              >
-                <span
-                  className={
-                    item.approval.status === "approved"
-                      ? "text-green-600 underline cursor-pointer font-semibold"
-                      : "text-red-600 underline cursor-pointer font-semibold"
-                  }
-                  style={{ marginLeft: 8 }}
-                >
-                  {item.approval.status.charAt(0).toUpperCase() +
-                    item.approval.status.slice(1)}
-                </span>
-              </Tooltip>
-            )}
 
             {/* Approval controls for admin roles */}
             {item._id && user?.role !== "user" && (

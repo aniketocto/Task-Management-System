@@ -169,7 +169,36 @@ const ManageTasksTable = ({
     const status = approvalObj?.status || "pending";
     const disable = userRole !== "superAdmin" || !allSubTasksApproved(task);
     if (status === "pending") {
-      return <p className="text-gray-500 text-sm">Pending</p>;
+      return userRole !== "superAdmin" ? (
+        <p className="text-gray-500 text-sm">Pending</p>
+      ) : (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={disable}
+            onClick={() => handleApprovalToggle(task._id, type, "approved")}
+            className={`${
+              disable
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-green-500 hover:text-green-700 cursor-pointer"
+            } p-1 border rounded`}
+          >
+            <LuCheck size={18} />
+          </button>
+          <button
+            type="button"
+            disabled={disable}
+            onClick={() => handleApprovalToggle(task._id, type, "rejected")}
+            className={`${
+              disable
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-red-500 hover:text-red-700 cursor-pointer"
+            } p-1 border rounded`}
+          >
+            <LuX size={18} />
+          </button>
+        </div>
+      );
     }
     return status === "approved" ? (
       <button

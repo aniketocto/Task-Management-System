@@ -9,6 +9,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
   const { user } = useContext(UserContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newDate, setNewDate] = useState("");
+  const [reason, setReason] = useState("");
 
   //   reset the picker whenever we open
   useEffect(() => {
@@ -20,7 +21,7 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
     try {
       await axiosInstance.post(
         API_PATHS.DUE_DATE.REQUEST_DUE_DATE_CHANGE(taskId),
-        { pendingDueDate: newDate }
+        { pendingDueDate: newDate, reason: reason }
       );
       toast.success("Due date change request sent successfully");
       setIsModalOpen(false);
@@ -53,13 +54,17 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
             type="button"
             disabled={taskData.dueDateStatus === "pending"}
             onClick={() => setIsModalOpen(true)}
-            className={`mt-1 px-3 py-1 text-sm  text-white rounded ${taskData.dueDateStatus === "pending" ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 cursor-pointer"}`}
+            className={`mt-1 px-3 py-1 text-sm  text-white rounded ${
+              taskData.dueDateStatus === "pending"
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-500 cursor-pointer"
+            }`}
           >
-            {taskData.dueDateStatus === "pending" ? " Awaiting approval…" : "Request Change"}
+            {taskData.dueDateStatus === "pending"
+              ? " Awaiting approval…"
+              : "Request Change"}
           </button>
         )}
-
-       
       </div>
 
       {/* 3) Modal for admins to pick & confirm the new date */}
@@ -78,6 +83,16 @@ const TaskDueDateField = ({ taskId, taskData, handleValueChange }) => {
             min={new Date().toISOString().split("T")[0]}
             value={newDate}
             onChange={(e) => setNewDate(e.target.value)}
+          />
+
+          <label className="block text-sm font-medium text-gray-700">
+            Reason for Change
+          </label>
+          <textarea
+            type="text"
+            className="form-input w-full"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
           />
         </div>
         <div className="mt-6 flex justify-end space-x-3">

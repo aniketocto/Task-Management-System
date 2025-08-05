@@ -783,6 +783,7 @@ const createTask = async (req, res) => {
       todoChecklist,
       taskCategory,
       objective,
+      creativeSizes,
       targetAudience,
       usps,
       competetors,
@@ -870,6 +871,7 @@ const createTask = async (req, res) => {
       serialNumber: nextSerial,
       taskCategory,
       objective,
+      creativeSizes,
       targetAudience,
       usps,
       competetors,
@@ -962,7 +964,8 @@ const updateTask = async (req, res) => {
         req.body.todoChecklist = normalizeChecklist(req.body.todoChecklist);
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
-          req.body.todoChecklist
+          req.body.todoChecklist,
+          req.user._id
         );
         changed = true;
       }
@@ -995,6 +998,7 @@ const updateTask = async (req, res) => {
       task.attachments = req.body.attachments || task.attachments;
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
+      task.creativeSizes = req.body.creativeSizes || task.creativeSizes;
       task.targetAudience = req.body.targetAudience || task.targetAudience;
       task.usps = req.body.usps || task.usps;
       task.competetors = req.body.competetors || task.competetors;
@@ -1036,6 +1040,7 @@ const updateTask = async (req, res) => {
       task.attachments = req.body.attachments || task.attachments;
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
+      task.creativeSizes = req.body.creativeSizes || task.creativeSizes;
       task.targetAudience = req.body.targetAudience || task.targetAudience;
       task.usps = req.body.usps || task.usps;
       task.competetors = req.body.competetors || task.competetors;
@@ -1136,15 +1141,37 @@ const normalizeChecklist = (checklist) => {
 };
 
 // 🔧 Helper to merge and preserve completed status
-const mergeChecklistPreservingCompletion = (existing = [], incoming = []) => {
+const mergeChecklistPreservingCompletion = (
+  existing = [],
+  incoming = [],
+  currentUserId = null
+) => {
   return incoming.map((item) => {
     const match = item._id
       ? existing.find((e) => e._id?.toString() === item._id)
       : null;
 
+    // Preserve existing logs
+    let completionLogs =
+      match && match.completionLogs ? [...match.completionLogs] : [];
+
+    // Detect if user is marking as completed (false -> true)
+    let wasCompleted = match?.completed || false;
+    let nowCompleted = item.completed;
+
+    if (!wasCompleted && nowCompleted && currentUserId) {
+      // Only log when completed goes from false to true
+      completionLogs.push({
+        user: currentUserId,
+        date: new Date(),
+      });
+      if (completionLogs.length > 3) completionLogs = completionLogs.slice(-3);
+    }
+
     return {
       ...item,
-      completed: match?.completed || false, // ✅ preserve true
+      completed: nowCompleted, // always honor what's coming in for completed
+      completionLogs, // update logs as calculated above
     };
   });
 };
@@ -1231,32 +1258,32 @@ const updateTaskChecklist = async (req, res) => {
       });
     }
 
-    if (isPrivileged) {
-      // Admins can update the full checklist
-      task.todoChecklist = todoChecklist;
-    } else {
-      // 🧠 Regular users can only update their own checklist items' `completed` status
-      const updatedChecklist = task.todoChecklist.map((item) => {
-        const updated = todoChecklist.find(
-          (i) => i._id === item._id.toString()
-        );
+    const updatedChecklist = task.todoChecklist.map((item) => {
+      const updated = todoChecklist.find((i) => i._id === item._id.toString());
 
-        // If item matches AND user is assigned → allow completion update
-        if (
-          updated &&
-          item.assignedTo?.toString() === req.user._id.toString()
-        ) {
-          return {
-            ...item.toObject(), // ensure we spread mongoose subdoc
-            completed: updated.completed,
-          };
+      // Only allow assigned user or admin to mark complete
+      const isAssigned = item.assignedTo.some(
+        (u) => u.toString() === req.user._id.toString()
+      );
+
+      if (updated && (isPrivileged || isAssigned)) {
+        let newItem = { ...item.toObject(), completed: updated.completed };
+        // Log only when user marks as completed (false -> true)
+        if (!item.completed && updated.completed) {
+          newItem.completionLogs = item.completionLogs || [];
+          newItem.completionLogs.push({
+            user: req.user._id,
+            date: new Date(),
+          });
+          if (newItem.completionLogs.length > 3) {
+            newItem.completionLogs = newItem.completionLogs.slice(-3);
+          }
         }
-
-        return item;
-      });
-
-      task.todoChecklist = updatedChecklist;
-    }
+        return newItem;
+      }
+      return item;
+    });
+    task.todoChecklist = updatedChecklist;
 
     // Recalculate progress
     // ✅ Recalculate progress using task.todoChecklist
@@ -1592,9 +1619,12 @@ const getUserDashboardData = async (req, res) => {
 
 const requestDueDateChange = async (req, res) => {
   try {
-    const { pendingDueDate } = req.body;
+    const { pendingDueDate, reason } = req.body;
     if (!pendingDueDate) {
       return res.status(400).json({ message: "Pending Due date is required" });
+    }
+    if (!reason) {
+      return res.status(400).json({ message: "Reason date is required" });
     }
 
     const date = new Date(pendingDueDate);
@@ -1619,6 +1649,7 @@ const requestDueDateChange = async (req, res) => {
     task.pendingDueDate = pendingDueDate;
     task.dueDateStatus = "pending";
     task.dueDateRequestedBy = req.user._id;
+    task.reason = reason;
     await task.save();
 
     // Notify the superAdmin
@@ -1648,6 +1679,7 @@ const requestDueDateChange = async (req, res) => {
       message: "Due date change request sent successfully",
       pendingDueDate: date,
       dueDateStatus: "pending",
+      reason: reason,
     });
   } catch (error) {
     console.error("Error requesting due date change:", error);
@@ -1808,6 +1840,17 @@ const approveChecklistItem = async (req, res) => {
     const checklistItem = task.todoChecklist.id(itemId);
     if (!checklistItem) {
       return res.status(404).json({ message: "Checklist item not found" });
+    }
+
+    // Add log
+    checklistItem.approvalLogs = checklistItem.approvalLogs || [];
+    checklistItem.approvalLogs.push({
+      status,
+      admin: userId,
+      date: new Date(),
+    });
+    if (checklistItem.approvalLogs.length > 4) {
+      checklistItem.approvalLogs = checklistItem.approvalLogs.slice(-4);
     }
 
     // Update approval status
