@@ -1,4 +1,3 @@
-import { validateEmail, validatePassword } from "../../utils/helper";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import React, { useContext, useEffect, useState } from "react";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
@@ -8,19 +7,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
-import uploadImage from "../../utils/uploadImage";
 import { GoogleLogin } from "@react-oauth/google";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import SpinLoader from "../../components/layouts/SpinLoader";
 
 const SignUp = () => {
-  const [email, setEmail] = useState([]);
-  const [password, setPassword] = useState("");
   const [profilePic, setProfilePic] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [department, setDepartment] = useState("");
+  const [designation, setDesignation] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
@@ -48,81 +43,81 @@ const SignUp = () => {
     });
   };
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    const errors = [];
+  // const handleSignUp = async (e) => {
+  //   e.preventDefault();
+  //   const errors = [];
 
-    let profileImgUrl = "";
+  //   let profileImgUrl = "";
 
-    if (!name) {
-      errors.push("Please enter your name");
-    }
-    if (!validateEmail(email)) {
-      errors.push("Email must be a valid @getunstoppable.in address");
-    }
-    if (isAdmin) {
-      if (!adminInviteToken) {
-        errors.push("Please enter your admin invite token");
-      }
-    }
-    if (!validatePassword(password)) {
-      errors.push(
-        "Password must have at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be at least 8 characters long."
-      );
-    }
-    if (password !== confirmPassword) {
-      errors.push("Password and Confirm Password should be the same");
-    }
-    if (!department) {
-      errors.push("Please select your department");
-    }
-    if (errors.length > 0) {
-      setError(errors); // setError can be an array now
-      return;
-    }
+  //   if (!name) {
+  //     errors.push("Please enter your name");
+  //   }
+  //   if (!validateEmail(email)) {
+  //     errors.push("Email must be a valid @getunstoppable.in address");
+  //   }
+  //   if (isAdmin) {
+  //     if (!adminInviteToken) {
+  //       errors.push("Please enter your admin invite token");
+  //     }
+  //   }
+  //   if (!validatePassword(password)) {
+  //     errors.push(
+  //       "Password must have at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be at least 8 characters long."
+  //     );
+  //   }
+  //   if (password !== confirmPassword) {
+  //     errors.push("Password and Confirm Password should be the same");
+  //   }
+  //   if (!department) {
+  //     errors.push("Please select your department");
+  //   }
+  //   if (errors.length > 0) {
+  //     setError(errors); // setError can be an array now
+  //     return;
+  //   }
 
-    // all good
-    setError([]);
+  //   // all good
+  //   setError([]);
 
-    // 🚀 proceed with Sign up Api Call
-    try {
-      // upload profile if present
-      if (profilePic) {
-        const imgUplaodRes = await uploadImage(profilePic);
-        profileImgUrl = imgUplaodRes.imageUrl || "";
-      }
+  //   // 🚀 proceed with Sign up Api Call
+  //   try {
+  //     // upload profile if present
+  //     if (profilePic) {
+  //       const imgUplaodRes = await uploadImage(profilePic);
+  //       profileImgUrl = imgUplaodRes.imageUrl || "";
+  //     }
 
-      const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
-        name,
-        email,
-        password,
-        profileImageUrl: profileImgUrl,
-        adminInviteToken,
-        department,
-      });
+  //     const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+  //       name,
+  //       email,
+  //       password,
+  //       profileImageUrl: profileImgUrl,
+  //       adminInviteToken,
+  //       department,
+  //     });
 
-      const { token, role } = response.data;
+  //     const { token, role } = response.data;
 
-      if (token) {
-        localStorage.setItem("taskManagerToken", token);
-        updateUser(response.data);
+  //     if (token) {
+  //       localStorage.setItem("taskManagerToken", token);
+  //       updateUser(response.data);
 
-        if (role === "admin" || role === "superAdmin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/user/dashboard");
-        }
-      } else {
-        setError(["Something went wrong"]);
-      }
-    } catch (error) {
-      if (error.response && error.response.data) {
-        setError([error.response.data.message]);
-      } else {
-        setError(["Something went wrong"]);
-      }
-    }
-  };
+  //       if (role === "admin" || role === "superAdmin") {
+  //         navigate("/admin/dashboard");
+  //       } else {
+  //         navigate("/user/dashboard");
+  //       }
+  //     } else {
+  //       setError(["Something went wrong"]);
+  //     }
+  //   } catch (error) {
+  //     if (error.response && error.response.data) {
+  //       setError([error.response.data.message]);
+  //     } else {
+  //       setError(["Something went wrong"]);
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     if (user) {
@@ -136,6 +131,9 @@ const SignUp = () => {
       const errors = [];
       if (!department) {
         errors.push("Please select your department");
+      }
+      if (!designation) {
+        errors.push("Please type your designation");
       }
       if (errors.length > 0) {
         setError(errors);
@@ -155,6 +153,7 @@ const SignUp = () => {
         idToken,
         adminInviteToken,
         department,
+        designation,
         profileImage: uploadedImageUrl || "",
       };
 
@@ -192,7 +191,7 @@ const SignUp = () => {
           tasks effectively
         </p>
 
-        <form onSubmit={handleSignUp}>
+        <form>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
 
           <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
@@ -219,6 +218,13 @@ const SignUp = () => {
                 type="text"
               />
             )}
+            <Input
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              label="Designation"
+              placeholder="Enter your Designation"
+              type="text"
+            />
             <SelectInput
               value={department}
               onChange={(e) => setDepartment(e.target.value)}

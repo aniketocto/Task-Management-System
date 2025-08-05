@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     profileImageUrl: { type: String, default: null },
-    role: { type: String, enum: ["superAdmin", "admin", "user"], default: "user" },
+    role: {
+      type: String,
+      enum: ["superAdmin", "admin", "user"],
+      default: "user",
+    },
     department: {
       type: String,
       enum: [
@@ -20,11 +24,11 @@ const userSchema = new mongoose.Schema(
         "Management",
         "Operations",
         "HR",
-        "Other"
+        "Other",
       ],
       default: "Other",
-      
     },
+    designation: { type: String},
   },
   {
     timestamps: true,
