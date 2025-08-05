@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
         "BusinessDevelopment",
         "ClientServicing",
         "Management",
+        "Operations",
         "HR",
         "Other"
       ],

@@ -227,6 +227,7 @@ const SignUp = () => {
                 { value: "Creative", label: "Creative" },
                 { value: "Digital", label: "Digital" },
                 { value: "Social", label: "Social" },
+                { value: "Operations", label: "Operations" },
                 { value: "DevelopmentUiUx", label: "DevelopmentUiUx" },
                 { value: "Strategy", label: "Strategy" },
                 { value: "BusinessDevelopment", label: "Business Development" },
