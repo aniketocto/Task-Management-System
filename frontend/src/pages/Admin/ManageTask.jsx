@@ -211,7 +211,7 @@ const ManageTask = () => {
   //   }
   // }, [availableMonths, filterMonth, filterTimeframe]);
 
-  console.log("availableMonths", availableMonths);
+  // console.log("availableMonths", availableMonths);
 
   useEffect(() => {
     socket.on("task:sync", () => {
@@ -224,12 +224,12 @@ const ManageTask = () => {
     };
   }, [getAllTasks, page]);
 
-  useEffect(() => {
-    if (allTasks.length === 0 && selectedCompany) {
-      // clear the filter back to “All companies”
-      setSelectedCompany("");
-    }
-  }, [allTasks, selectedCompany]);
+  // useEffect(() => {
+  //   if (allTasks.length === 0 && selectedCompany) {
+  //     // clear the filter back to “All companies”
+  //     setSelectedCompany("");
+  //   }
+  // }, [allTasks, selectedCompany]);
 
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
