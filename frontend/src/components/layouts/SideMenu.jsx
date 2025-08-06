@@ -1,18 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 import React, { useContext, useEffect, useState } from "react";
-import {
-  SIDE_MENU_ADMIN_DATA,
-  SIDE_MENU_BE_USER_DATA,
-  SIDE_MENU_SUPER_ADMIN_DATA,
-  SIDE_MENU_USER_DATA,
-} from "../../utils/data";
+// import {
+//   SIDE_MENU_ADMIN_DATA,
+//   SIDE_MENU_BE_USER_DATA,
+//   SIDE_MENU_SUPER_ADMIN_DATA,
+//   SIDE_MENU_USER_DATA,
+// } from "../../utils/data";
+import { MENU_DATA } from "../../utils/data";
 import USER_IMG from "../../assets/user_fallback.svg";
 import Modal from "./Modal";
 import DeleteAlert from "./DeleteAlert";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import axiosInstance from "../../utils/axiosInstance";
-import { LuUpload } from "react-icons/lu";
+import { LuChevronDown, LuChevronUp, LuUpload } from "react-icons/lu";
 import { API_PATHS } from "../../utils/apiPaths";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
 import SpinLoader from "./SpinLoader";
@@ -20,7 +21,6 @@ import Input from "components/Inputs/Input";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser, updateUser } = useContext(UserContext);
-  const [sideMenuData, setSideMenuData] = useState([]);
   const [profileImg, setProfileImg] = useState("");
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
@@ -30,6 +30,14 @@ const SideMenu = ({ activeMenu }) => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const filteredMenu = MENU_DATA.map((section) => {
+    const visibleChildren = section.children.filter((item) =>
+      item.access({ role: user?.role, department: user?.department })
+    );
+    if (!visibleChildren.length) return null;
+    return { ...section, children: visibleChildren };
+  }).filter(Boolean);
 
   const handleClick = (route) => {
     if (route === "logout") {
@@ -100,27 +108,22 @@ const SideMenu = ({ activeMenu }) => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      if (user?.role === "superAdmin") {
-        setSideMenuData(SIDE_MENU_SUPER_ADMIN_DATA);
-      } else if (
-        user?.role === "admin" &&
-        user?.department === "BusinessDevelopment"
-      ) {
-        setSideMenuData(SIDE_MENU_BE_USER_DATA); // maybe you want BE admin UI
-      } else if (user?.role === "admin") {
-        setSideMenuData(SIDE_MENU_ADMIN_DATA);
-      } else if (user?.department === "BusinessDevelopment") {
-        setSideMenuData(SIDE_MENU_BE_USER_DATA);
-      } else {
-        setSideMenuData(SIDE_MENU_USER_DATA);
-      }
+  // Find which section contains the activeMenu
+  const initialOpenSection = filteredMenu.findIndex((section) =>
+    section.children.some((item) => item.label === activeMenu)
+  );
 
-      setProfileImg(user?.profileImageUrl);
+  const [openSection, setOpenSection] = useState(
+    initialOpenSection !== -1 ? initialOpenSection : null
+  );
+
+  // If activeMenu changes (e.g. after navigation), update openSection
+  useEffect(() => {
+    if (initialOpenSection !== openSection) {
+      setOpenSection(initialOpenSection);
     }
-    return () => {};
-  }, [user]);
+    // eslint-disable-next-line
+  }, [activeMenu]);
 
   return (
     <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
@@ -150,40 +153,53 @@ const SideMenu = ({ activeMenu }) => {
           </div>
         )}
 
-        <p className="text-white text-sm font-regular mt-3 ">{user?.designation}</p>
+        <p className="text-white text-sm font-regular mt-3 ">
+          {user?.designation}
+        </p>
         <p className="text-white text-xs font-light ">{user?.name}</p>
         <p className="text-[10px] text-gray-500"> {user?.department || ""} </p>
         <p className="text-[10px] text-gray-500 mb-5"> {user?.email || ""} </p>
-
-        {sideMenuData.map((item, index) => {
-          const isLogout = item.path === "logout";
-
-          return (
-            <button
-              key={`menu_${index}`}
-              className={`w-full flex items-center gap-4 text-[15px] ${
-                activeMenu === item.label
-                  ? "text-[#E43941] bg-linear-to-r from-red-500/20 to-transparent border-r-3"
-                  : "text-white"
-              } py-3 px-6 mb-3 cursor-pointer`}
-              onClick={() => {
-                if (isLogout) {
-                  setOpenLogoutModal(true);
-                } else {
-                  handleClick(item.path);
-                }
-              }}
-            >
-              <item.icon
-                className={`text-xl ${
-                  activeMenu === item.label && "text-[#E43941]"
-                }`}
-              />
-              {item.label}
-            </button>
-          );
-        })}
       </div>
+
+      {filteredMenu.map((section, idx) => (
+        <div key={section.label} className="mb-[1px]">
+          <button
+            className="flex items-center justify-between w-full px-6 py-2 text-white text-lg font-regular bg-[#1a1d23] hover:bg-[#22252b]transition"
+            onClick={() => setOpenSection(openSection === idx ? null : idx)}
+          >
+            <span>{section.label}</span>
+            <span>
+              {openSection === idx ? <LuChevronUp /> : <LuChevronDown />}
+            </span>
+          </button>
+          {openSection === idx && (
+            <div className="flex flex-col mt-1">
+              {section.children.map((item) => (
+                <button
+                  key={item.label + item.path}
+                  className={`flex items-center gap-4 text-[15px] py-3 px-8 mb-1 text-left  hover:bg-[#E43941]/20 transition
+  ${
+    activeMenu === item.label
+      ? "text-[#E43941] font-bold bg-gradient-to-r from-[#E43941]/20 to-[#ffffff00]"
+      : "text-white"
+  }
+`}
+                  onClick={() => {
+                    if (item.path === "logout") {
+                      setOpenLogoutModal(true);
+                    } else {
+                      handleClick(item.path);
+                    }
+                  }}
+                >
+                  <item.icon className="text-xl" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
 
       <Modal
         isOpen={openLogoutModal}

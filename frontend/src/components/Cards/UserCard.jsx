@@ -32,6 +32,7 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
       toast.success("Admin deleted and tasks reassigned!");
       onUserDeleted?.();
     } catch (error) {
+      console.error("Error transferring tasks:", error);
       toast.error("Transfer or delete failed");
     }
   };
@@ -69,6 +70,7 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
               {userInfo?.name}
             </p>
             <p className="text-xs text-gray-200">{userInfo?.department}</p>
+            <p className="text-xs text-gray-200">{userInfo?.designation}</p>
             <p className="text-xs text-gray-100">{userInfo?.email}</p>
           </div>
 
@@ -131,7 +133,7 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
                 Cancel
               </button>
               <button
-                className="card-btn-fill"
+                className="card-btn"
                 onClick={handleTransferAndDelete}
                 disabled={!selectedAdmin}
               >

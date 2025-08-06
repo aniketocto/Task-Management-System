@@ -5,156 +5,246 @@ import {
   LuSquare,
 } from "react-icons/lu";
 
-import { MdOutlineLeaderboard } from "react-icons/md";
 import { RiTeamLine } from "react-icons/ri";
 
-export const SIDE_MENU_ADMIN_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "02",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "03",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "04",
-    label: "My Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/my-tasks",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "05",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_ADMIN_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "02",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "04",
+//     label: "My Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/my-tasks",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "05",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_SUPER_ADMIN_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "03",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "04",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "05",
-    label: "Create Leads",
-    icon: LuSquare,
-    path: "/leads-create",
-  },
-  {
-    id: "06",
-    label: "Team Members",
-    icon: RiTeamLine,
-    path: "/admin/users",
-  },
-  {
-    id: "07",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_SUPER_ADMIN_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "03",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "04",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "05",
+//     label: "Create Leads",
+//     icon: LuSquare,
+//     path: "/leads-create",
+//   },
+//   {
+//     id: "06",
+//     label: "Team Members",
+//     icon: RiTeamLine,
+//     path: "/admin/users",
+//   },
+//   {
+//     id: "07",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_BE_USER_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "02",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "02",
-    label: "My Tasks",
-    icon: LuClipboardCheck,
-    path: "/user/tasks",
-  },
-  {
-    id: "03",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "04",
-    label: "Create Leads",
-    icon: LuClipboardCheck,
-    path: "/leads-create",
-  },
-  {
-    id: "05",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_BE_USER_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "02",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "02",
+//     label: "My Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/user/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "04",
+//     label: "Create Leads",
+//     icon: LuClipboardCheck,
+//     path: "/leads-create",
+//   },
+//   {
+//     id: "05",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_USER_DATA = [
+// export const SIDE_MENU_USER_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/user/dashboard",
+//   },
+//   {
+//     id: "02",
+//     label: "View Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/user/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
+
+export const MENU_DATA = [
   {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/user/dashboard",
+    label: "Tasks",
+    children: [
+      {
+        label: "Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/admin/dashboard", // Admins/SuperAdmins
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/user/dashboard", // Users
+        access: ({ role }) => role === "user",
+      },
+      {
+        label: "Manage Tasks",
+        icon: LuClipboardCheck,
+        path: "/admin/tasks",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Create Task",
+        icon: LuSquare,
+        path: "/admin/create-task",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "My Tasks",
+        icon: LuClipboardCheck,
+        path: "/admin/my-tasks",
+        access: ({ role }) => role === "admin",
+      },
+      {
+        label: "My Tasks",
+        icon: LuClipboardCheck,
+        path: "/user/tasks",
+        access: ({ role }) => role === "user",
+      },
+      {
+        label: "View Tasks",
+        icon: LuClipboardCheck,
+        path: "/user/tasks",
+        access: ({ role }) => role === "user",
+      },
+    ],
   },
   {
-    id: "02",
-    label: "View Tasks",
-    icon: LuClipboardCheck,
-    path: "/user/tasks",
+    label: "Leads",
+    children: [
+      {
+        label: "Manage Lead",
+        icon: LuClipboardCheck,
+        path: "/manage-lead",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Create Leads",
+        icon: LuSquare,
+        path: "/leads-create",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "BusinessDevelopment"),
+      },
+    ],
   },
   {
-    id: "03",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
+    label: "Team",
+    children: [
+      {
+        label: "Team Members",
+        icon: RiTeamLine,
+        path: "/admin/users",
+        access: ({ role }) => role === "superAdmin",
+      },
+    ],
+  },
+  {
+    label: "Account",
+    children: [
+      {
+        label: "Logout",
+        icon: LuLogOut,
+        path: "logout",
+        access: () => true, // Everyone sees logout
+      },
+    ],
   },
 ];
 

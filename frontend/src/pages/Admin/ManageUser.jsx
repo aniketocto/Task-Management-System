@@ -1,6 +1,6 @@
 import axiosInstance from "../../utils/axiosInstance";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { API_PATHS } from "../../utils/apiPaths";
 import UserCard from "../../components/Cards/UserCard";
 
@@ -10,7 +10,7 @@ const ManageUser = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [refreshFlag, setRefreshFlag] = useState(false);
 
-  const getAllUsers = async () => {
+  const getAllUsers =  useCallback( async() => {
     try {
       const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS, {
         params: {
@@ -24,7 +24,7 @@ const ManageUser = () => {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+  }, [filterMonth]);
 
   const getAvailableMonths = async () => {
     try {
@@ -46,7 +46,7 @@ const ManageUser = () => {
   // 2️⃣ Whenever filterMonth OR refreshFlag changes:
   useEffect(() => {
     getAllUsers();
-  }, [filterMonth, refreshFlag]);
+  }, [filterMonth, refreshFlag, getAllUsers]);
 
   // callback to hand down to UserCard
   const handleUserDeleted = () => {
