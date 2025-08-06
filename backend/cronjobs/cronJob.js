@@ -7,7 +7,15 @@ const User = require("../models/User");
 // Runs daily at 00:00 IST
 cron.schedule("0 0 * * *", async () => {
   const tz = "Asia/Kolkata";
-  const yStart = moment.tz(tz).startOf("day").subtract(1, "day").toDate();
+  // const yStart = moment.tz(tz).startOf("day").subtract(1, "day").toDate();
+  const yesterdayMoment = moment.tz(tz).startOf("day").subtract(1, "day");
+
+  if (yesterdayMoment.day() === 0) {
+    console.log("⏭ Skipping attendance marking for Sunday");
+    return;
+  }
+
+  const yStart = yesterdayMoment.toDate();
 
   try {
     const users = await User.find(
