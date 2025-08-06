@@ -13,27 +13,26 @@ import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
-
-import { io } from "socket.io-client";
-
-const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
-});
+import { infoCard } from "../../utils/data";
+import { addThousandsSeperator } from "../../utils/helper";
+import InfoCard from "components/Cards/InfoCard";
 
 const MyTasks = () => {
   const { user } = useContext(UserContext);
   const userRole = user?.role;
+
   const navigate = useNavigate();
 
   // --- state ---
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([]);
 
-  const [page, setPage] = useState(1);
-  const tasksPerPage = 12;
+  const [page, setPage] = useState(() => {
+    return parseInt(localStorage.getItem("lastPage")) || 1;
+  });
+  const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
+  const [statusSummary, setStatusSummary] = useState({});
 
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMonth, setFilterMonth] = useState("");
@@ -72,14 +71,12 @@ const MyTasks = () => {
     }
   }, [filterMonth]);
 
-  console.log("Months from API:", availableMonths);
-
   // --- fetch tasks for the selected month/status/etc ---
   const getAllTasks = useCallback(
     async (currentPage = 1) => {
       try {
         setLoading(true);
-        const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
+        const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ADMIN_TASKS, {
           params: {
             status: filterStatus === "All" ? "" : filterStatus,
             month: filterMonth || undefined,
@@ -95,6 +92,8 @@ const MyTasks = () => {
 
         const tasks = resp.data.tasks || [];
         setAllTasks(tasks);
+        setStatusSummary(resp.data.statusSummary || {});
+        console.log(resp.data);
 
         // status tabs
         const s = resp.data.statusSummary || {};
@@ -105,6 +104,7 @@ const MyTasks = () => {
           { label: "completed", count: s.completedTasks || 0 },
           { label: "pending", count: s.pendingTasks || 0 },
           { label: "delayed", count: s.delayedTasks || 0 },
+          { label: "working", count: s.workingTasks || 0 },
         ]);
 
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
@@ -144,102 +144,101 @@ const MyTasks = () => {
     getAllTasks(page);
   }, [getAllTasks, page]);
 
-  useEffect(() => {
-    socket.on("task:sync", () => {
-      getAllTasks(page); // silently refresh tasks
-      console.log("tasks synced");
-    });
-
-    return () => {
-      socket.off("task:sync"); // clean up
-    };
-  }, [getAllTasks, page]);
-
   const handleRowClick = (taskData) => {
-    if (userRole === "user") {
-      navigate(`/user/task-detail/${taskData}`);
-    } else {
-      navigate("/admin/create-task", { state: { taskId: taskData } });
-    }
+    navigate(`/user/task-detail/${taskData}`);
   };
 
   return (
-    <DashboardLayout activeMenu="View Tasks">
+    <DashboardLayout activeMenu="My Tasks">
       <div className="my-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg md:text-xl font-medium text-white">
-              View Tasks
-            </h2>
-            {/* View toggle */}
-            <div className="flex items-center border rounded overflow-hidden">
-              <button
-                onClick={() => setViewType("table")}
-                className={`p-2 ${
-                  viewType === "table"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuFileSpreadsheet size={20} />
-              </button>
-              <button
-                onClick={() => setViewType("grid")}
-                className={`p-2 ${
-                  viewType === "grid"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuLayoutGrid size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Month dropdown driven by availableMonths */}
-            {availableMonths.length > 0 && (
-              <>
-                <label className="text-sm font-medium text-gray-600">
-                  Month:
-                </label>
-                <select
-                  value={filterMonth}
-                  onChange={(e) => {
-                    setFilterMonth(e.target.value);
-                    setPage(1);
-                  }}
-                  className="border rounded px-3 py-2 text-sm text-gray-50"
+        <div className="flex flex-col gap-5 card justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg md:text-xl font-medium text-white">
+                View Tasks
+              </h2>
+              {/* View toggle */}
+              <div className="flex items-center border rounded overflow-hidden">
+                <button
+                  onClick={() => setViewType("table")}
+                  className={`p-2 ${
+                    viewType === "table"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
                 >
-                  <option value="">All Months</option>
-                  {availableMonths
-                    .sort((a, b) => b.value.localeCompare(a.value))
-                    .slice(0, 12)
-                    .map((m) => (
-                      <option
-                        key={m.value}
-                        value={m.value}
-                        className="text-black"
-                      >
-                        {m.label}
-                      </option>
-                    ))}
-                </select>
-              </>
-            )}
+                  <LuFileSpreadsheet size={20} />
+                </button>
+                <button
+                  onClick={() => setViewType("grid")}
+                  className={`p-2 ${
+                    viewType === "grid"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  <LuLayoutGrid size={20} />
+                </button>
+              </div>
+            </div>
 
-            {/* Status tabs */}
-            <TaskStatusTabs
-              tabs={tabs}
-              activeTab={filterStatus}
-              setActiveTab={(tab) => {
-                setFilterStatus(tab);
-                setPage(1);
-              }}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Month dropdown driven by availableMonths */}
+              {availableMonths.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Month:
+                  </label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-gray-50"
+                  >
+                    <option value="">All Months</option>
+                    {availableMonths
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .slice(0, 12)
+                      .map((m) => (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          className="text-black"
+                        >
+                          {m.label}
+                        </option>
+                      ))}
+                  </select>
+                </>
+              )}
+
+              {/* Status tabs */}
+              <TaskStatusTabs
+                tabs={tabs}
+                activeTab={filterStatus}
+                setActiveTab={(tab) => {
+                  setFilterStatus(tab);
+                  setPage(1);
+                }}
+              />
+            </div>
+
+           
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+            {infoCard.map(({ label, key2, color, description }) => (
+              <InfoCard
+                key={key2}
+                label={label}
+                value={addThousandsSeperator(statusSummary[key2] || 0)}
+                color={color}
+                description={description}
+              />
+            ))}
           </div>
         </div>
-
         {loading && <SpinLoader />}
         <div className="mt-4 flex gap-2 items-center">
           <label className="text-white text-sm">Search Serial:</label>
@@ -282,7 +281,6 @@ const MyTasks = () => {
                 setFilterPriority(p);
                 setPage(1);
               }}
-              onRowClick={handleRowClick}
             />
 
             {/* If there were no tasks, show a “no data” message below the header */}
@@ -298,7 +296,6 @@ const MyTasks = () => {
               <TaskCard
                 key={item._id}
                 title={item.title}
-                company={item.companyName}
                 desc={item.description}
                 priority={item.priority}
                 status={item.status}

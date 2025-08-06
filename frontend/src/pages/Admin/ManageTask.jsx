@@ -441,12 +441,13 @@ const ManageTask = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
-            {infoCard.map(({ label, key1, color }) => (
+            {infoCard.map(({ label, key1, color, description }) => (
               <InfoCard
                 key={key1}
                 label={label}
                 value={addThousandsSeperator(statusSummary[key1] || 0)}
                 color={color}
+                description={description}
               />
             ))}
           </div>
