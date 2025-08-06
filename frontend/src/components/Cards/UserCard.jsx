@@ -5,9 +5,36 @@ import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
 import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
+import SelectUsers from "components/Inputs/SelectUsers";
 
-const UserCard = ({ userInfo, onUserDeleted }) => {
+const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+
+  // 2. Select admin in modal
+  const handleSelectAdmin = (userIds) => {
+    setSelectedAdmin(userIds[0]);
+  };
+
+  // 3. Transfer tasks and delete admin
+  const handleTransferAndDelete = async () => {
+    try {
+      // API: Transfer all main and checklist assignments from userInfo._id to selectedAdmin
+      await axiosInstance.post(API_PATHS.USERS.TRANSFER_TASKS(userInfo._id), {
+        targetAdminId: selectedAdmin,
+      });
+      // Now delete the admin
+      await axiosInstance.delete(
+        API_PATHS.USERS.DELETE_USER_BY_ID(userInfo._id)
+      );
+
+      setSelectedAdmin(null);
+      toast.success("Admin deleted and tasks reassigned!");
+      onUserDeleted?.();
+    } catch (error) {
+      toast.error("Transfer or delete failed");
+    }
+  };
 
   // Delete Task
   const deleteUser = async () => {
@@ -78,12 +105,46 @@ const UserCard = ({ userInfo, onUserDeleted }) => {
       <Modal
         isOpen={openDeleteAlert}
         onClose={() => setOpenDeleteAlert(false)}
-        title="Delete Task"
+        title={
+          userInfo?.role === "admin" ? "Transfer & Delete Admin" : "Delete User"
+        }
       >
-        <DeleteAlert
-          content="Are you sure sure you want to delete this user"
-          onDelete={() => deleteUser()}
-        />
+        {userInfo?.role === "admin" ? (
+          <div>
+            <p className="mb-3 text-white">
+              This user is an admin. Please select another admin to transfer all
+              their assigned tasks and subtasks before deletion.
+            </p>
+            <SelectUsers
+              selectedUsers={selectedAdmin ? [selectedAdmin] : []}
+              setSelectedUsers={handleSelectAdmin}
+              allUsers={allUsers.filter(
+                (u) => u.role === "admin" && u._id !== userInfo._id
+              )}
+              role="admin"
+            />
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                className="card-btn"
+                onClick={() => setOpenDeleteAlert(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="card-btn-fill"
+                onClick={handleTransferAndDelete}
+                disabled={!selectedAdmin}
+              >
+                Transfer & Delete
+              </button>
+            </div>
+          </div>
+        ) : (
+          <DeleteAlert
+            content="Are you sure you want to delete this user?"
+            onDelete={deleteUser}
+          />
+        )}
       </Modal>
     </div>
   );

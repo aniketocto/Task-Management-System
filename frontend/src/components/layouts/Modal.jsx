@@ -5,14 +5,14 @@ const Modal = ({ children, isOpen, onClose, title }) => {
   if (!isOpen) return;
 
   return (
-    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex justify-center items-center w-full  max-h-full overflow-y-auto overflow-x-hidden bg-black/20 bg-opacity-50 backdrop-blur-[1px]">
+    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex justify-center items-center w-full  h-dvh overflow-y-auto overflow-x-hidden bg-black/20 bg-opacity-50 backdrop-blur-[1px]">
       <div className="relative w-full max-w-2xl max-h-full">
         {/* Modal Content */}
         <div className="relative bg-gray-900 rounded-lg shadow-sm">
           {/* Modal Header */}
-          <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t  border-gray-900">
+          <div className="flex items-center justify-between !pb-0 p-4 md:p-5 border-b rounded-t  border-gray-900">
             <h3 className="text-lg font-medium text-gray-100 ">{title}</h3>
-            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" onClick={onClose}>
+            <button type="button" className="text-gray-100 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" onClick={onClose}>
              <LuX className="size-[50px]" />
             </button>
           </div>

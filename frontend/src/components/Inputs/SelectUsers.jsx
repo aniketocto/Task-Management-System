@@ -119,7 +119,7 @@ const SelectUsers = ({
           placeholder="Search by name"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full mb-3 p-2 text-sm border border-gray-300 rounded"
+          className="w-full mb-3 p-2 text-sm border border-gray-300 rounded placeholder:text-amber-50"
         />
         <div className="sapce-y-4 h-[60vh] overflow-y-auto">
           {allUsers
@@ -142,8 +142,8 @@ const SelectUsers = ({
                   className="w-10 h-10 rounded-full object-contain"
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-800">{user.name}</p>
-                  <p className="text-[13px] text-gray-600">{user.department}</p>
+                  <p className="font-medium text-gray-100">{user.name}</p>
+                  <p className="text-[13px] text-gray-100">{user.department}</p>
                 </div>
 
                 <input

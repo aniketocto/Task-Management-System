@@ -132,14 +132,54 @@ const getUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Find all tasks with a checklist item assigned to this user
+    const tasks = await Task.find({ "todoChecklist.assignedTo": userId });
+    for (const task of tasks) {
+      let changed = false;
+      // Get first admin in task.assignedTo (main assignees)
+      let adminId = null;
+      for (const aid of task.assignedTo) {
+        const assignedUser = await User.findById(aid);
+        if (assignedUser?.role === "admin") {
+          adminId = assignedUser._id;
+          break;
+        }
+      }
+      // Fallback: if no admin, fallback to superAdmin
+      if (!adminId) {
+        const superAdmin = await User.findOne({ role: "superAdmin" });
+        if (superAdmin) adminId = superAdmin._id;
+      }
+
+      for (const item of task.todoChecklist) {
+        if (
+          Array.isArray(item.assignedTo) &&
+          item.assignedTo.map((id) => id.toString()).includes(userId)
+        ) {
+          // Remove user from checklist assignedTo
+          item.assignedTo = item.assignedTo.filter(
+            (id) => id.toString() !== userId
+          );
+          // If empty, assign to admin
+          if (item.assignedTo.length === 0 && adminId) {
+            item.assignedTo = [adminId];
+          }
+          changed = true;
+        }
+      }
+      if (changed) await task.save();
     }
+
+    // Delete the user
     await user.deleteOne();
-    res.json({ message: "User removed" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+
+    res.json({ message: "User deleted. Checklist items reassigned to admin." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
@@ -152,9 +192,33 @@ const getDepartment = async (req, res) => {
   }
 };
 
+const transferAdminTasks = async (req, res) => {
+  const { adminId } = req.params;
+  const { targetAdminId } = req.body;
+  // 1. Main tasks
+  await Task.updateMany(
+    { assignedTo: adminId },
+    { $set: { "assignedTo.$": targetAdminId } }
+  );
+  // 2. Checklist items
+  const tasks = await Task.find({ "todoChecklist.assignedTo": adminId });
+  for (const task of tasks) {
+    let changed = false;
+    for (const item of task.todoChecklist) {
+      item.assignedTo = item.assignedTo.map((uid) =>
+        uid.toString() === adminId ? targetAdminId : uid
+      );
+      changed = true;
+    }
+    if (changed) await task.save();
+  }
+  res.json({ success: true });
+};
+
 module.exports = {
   getUsers,
   getUser,
   deleteUser,
   getDepartment,
+  transferAdminTasks,
 };

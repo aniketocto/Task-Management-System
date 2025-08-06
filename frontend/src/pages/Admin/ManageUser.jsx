@@ -107,7 +107,7 @@ const ManageUser = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {users.map((user) => (
-                  <UserCard key={user._id} userInfo={user} onUserDeleted={handleUserDeleted} />
+                  <UserCard allUsers={allUsers} key={user._id} userInfo={user} onUserDeleted={handleUserDeleted} />
                 ))}
               </div>
             </div>

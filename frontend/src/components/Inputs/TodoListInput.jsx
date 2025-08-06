@@ -45,7 +45,14 @@ const TodoListInput = ({
     if (!option.trim()) return;
     setTodoList([
       ...todoList,
-      { text: option, completed: false, assignedTo: [] },
+      {
+        text: option,
+        completed: false,
+        assignedTo: [],
+        completionLogs: [], // <-- add this
+        approvalLogs: [], // <-- add this
+        approval: { status: "pending" }, // also safe to add this default
+      },
     ]);
     setOption("");
   };
