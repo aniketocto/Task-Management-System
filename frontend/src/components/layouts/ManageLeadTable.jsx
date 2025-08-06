@@ -39,19 +39,29 @@ const ManageLeadTable = () => {
     }
   };
 
-  const toggleFollowUp = async (id, attemptKey, currVal) => {
-    try {
-      const leadToUpdate = leads.find((l) => l._id === id);
-      const newFollowUp = {
-        ...(leadToUpdate.followUp || {}),
-        [attemptKey]: !currVal,
-      };
+  const getAttemptObj = (attempt) => {
+    if (typeof attempt === "object" && attempt !== null) {
+      return { done: !!attempt.done, remark: attempt.remark || "" };
+    }
+    // fallback for old boolean data
+    return { done: !!attempt, remark: "" };
+  };
 
+  const handleFollowUpChange = async (leadId, attemptKey, { done, remark }) => {
+    try {
+      // Find the target lead
+      const leadToUpdate = leads.find((l) => l._id === leadId);
+      // Build new followUp object, preserving other attempts
+      const newFollowUp = { ...(leadToUpdate.followUp || {}) };
+      newFollowUp[attemptKey] = { done, remark };
+
+      // Call API
       const { data } = await axiosInstance.put(
-        API_PATHS.LEADS.UPDATE_LEAD_BY_ID(id),
+        API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId),
         { followUp: newFollowUp }
       );
-      setLeads((prev) => prev.map((l) => (l._id === id ? data.lead : l)));
+      // Update state
+      setLeads((prev) => prev.map((l) => (l._id === leadId ? data.lead : l)));
     } catch (err) {
       console.error("Failed to update followUp:", err);
     }
@@ -70,7 +80,6 @@ const ManageLeadTable = () => {
     (user?.role === "admin" && user?.department === "BusinessDevelopment") ||
     (user?.role === "user" && user?.department === "BusinessDevelopment");
 
-  
   const baseAttachments = ["briefUrl", "presentationUrl", "websiteUrl"];
   const extraAttachments = ["agreementUrl", "invoiceUrl"];
 
@@ -81,6 +90,27 @@ const ManageLeadTable = () => {
   if (loading) {
     return <div className="p-4 text-center text-gray-400">Loading leads…</div>;
   }
+
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case "new":
+        return "bg-[#FF6900] border border-orange-500";
+      case "followUp":
+        return "bg-[#f0b100] border border-yellow-500";
+      case "dead":
+        return "bg-[#FB2C36] border border-red-500";
+      case "onboarded":
+        return "bg-[#00c950] border border-green-500";
+      case "negotiation":
+        return "bg-[#615fff] border border-indigo-500";
+      case "agreement":
+        return "bg-[#2b7fff] border border-blue-500";
+      case "pitch":
+        return "bg-[#8B5CF6] border border-purple-500";
+      default:
+        return "bg-gray-100 text-gray-500 border border-gray-200";
+    }
+  };
 
   return (
     <div className="relative bg-gray-900 rounded-lg shadow-lg p-4 w-full">
@@ -104,11 +134,11 @@ const ManageLeadTable = () => {
               <col style={{ width: "150px" }} />
               <col style={{ width: "170px" }} />
               <col style={{ width: "300px" }} />
-              {canSeeDetails && <col style={{ width: "150px" }} />}
-              {canSeeDetails && <col style={{ width: "150px" }} />}
-              {canSeeDetails && <col style={{ width: "150px" }} />}
-              {canSeeDetails && <col style={{ width: "150px" }} />}
-              {canSeeDetails && <col style={{ width: "150px" }} />}
+              {canSeeDetails && <col style={{ width: "200px" }} />}
+              {canSeeDetails && <col style={{ width: "200px" }} />}
+              {canSeeDetails && <col style={{ width: "200px" }} />}
+              {canSeeDetails && <col style={{ width: "200px" }} />}
+              {canSeeDetails && <col style={{ width: "200px" }} />}
               <col style={{ width: "100px" }} />
               <col style={{ width: "120px" }} />
               <col style={{ width: "120px" }} />
@@ -285,7 +315,13 @@ const ManageLeadTable = () => {
                     {lead.companyName || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
-                    {lead.status || "-"}
+                    <span
+                      className={`px-2 py-1 text-sm text-white rounded capitalize inline-block ${getStatusBadgeColor(
+                        lead.status
+                      )}`}
+                    >
+                      {lead.status || "-"}
+                    </span>
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
                     {lead.type || "-"}
@@ -321,30 +357,72 @@ const ManageLeadTable = () => {
                       : "-"}
                   </td>
                   {canSeeDetails &&
-                    [1, 2, 3, 4, 5].map((attempt) => (
-                      <td
-                        key={`attempt-${attempt}`}
-                        className="px-4 py-2 text-sm text-center text-gray-300 border-b border-gray-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={
-                            lead.followUp?.[`attempt${attempt}`] || false
-                          }
-                          disabled={allow}
-                          onChange={() =>
-                            toggleFollowUp(
-                              lead._id,
-                              `attempt${attempt}`,
-                              lead.followUp?.[`attempt${attempt}`]
-                            )
-                          }
-                          className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${
-                            allow ? "cursor-not-allowed" : "cursor-pointer"
-                          }`}
-                        />
-                      </td>
-                    ))}
+                    [1, 2, 3, 4, 5].map((attempt) => {
+                      const attemptKey = `attempt${attempt}`;
+                      const { done, remark } = getAttemptObj(
+                        lead.followUp?.[attemptKey]
+                      );
+                      return (
+                        <td
+                          key={`attempt-${attempt}`}
+                          className="px-2 py-2 text-sm text-center text-gray-300 border-b border-gray-700"
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            {/* Checkbox */}
+                            <input
+                              type="checkbox"
+                              checked={done}
+                              disabled={allow}
+                              onChange={() =>
+                                handleFollowUpChange(lead._id, attemptKey, {
+                                  done: !done,
+                                  remark,
+                                })
+                              }
+                              className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${
+                                allow ? "cursor-not-allowed" : "cursor-pointer"
+                              }`}
+                            />
+                            {/* Remark input */}
+                            <textarea
+                              type="text"
+                              value={remark}
+                              disabled={allow}
+                              rows={2}
+                              placeholder="Remark"
+                              onBlur={(e) =>
+                                handleFollowUpChange(lead._id, attemptKey, {
+                                  done,
+                                  remark: e.target.value,
+                                })
+                              }
+                              onChange={(e) => {
+                                setLeads((prev) =>
+                                  prev.map((l) =>
+                                    l._id === lead._id
+                                      ? {
+                                          ...l,
+                                          followUp: {
+                                            ...l.followUp,
+                                            [attemptKey]: {
+                                              done,
+                                              remark: e.target.value,
+                                            },
+                                          },
+                                        }
+                                      : l
+                                  )
+                                );
+                              }}
+                              className={`w-24 mt-1 px-1 py-0.5 text-xs bg-gray-800 border border-gray-600 rounded text-gray-200 focus:border-[#E43941] focus:outline-none ${
+                                allow ? "cursor-not-allowed" : "cursor-pointer"
+                              }`}
+                              maxLength={60}
+                            />
+                          </div>
+                        </td>
+                      );
+                    })}
 
                   {/* Attachments */}
                   {visibleAttachments.map((key) => {

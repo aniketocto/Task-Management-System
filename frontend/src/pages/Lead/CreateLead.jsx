@@ -255,6 +255,7 @@ const CreateLead = () => {
       closeDateRequestModal();
       getLead(); // reload data
     } catch (err) {
+      console.error(err);
       toast.error("Failed to send request.");
     } finally {
       setLoading(false);
@@ -271,6 +272,7 @@ const CreateLead = () => {
       toast.success(`Date change ${decision}d.`);
       getLead(); // reload to get latest status
     } catch (err) {
+      console.error(err);
       toast.error("Failed to update request.");
     } finally {
       setLoading(false);

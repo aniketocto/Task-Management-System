@@ -11,6 +11,8 @@ import InfoCard from "components/Cards/InfoCard";
 import CustomBarChart from "components/Charts/CustomBarChart";
 
 import CustomTreeMap from "components/Charts/CustomTreeMap";
+import MeetingTable from "components/layouts/MeetingTable";
+import SpinLoader from "components/layouts/SpinLoader";
 
 const getDailyQuote = () => {
   const today = new Date().toISOString().slice(0, 10);
@@ -30,6 +32,9 @@ const LeadDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [categoryTreeMapData, setCategoryTreeMapData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
+  const [meetings, setMeetings] = useState([]);
+
+  const [loading, setLoading] = useState(false);
 
   const dailyQuote = useMemo(() => getDailyQuote(), []);
 
@@ -60,6 +65,7 @@ const LeadDashboard = () => {
 
   const getDashboardData = useCallback(async () => {
     try {
+      setLoading(true);
       const res = await axiosInstance.get(API_PATHS.LEADS.GET_DASHBOARD_DATA);
 
       if (res.data) {
@@ -69,15 +75,30 @@ const LeadDashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const upcomingMeetings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get(API_PATHS.LEADS.GET_MEETINGS);
+      if (res.data) {
+        setMeetings(res.data.meetings);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     getDashboardData();
+    upcomingMeetings();
     return () => {};
-  }, [getDashboardData]);
-
-  console.log(categoryTreeMapData);
+  }, [getDashboardData, upcomingMeetings]);
 
   return (
     <DashboardLayout activeMenu="Lead Dashboard">
@@ -107,25 +128,31 @@ const LeadDashboard = () => {
           ))}
         </div>
       </div>
+      {loading && <SpinLoader />}
+
+      <div className="card h-[500px] flex flex-col">
+        <div className="flex items-center justify-between">
+          <h5 className="font-medium">Upcoming meetings</h5>
+        </div>
+        <MeetingTable data={meetings} />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
         <div>
           <div className="card">
             <div className="flex items-center justify-between">
-              <h5 className="font-medium mb-6">Leads by Category</h5>
+              <h5 className="font-medium mb-6">Category</h5>
             </div>
             <CustomTreeMap data={categoryTreeMapData} />
           </div>
         </div>
 
-        <div>
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <h5 className="font-medium">Lead Stat Level</h5>
-            </div>
-
-            <CustomBarChart data={barChartData} dataKey="status" />
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <h5 className="font-medium">Status</h5>
           </div>
+
+          <CustomBarChart data={barChartData} dataKey="status" />
         </div>
       </div>
     </DashboardLayout>

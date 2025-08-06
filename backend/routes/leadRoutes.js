@@ -8,6 +8,7 @@ const {
   deleteLead,
   getLeadDashboardData,
   decideDateChangeRequest,
+  getUpcomingMeetings,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
@@ -17,6 +18,13 @@ router.get(
   protect,
   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getLeadDashboardData
+);
+
+router.get(
+  "/upcoming-meetings",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  getUpcomingMeetings
 );
 
 router.post(

@@ -186,11 +186,26 @@ const leadSchema = new mongoose.Schema(
 
     // ——— Follow-up tick-boxes ———
     followUp: {
-      attempt1: { type: Boolean, default: false },
-      attempt2: { type: Boolean, default: false },
-      attempt3: { type: Boolean, default: false },
-      attempt4: { type: Boolean, default: false },
-      attempt5: { type: Boolean, default: false },
+      attempt1: {
+        done: { type: Boolean, default: false },
+        remark: { type: String, trim: true, default: "" },
+      },
+      attempt2: {
+        done: { type: Boolean, default: false },
+        remark: { type: String, trim: true, default: "" },
+      },
+      attempt3: {
+        done: { type: Boolean, default: false },
+        remark: { type: String, trim: true, default: "" },
+      },
+      attempt4: {
+        done: { type: Boolean, default: false },
+        remark: { type: String, trim: true, default: "" },
+      },
+      attempt5: {
+        done: { type: Boolean, default: false },
+        remark: { type: String, trim: true, default: "" },
+      },
     },
 
     // ——— Audit & relations ———
