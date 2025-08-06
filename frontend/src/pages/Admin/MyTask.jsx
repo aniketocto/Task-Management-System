@@ -13,6 +13,9 @@ import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
+import { infoCard } from "../../utils/data";
+import { addThousandsSeperator } from "../../utils/helper";
+import InfoCard from "components/Cards/InfoCard";
 
 const MyTasks = () => {
   const { user } = useContext(UserContext);
@@ -24,9 +27,12 @@ const MyTasks = () => {
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([]);
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    return parseInt(localStorage.getItem("lastPage")) || 1;
+  });
   const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
+  const [statusSummary, setStatusSummary] = useState({});
 
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMonth, setFilterMonth] = useState("");
@@ -86,6 +92,8 @@ const MyTasks = () => {
 
         const tasks = resp.data.tasks || [];
         setAllTasks(tasks);
+        setStatusSummary(resp.data.statusSummary || {});
+        console.log(resp.data);
 
         // status tabs
         const s = resp.data.statusSummary || {};
@@ -143,77 +151,90 @@ const MyTasks = () => {
   return (
     <DashboardLayout activeMenu="My Tasks">
       <div className="my-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg md:text-xl font-medium text-white">
-              View Tasks
-            </h2>
-            {/* View toggle */}
-            <div className="flex items-center border rounded overflow-hidden">
-              <button
-                onClick={() => setViewType("table")}
-                className={`p-2 ${
-                  viewType === "table"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuFileSpreadsheet size={20} />
-              </button>
-              <button
-                onClick={() => setViewType("grid")}
-                className={`p-2 ${
-                  viewType === "grid"
-                    ? "bg-primary text-white"
-                    : "text-gray-400"
-                }`}
-              >
-                <LuLayoutGrid size={20} />
-              </button>
+        <div className="flex flex-col gap-5 card justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg md:text-xl font-medium text-white">
+                View Tasks
+              </h2>
+              {/* View toggle */}
+              <div className="flex items-center border rounded overflow-hidden">
+                <button
+                  onClick={() => setViewType("table")}
+                  className={`p-2 ${
+                    viewType === "table"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  <LuFileSpreadsheet size={20} />
+                </button>
+                <button
+                  onClick={() => setViewType("grid")}
+                  className={`p-2 ${
+                    viewType === "grid"
+                      ? "bg-primary text-white"
+                      : "text-gray-400"
+                  }`}
+                >
+                  <LuLayoutGrid size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Month dropdown driven by availableMonths */}
+              {availableMonths.length > 0 && (
+                <>
+                  <label className="text-sm font-medium text-gray-600">
+                    Month:
+                  </label>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-gray-50"
+                  >
+                    <option value="">All Months</option>
+                    {availableMonths
+                      .sort((a, b) => b.value.localeCompare(a.value))
+                      .slice(0, 12)
+                      .map((m) => (
+                        <option
+                          key={m.value}
+                          value={m.value}
+                          className="text-black"
+                        >
+                          {m.label}
+                        </option>
+                      ))}
+                  </select>
+                </>
+              )}
+
+              {/* Status tabs */}
+              <TaskStatusTabs
+                tabs={tabs}
+                activeTab={filterStatus}
+                setActiveTab={(tab) => {
+                  setFilterStatus(tab);
+                  setPage(1);
+                }}
+              />
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Month dropdown driven by availableMonths */}
-            {availableMonths.length > 0 && (
-              <>
-                <label className="text-sm font-medium text-gray-600">
-                  Month:
-                </label>
-                <select
-                  value={filterMonth}
-                  onChange={(e) => {
-                    setFilterMonth(e.target.value);
-                    setPage(1);
-                  }}
-                  className="border rounded px-3 py-2 text-sm text-gray-50"
-                >
-                  <option value="">All Months</option>
-                  {availableMonths
-                    .sort((a, b) => b.value.localeCompare(a.value))
-                    .slice(0, 12)
-                    .map((m) => (
-                      <option
-                        key={m.value}
-                        value={m.value}
-                        className="text-black"
-                      >
-                        {m.label}
-                      </option>
-                    ))}
-                </select>
-              </>
-            )}
-
-            {/* Status tabs */}
-            <TaskStatusTabs
-              tabs={tabs}
-              activeTab={filterStatus}
-              setActiveTab={(tab) => {
-                setFilterStatus(tab);
-                setPage(1);
-              }}
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+            {infoCard.map(({ label, key2, color, description }) => (
+              <InfoCard
+                key={key2}
+                label={label}
+                value={addThousandsSeperator(statusSummary[key2] || 0)}
+                color={color}
+                description={description}
+              />
+            ))}
           </div>
         </div>
         {loading && <SpinLoader />}

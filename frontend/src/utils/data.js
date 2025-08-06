@@ -5,156 +5,246 @@ import {
   LuSquare,
 } from "react-icons/lu";
 
-import { MdOutlineLeaderboard } from "react-icons/md";
 import { RiTeamLine } from "react-icons/ri";
 
-export const SIDE_MENU_ADMIN_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "02",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "03",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "04",
-    label: "My Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/my-tasks",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "05",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_ADMIN_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "02",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "04",
+//     label: "My Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/my-tasks",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "05",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_SUPER_ADMIN_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "03",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "04",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "05",
-    label: "Create Leads",
-    icon: LuSquare,
-    path: "/leads-create",
-  },
-  {
-    id: "06",
-    label: "Team Members",
-    icon: RiTeamLine,
-    path: "/admin/users",
-  },
-  {
-    id: "07",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_SUPER_ADMIN_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "03",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "04",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "05",
+//     label: "Create Leads",
+//     icon: LuSquare,
+//     path: "/leads-create",
+//   },
+//   {
+//     id: "06",
+//     label: "Team Members",
+//     icon: RiTeamLine,
+//     path: "/admin/users",
+//   },
+//   {
+//     id: "07",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_BE_USER_DATA = [
-  {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    id: "04",
-    label: "Manage Lead",
-    icon: LuClipboardCheck,
-    path: "/manage-lead",
-  },
-  {
-    id: "02",
-    label: "Manage Tasks",
-    icon: LuClipboardCheck,
-    path: "/admin/tasks",
-  },
-  {
-    id: "02",
-    label: "My Tasks",
-    icon: LuClipboardCheck,
-    path: "/user/tasks",
-  },
-  {
-    id: "03",
-    label: "Create Task",
-    icon: LuSquare,
-    path: "/admin/create-task",
-  },
-  {
-    id: "04",
-    label: "Create Leads",
-    icon: LuClipboardCheck,
-    path: "/leads-create",
-  },
-  {
-    id: "05",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
-  },
-];
+// export const SIDE_MENU_BE_USER_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/admin/dashboard",
+//   },
+//   {
+//     id: "04",
+//     label: "Manage Lead",
+//     icon: LuClipboardCheck,
+//     path: "/manage-lead",
+//   },
+//   {
+//     id: "02",
+//     label: "Manage Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/admin/tasks",
+//   },
+//   {
+//     id: "02",
+//     label: "My Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/user/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Create Task",
+//     icon: LuSquare,
+//     path: "/admin/create-task",
+//   },
+//   {
+//     id: "04",
+//     label: "Create Leads",
+//     icon: LuClipboardCheck,
+//     path: "/leads-create",
+//   },
+//   {
+//     id: "05",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
 
-export const SIDE_MENU_USER_DATA = [
+// export const SIDE_MENU_USER_DATA = [
+//   {
+//     id: "01",
+//     label: "Dashboard",
+//     icon: LuLayoutDashboard,
+//     path: "/user/dashboard",
+//   },
+//   {
+//     id: "02",
+//     label: "View Tasks",
+//     icon: LuClipboardCheck,
+//     path: "/user/tasks",
+//   },
+//   {
+//     id: "03",
+//     label: "Logout",
+//     icon: LuLogOut,
+//     path: "logout",
+//   },
+// ];
+
+export const MENU_DATA = [
   {
-    id: "01",
-    label: "Dashboard",
-    icon: LuLayoutDashboard,
-    path: "/user/dashboard",
+    label: "Tasks",
+    children: [
+      {
+        label: "Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/admin/dashboard", // Admins/SuperAdmins
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/user/dashboard", // Users
+        access: ({ role }) => role === "user",
+      },
+      {
+        label: "Manage Tasks",
+        icon: LuClipboardCheck,
+        path: "/admin/tasks",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Create Task",
+        icon: LuSquare,
+        path: "/admin/create-task",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "My Tasks",
+        icon: LuClipboardCheck,
+        path: "/admin/my-tasks",
+        access: ({ role }) => role === "admin",
+      },
+      {
+        label: "My Tasks",
+        icon: LuClipboardCheck,
+        path: "/user/tasks",
+        access: ({ role }) => role === "user",
+      },
+      {
+        label: "View Tasks",
+        icon: LuClipboardCheck,
+        path: "/user/tasks",
+        access: ({ role }) => role === "user",
+      },
+    ],
   },
   {
-    id: "02",
-    label: "View Tasks",
-    icon: LuClipboardCheck,
-    path: "/user/tasks",
+    label: "Leads",
+    children: [
+      {
+        label: "Manage Lead",
+        icon: LuClipboardCheck,
+        path: "/manage-lead",
+        access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Create Leads",
+        icon: LuSquare,
+        path: "/leads-create",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "BusinessDevelopment"),
+      },
+    ],
   },
   {
-    id: "03",
-    label: "Logout",
-    icon: LuLogOut,
-    path: "logout",
+    label: "Team",
+    children: [
+      {
+        label: "Team Members",
+        icon: RiTeamLine,
+        path: "/admin/users",
+        access: ({ role }) => role === "superAdmin",
+      },
+    ],
+  },
+  {
+    label: "Account",
+    children: [
+      {
+        label: "Logout",
+        icon: LuLogOut,
+        path: "logout",
+        access: () => true, // Everyone sees logout
+      },
+    ],
   },
 ];
 
@@ -178,33 +268,54 @@ export const STATUS_OPTIONS = [
 ];
 
 export const infoCard = [
-  { label: "New Tasks", key: "new", color: "bg-[#3956E4]", key1: "newTasks" },
-  // { label: "Working Tasks", key: "startedWork", color: "bg-[#E4CA39]", key1: "" },
+  {
+    label: "New Tasks",
+    key: "new",
+    key1: "newTasks",
+    key2: "new",
+    color: "bg-[#3956E4]",
+    description: "Newly allotted tasks not yet started",
+  },
   {
     label: "InProgress Tasks",
     key: "inProgress",
-    color: "bg-[#E48E39]",
     key1: "inProgressTasks",
+    key2: "inProgress",
+    color: "bg-[#E48E39]",
+    description: "Tasks started and ongoing, still within the due date",
   },
   {
     label: "Completed Tasks",
     key: "completed",
-    color: "bg-[#6FE439]",
     key1: "completedTasks",
+    key2: "completed",
+    color: "bg-[#6FE439]",
+    description: "Tasks finished on or before the due date",
   },
   {
     label: "Pending Tasks",
     key: "pending",
-    color: "bg-[#39C5E4]",
     key1: "pendingTasks",
+    key2: "pending",
+    color: "bg-[#39C5E4]",
+    description: "Tasks in progress but the due date has passed",
   },
   {
     label: "Delayed Tasks",
     key: "delayed",
-    color: "bg-[#E43941]",
     key1: "delayedTasks",
+    key2: "delayed",
+    color: "bg-[#E43941]",
+    description: "Tasks completed after the due date",
   },
-  { label: "Total Tasks", key: "All", color: "bg-[#B439E4]", key1: "all" },
+  {
+    label: "Total Tasks",
+    key: "All",
+    key1: "all",
+    key2: "all",
+    color: "bg-[#B439E4]",
+    description: "All tasks assigned to you",
+  },
 ];
 
 export const leadStats = [
@@ -352,39 +463,39 @@ export const LEAD_TYPE = [
 ];
 
 export const LEAD_SERVICE = [
-  {value: "logoDesign", label: "Logo Design"},
-  {value: "socialMediaManagement", label: "Social Media Management"},
-  {value: "leadGeneration", label: "Lead Generation"},
-  {value: "webDesignNDev", label: "Web Design & Development"},
-  {value: "appDesignNDev", label: "App Design & Development"},
-  {value: "videoProduction", label: "Video Production"},
-  {value: "branding", label: "Branding"},
-  {value: "visualIdentity", label: "Visual Identity"},
-  {value: "coffeeTableBook", label: "Coffee Table Book"},
-  {value: "brochures", label: "Brochures"},
-  {value: "merchandise", label: "Merchandise"},
-  {value: "stallDesign", label: "Stall Design"},
-  {value: "influencerMarketing", label: "Influencer Marketing"},
-  {value: "siteBranding", label: "Site Branding"},
-  {value: "packaging", label: "Packaging"},
-  {value: "energy", label: "Energy"},
-  {value: "others", label: "Others"},
+  { value: "logoDesign", label: "Logo Design" },
+  { value: "socialMediaManagement", label: "Social Media Management" },
+  { value: "leadGeneration", label: "Lead Generation" },
+  { value: "webDesignNDev", label: "Web Design & Development" },
+  { value: "appDesignNDev", label: "App Design & Development" },
+  { value: "videoProduction", label: "Video Production" },
+  { value: "branding", label: "Branding" },
+  { value: "visualIdentity", label: "Visual Identity" },
+  { value: "coffeeTableBook", label: "Coffee Table Book" },
+  { value: "brochures", label: "Brochures" },
+  { value: "merchandise", label: "Merchandise" },
+  { value: "stallDesign", label: "Stall Design" },
+  { value: "influencerMarketing", label: "Influencer Marketing" },
+  { value: "siteBranding", label: "Site Branding" },
+  { value: "packaging", label: "Packaging" },
+  { value: "energy", label: "Energy" },
+  { value: "others", label: "Others" },
 ];
 
 export const LEAD_SOURCE = [
-  {value: "website", label: "Website"},
-  {value: "inboundWhatsApp", label: "Inbound Whatsapp"},
-  {value: "outboundWhatsApp", label: "Outbound Whatsapp"},
-  {value: "inboundCall", label: "Inbound Call"},
-  {value: "outboundCall", label: "Outbound Call"},
-  {value: "inboundEmail", label: "Inbound Email"},
-  {value: "outboundEmail", label: "Outbound Email"},
-  {value: "metaAds", label: "Meta Ads"},
-  {value: "googleAds", label: "Google Ads"},
-  {value: "events", label: "Events"},
-  {value: "referral", label: "Referral"},
-  {value: "others", label: "Others"},
-]
+  { value: "website", label: "Website" },
+  { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
+  { value: "outboundWhatsApp", label: "Outbound Whatsapp" },
+  { value: "inboundCall", label: "Inbound Call" },
+  { value: "outboundCall", label: "Outbound Call" },
+  { value: "inboundEmail", label: "Inbound Email" },
+  { value: "outboundEmail", label: "Outbound Email" },
+  { value: "metaAds", label: "Meta Ads" },
+  { value: "googleAds", label: "Google Ads" },
+  { value: "events", label: "Events" },
+  { value: "referral", label: "Referral" },
+  { value: "others", label: "Others" },
+];
 
 export const statsColors = [
   "#6366F1", // indigo for Total

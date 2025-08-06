@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
-const { backfillTaskApprovals, backfillPitchAndPresentation } = require("./config/helper");
+const { backfillTaskApprovals, backfillPitchAndPresentation, migrateApprovalToLogs } = require("./config/helper");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -84,6 +84,7 @@ io.on("connection", (socket) => {
 //  TODO: uncomment this before going live
 // backfillTaskApprovals();
 // backfillPitchAndPresentation();
+// migrateApprovalToLogs();
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

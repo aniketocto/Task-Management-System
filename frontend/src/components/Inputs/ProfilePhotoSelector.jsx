@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { LuUser, LuUpload, LuTrash } from "react-icons/lu";
+import USER_IMG from "../../assets/user_fallback.svg";
 
 const ProfilePhotoSelector = ({ image, setImage }) => {
   const inputRef = useRef(null);
@@ -51,7 +52,7 @@ const ProfilePhotoSelector = ({ image, setImage }) => {
       ) : (
         <div className="relative">
           <img
-            src={previewImage}
+            src={previewImage || (typeof image === "string" ? image : USER_IMG)}
             alt="Preview"
             className="w-20 h-20 rounded-full object-contain"
           />

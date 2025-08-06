@@ -125,6 +125,7 @@ const updateUserProfile = async (req, res) => {
     user.email = req.body.email || user.email;
     user.department = req.body.department || user.department;
     user.profileImageUrl = req.body.profileImageUrl || user.profileImageUrl;
+    user.designation = req.body.designation || user.designation;
 
     // Handle password update (only if sent)
     if (req.body.password) {
@@ -141,6 +142,7 @@ const updateUserProfile = async (req, res) => {
       role: updatedUser.role,
       department: updatedUser.department,
       profileImageUrl: updatedUser.profileImageUrl,
+      designation: updatedUser.designation,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {
@@ -150,7 +152,8 @@ const updateUserProfile = async (req, res) => {
 
 const googleAuth = async (req, res) => {
   try {
-    const { idToken, adminInviteToken, department, profileImage } = req.body;
+    const { idToken, adminInviteToken, department, profileImage, designation } =
+      req.body;
 
     const ticket = await googleClient.verifyIdToken({
       idToken,
@@ -188,6 +191,7 @@ const googleAuth = async (req, res) => {
         profileImageUrl, // base64 or Google image URL
         role,
         department,
+        designation
       });
     }
 
@@ -199,6 +203,7 @@ const googleAuth = async (req, res) => {
       profileImageUrl: user.profileImageUrl,
       role: user.role,
       department: user.department,
+      designation: user.designation,
       token,
     });
   } catch (error) {

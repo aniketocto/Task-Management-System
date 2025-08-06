@@ -5,6 +5,7 @@ const {
   getUser,
   deleteUser,
   getDepartment,
+  transferAdminTasks,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
@@ -19,5 +20,11 @@ router.get(
 router.get("/department", protect, getDepartment);
 router.get("/:id", protect, getUser);
 router.delete("/:id", protect, allowRoleOrDept(["superAdmin"], []), deleteUser);
+router.post(
+  "/:adminId/transfer-tasks",
+  protect,
+  allowRoleOrDept(["superAdmin"], []),
+  transferAdminTasks
+);
 
 module.exports = router;

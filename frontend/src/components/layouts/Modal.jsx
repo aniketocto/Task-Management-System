@@ -1,27 +1,46 @@
 import React from "react";
-import { LuCross, LuX } from "react-icons/lu";
+import { LuX } from "react-icons/lu";
 
 const Modal = ({ children, isOpen, onClose, title }) => {
-  if (!isOpen) return;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-[calc(100vh-1rem)] max-h-full overflow-y-auto overflow-x-hidden bg-black/20 bg-opacity-50 backdrop-blur-[1px]">
-      <div className="relative w-full max-w-2xl max-h-full">
-        {/* Modal Content */}
-        <div className="relative bg-white rounded-lg shadow-sm">
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-transparent bg-opacity-60 backdrop-blur-sm"
+        onClick={onClose}
+      ></div>
+      {/* Centered modal */}
+      <div
+        className="fixed z-50 inset-0 flex items-center justify-center p-2 sm:p-0"
+        style={{ pointerEvents: "none" }}
+      >
+        <div
+          className="
+            bg-gray-900 rounded-xl shadow-lg w-full max-w-md sm:max-w-lg
+            mx-2
+            overflow-y-auto max-h-[90vh]
+            border border-gray-700
+          "
+          style={{ pointerEvents: "auto" }}
+        >
           {/* Modal Header */}
-          <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t  border-gray-900">
-            <h3 className="text-lg font-medium text-gray-900 ">{title}</h3>
-            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" onClick={onClose}>
-             <LuX className="size-[50px]" />
+          <div className="flex items-center justify-between p-4 border-b border-gray-800 rounded-t">
+            <h3 className="text-lg font-medium text-gray-100">{title}</h3>
+            <button
+              type="button"
+              className="text-gray-100 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
+              onClick={onClose}
+            >
+              <LuX className="text-2xl" />
             </button>
           </div>
-
           {/* Modal Body */}
-          <div className="p-4 md:p-5 space-y-4">{children}</div>
+          <div className="p-4 space-y-4">{children}</div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

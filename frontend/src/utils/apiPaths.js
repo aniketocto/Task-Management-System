@@ -13,9 +13,10 @@ export const API_PATHS = {
     GET_ALL_USERS: "/api/users", //get all user
     GET_USER_BY_ID: (userId) => `/api/users/${userId}`, //get user by id
     CREATE_USER: "/api/users", // create a new user admin only
-    UPDATE_USER_BY_ID: (userId) => `/api/users/${userId}`, // update user by id admin only
-    DELETE_USER_BY_ID: (userId) => `/api/users/${userId}`, // delete user by id admin only
+    UPDATE_USER_BY_ID: (userId) => `/api/users/${userId}`,
+    DELETE_USER_BY_ID: (userId) => `/api/users/${userId}`, // delete user by id Superadmin only
     GET_DEPARTMENT: "/api/users/department",
+    TRANSFER_TASKS: (userId) => `/api/users/${userId}/transfer-tasks`,
   },
   COMPANY: {
     GET_COMPANY: "/api/company",
@@ -28,7 +29,7 @@ export const API_PATHS = {
     GET_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // get task by id
     CREATE_TASK: "/api/tasks/create-task", // create a new task admin only
     UPDATE_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // update task by id admin only
-    DELETE_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // delete task by id admin only
+    DELETE_TASK_BY_ID: (taskId) => `/api/tasks/${taskId}`, // delete task by id SuperAdmin only
 
     UPDATE_TASK_STATUS: (taskId) => `/api/tasks/${taskId}/status`, // update task status
     UPDATE_TASK_CHECKLIST: (taskId) => `/api/tasks/${taskId}/todo`, // update task checklist

@@ -41,6 +41,7 @@ const CreateTask = () => {
     dueDate: null,
     dueDateStatus: "",
     pendingDueDate: null,
+    reason: "",
     assignedTo: [],
     todoChecklist: [],
     attachments: [],
@@ -48,6 +49,7 @@ const CreateTask = () => {
     serialNumber: null,
     taskCategory: "",
     objective: "",
+    creativeSizes: "",
     targetAudience: "",
     usps: "",
     competetors: "",
@@ -77,11 +79,13 @@ const CreateTask = () => {
       dueDate: null,
       dueDateStatus: "",
       pendingDueDate: null,
+      reason: "",
       assignedTo: [],
       todoChecklist: [],
       attachments: [],
       taskCategory: "",
       objective: "",
+      creativeSizes: "",
       targetAudience: "",
       usps: "",
       competetors: "",
@@ -165,8 +169,8 @@ const CreateTask = () => {
 
       if (response.status === 200) {
         toast.success("Task updating successfully");
-        clearData();
-        navigate("/admin/tasks");
+        // clearData();
+        // navigate("/admin/tasks");
       }
     } catch (error) {
       toast.error("Error updating task. Task not updated");
@@ -233,6 +237,7 @@ const CreateTask = () => {
             : null,
           dueDateStatus: taskInfo.dueDateStatus,
           pendingDueDate: taskInfo.pendingDueDate,
+          reason: taskInfo.reason,
           // assignedTo: taskInfo.assignedTo?.map((user) => user?._id) || [],
           assignedTo: taskInfo.assignedTo || [], // ✅ full objects
           todoChecklist: taskInfo.todoChecklist || [],
@@ -241,6 +246,7 @@ const CreateTask = () => {
           serialNumber: taskInfo.serialNumber,
           taskCategory: taskInfo.taskCategory,
           objective: taskInfo.objective,
+          creativeSizes: taskInfo.creativeSizes,
           targetAudience: taskInfo.targetAudience,
           usps: taskInfo.usps,
           competetors: taskInfo.competetors,
@@ -375,7 +381,7 @@ const CreateTask = () => {
   return (
     <DashboardLayout activeMenu="Create Task">
       <div className="mt-5">
-        <div className="grid grid-cols-1 md:grid-cols-4 mt-4">
+        <div className="grid grid-cols-1  mt-4">
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <div>
@@ -470,6 +476,20 @@ const CreateTask = () => {
               </div>
             ) : (
               <>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-200">
+                    Creative Sizes
+                  </label>
+                  <textarea
+                    placeholder="Creative Sizes"
+                    className="form-input"
+                    rows={1}
+                    value={taskData.creativeSizes}
+                    onChange={({ target }) => {
+                      handleValueChange("creativeSizes", target.value);
+                    }}
+                  />
+                </div>
                 <div className="mt-4">
                   <label className="text-xs font-medium text-slate-200">
                     Objective / Goal
@@ -617,26 +637,29 @@ const CreateTask = () => {
 
             {user?.role === "superAdmin" &&
               taskData.dueDateStatus === "pending" && (
-                <div className="mt-4 flex items-center space-x-4">
-                  <span className="text-yellow-400 text-sm">
-                    Deadline shift to:{" "}
-                    {moment(taskData.pendingDueDate).format("YYYY-MM-DD")}
-                  </span>
-                  <button
-                    onClick={() => handleReview(true)}
-                    disabled={loading}
-                    className="cursor-pointer px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReview(false)}
-                    disabled={loading}
-                    className="cursor-pointer px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-                  >
-                    Reject
-                  </button>
-                </div>
+                <>
+                  <div className="mt-4 flex items-center space-x-4">
+                    <span className="text-yellow-400 text-sm">
+                      Deadline shift to:{" "}
+                      {moment(taskData.pendingDueDate).format("YYYY-MM-DD")}
+                    </span>
+                    <button
+                      onClick={() => handleReview(true)}
+                      disabled={loading}
+                      className="cursor-pointer px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleReview(false)}
+                      disabled={loading}
+                      className="cursor-pointer px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                  <p>{taskData.rea}</p>
+                </>
               )}
 
             {/* Checklist */}
