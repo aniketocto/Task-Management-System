@@ -127,20 +127,22 @@ const getLeadDashboardData = async (req, res) => {
   try {
     // Fetch Statistic
     const totalLeads = await Leads.countDocuments();
+    const newLeads = await Leads.countDocuments({ status: "new" });
     const followUpLeads = await Leads.countDocuments({ status: "followUp" });
     const deadLeads = await Leads.countDocuments({ status: "dead" });
     const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
-    const argumentLeads = await Leads.countDocuments({ status: "argument" });
+    const agreementLeads = await Leads.countDocuments({ status: "agreement" });
     const pitchLeads = await Leads.countDocuments({ status: "pitch" });
     const negotiationLeads = await Leads.countDocuments({
       status: "negotiation",
     });
 
     const leadStatuses = [
+      "new",
       "followUp",
       "dead",
       "onboarded",
-      "argument",
+      "agreement",
       "pitch",
       "negotiation",
     ];
@@ -161,27 +163,49 @@ const getLeadDashboardData = async (req, res) => {
       return acc;
     }, {});
 
-    const recentLeads = await Leads.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select(
-        "companyName status type credentialDeckDate discoveryCallDate pitchDate attachments"
-      );
+    const leadCategories = [
+      "realEstate",
+      "hospitality",
+      "bsfi",
+      "fmcg",
+      "healthcare",
+      "wellness",
+      "fnb",
+      "agency",
+      "fashion",
+      "other",
+    ];
+
+    const categoryDistributionRaw = await Leads.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const categoryDistribution = leadCategories.reduce((acc, cat) => {
+      acc[cat] =
+        categoryDistributionRaw.find((item) => item._id === cat)?.count || 0;
+      return acc;
+    }, {});
 
     res.json({
       statistic: {
         totalLeads,
+        newLeads,
         followUpLeads,
         deadLeads,
         onboardedLeads,
-        argumentLeads,
+        agreementLeads,
         pitchLeads,
         negotiationLeads,
       },
       charts: {
         leadDistribution,
+        categoryDistribution,
       },
-      recentLeads,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

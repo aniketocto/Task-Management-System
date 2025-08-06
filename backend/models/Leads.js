@@ -93,7 +93,7 @@ const leadSchema = new mongoose.Schema(
         "dead",
         "onboarded",
         "negotiation",
-        "argument",
+        "agreement",
         "pitch",
       ],
       default: "new",

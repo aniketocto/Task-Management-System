@@ -15,18 +15,20 @@ const CustomBarChart = ({ data, dataKey, valueKey = "count" }) => {
 
     if (dataKey === "status") {
       switch (keyVal) {
+        case "new":
+          return "#FF6900"; // orange
         case "followUp":
-          return "#FBBF24"; // amber
+          return "#f0b100"; // yellow
         case "dead":
-          return "#EF4444"; // red
+          return "#FB2C36"; // red
         case "onboarded":
-          return "#10B981"; // green
-        case "argument":
-          return "#3B82F6"; // blue
+          return "#00c950"; // green
+        case "agreement":
+          return "#2b7fff"; // blue
         case "pitch":
           return "#8B5CF6"; // purple
         case "negotiation":
-          return "#8B5CF6"; // purple
+          return "#615fff"; // purple
         default:
           return "#8884d8"; // fallback gray
       }
@@ -75,14 +77,21 @@ const CustomBarChart = ({ data, dataKey, valueKey = "count" }) => {
           <CartesianGrid stroke="none" />
           <XAxis
             dataKey={dataKey}
-            tick={{ fontSize: 12, fill: "#fff" }}
+            tick={{
+              fontSize: 12,
+              fill: "#fff",
+              textAnchor: "middle",
+            }}
             stroke="#fff"
           />
           {/* <YAxis
             tick={{ fontSize: 12, fill: "#fff" }}
             stroke="#fff"
           /> */}
-          <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: "transparent" }}
+          />
 
           <Bar
             dataKey={valueKey}
