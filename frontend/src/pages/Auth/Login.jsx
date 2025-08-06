@@ -10,7 +10,9 @@ import { UserContext } from "../../context/userContext";
 import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
+  // eslint-disable-next-line
   const [email, setEmail] = useState("");
+  // eslint-disable-next-line
   const [password, setPassword] = useState("");
   // eslint-disable-next-line
   const [error, setError] = useState([]);
