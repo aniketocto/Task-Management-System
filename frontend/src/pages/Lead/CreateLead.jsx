@@ -64,6 +64,7 @@ const CreateLead = () => {
   });
 
   const [currentLead, setCurrentLead] = useState(null);
+  // eslint-disable-next-line
   const [error, setError] = useState([]);
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [newRequestedDate, setNewRequestedDate] = useState("");
