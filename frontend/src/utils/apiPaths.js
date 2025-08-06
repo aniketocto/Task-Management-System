@@ -63,6 +63,7 @@ export const API_PATHS = {
     UPDATE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     DELETE_LEAD_BY_ID: (leadId) => `/api/leads/${leadId}`,
     GET_DASHBOARD_DATA: "/api/leads/dashboard-data",
+    GET_MEETINGS: "/api/leads/upcoming-meetings",
   },
   APPROVAL: {
     TASK_APPROVAL: (taskId) => `/api/tasks/${taskId}/approve`,

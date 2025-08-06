@@ -27,6 +27,8 @@ import CustomBarChart from "../../components/Charts/CustomBarChart";
 import { infoCard, officeQuotes } from "../../utils/data";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { io } from "socket.io-client";
+import { userSOPs } from "../../utils/userSOPs";
+import DailySOP from "components/Inputs/DailySOP";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: {
@@ -69,6 +71,9 @@ const Dashboard = () => {
   const [filterEndDate, setFilterEndDate] = useState("");
 
   const dailyQuote = useMemo(() => getDailyQuote(), []);
+
+  const userEmail = user.email;
+  const sops = userSOPs[userEmail] || [];
 
   // debounce ref
   const debounceTimeout = useRef();
@@ -230,6 +235,7 @@ const Dashboard = () => {
   // }, [availableMonths, filterMonth, filterTimeframe]);
 
   // Filter chart data (do not spam network)
+
   useEffect(() => {
     if (!dashboardData) return;
     const chartsToUse = findChartsOrFallback({
@@ -464,6 +470,8 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      <DailySOP sops={sops} email={userEmail} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">

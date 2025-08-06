@@ -125,8 +125,6 @@ const SideMenu = ({ activeMenu }) => {
     // eslint-disable-next-line
   }, [activeMenu]);
 
-  console.log(user)
-
   return (
     <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
       <div className="flex flex-col items-center justify-center mb-7 pt-5">

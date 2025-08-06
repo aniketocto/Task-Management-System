@@ -28,6 +28,27 @@ const createLead = async (req, res) => {
       followUp,
     } = req.body;
 
+    let safeFollowUp = {};
+    if (followUp) {
+      for (let i = 1; i <= 5; i++) {
+        const key = `attempt${i}`;
+        const val = followUp[key];
+        if (typeof val === "object" && val !== null) {
+          safeFollowUp[key] = {
+            done: !!val.done,
+            remark: val.remark || "",
+          };
+        } else if (typeof val === "boolean") {
+          safeFollowUp[key] = {
+            done: val,
+            remark: "",
+          };
+        } else {
+          safeFollowUp[key] = { done: false, remark: "" };
+        }
+      }
+    }
+
     const lead = await Leads.create({
       cName,
       email,
@@ -48,7 +69,7 @@ const createLead = async (req, res) => {
       pitchDate,
       attachments,
       remark,
-      followUp,
+      followUp: safeFollowUp,
       createdBy: req.user._id,
     });
 
@@ -127,20 +148,22 @@ const getLeadDashboardData = async (req, res) => {
   try {
     // Fetch Statistic
     const totalLeads = await Leads.countDocuments();
+    const newLeads = await Leads.countDocuments({ status: "new" });
     const followUpLeads = await Leads.countDocuments({ status: "followUp" });
     const deadLeads = await Leads.countDocuments({ status: "dead" });
     const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
-    const argumentLeads = await Leads.countDocuments({ status: "argument" });
+    const agreementLeads = await Leads.countDocuments({ status: "agreement" });
     const pitchLeads = await Leads.countDocuments({ status: "pitch" });
     const negotiationLeads = await Leads.countDocuments({
       status: "negotiation",
     });
 
     const leadStatuses = [
+      "new",
       "followUp",
       "dead",
       "onboarded",
-      "argument",
+      "agreement",
       "pitch",
       "negotiation",
     ];
@@ -161,27 +184,49 @@ const getLeadDashboardData = async (req, res) => {
       return acc;
     }, {});
 
-    const recentLeads = await Leads.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select(
-        "companyName status type credentialDeckDate discoveryCallDate pitchDate attachments"
-      );
+    const leadCategories = [
+      "realEstate",
+      "hospitality",
+      "bsfi",
+      "fmcg",
+      "healthcare",
+      "wellness",
+      "fnb",
+      "agency",
+      "fashion",
+      "other",
+    ];
+
+    const categoryDistributionRaw = await Leads.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const categoryDistribution = leadCategories.reduce((acc, cat) => {
+      acc[cat] =
+        categoryDistributionRaw.find((item) => item._id === cat)?.count || 0;
+      return acc;
+    }, {});
 
     res.json({
       statistic: {
         totalLeads,
+        newLeads,
         followUpLeads,
         deadLeads,
         onboardedLeads,
-        argumentLeads,
+        agreementLeads,
         pitchLeads,
         negotiationLeads,
       },
       charts: {
         leadDistribution,
+        categoryDistribution,
       },
-      recentLeads,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -223,29 +268,6 @@ const updateLead = async (req, res) => {
               reason: globalReason,
             });
 
-            // Notify all superadmins
-            const superAdmins = await User.find({ role: "superAdmin" });
-            const notifications = await Promise.all(
-              superAdmins.map((sa) =>
-                Notification.create({
-                  user: sa._id,
-                  message: `${name} requested to change ${field} for lead "${
-                    lead.cName
-                  }" from ${
-                    prevDate ? prevDate.toLocaleDateString() : "N/A"
-                  } to ${newDate.toLocaleDateString()}.`,
-                  leadId: lead._id,
-                  type: "info",
-                })
-              )
-            );
-            const io = req.app.get("io");
-            notifications.forEach((notification) => {
-              io.to(notification.user.toString()).emit(
-                "new-notification",
-                notification
-              );
-            });
             requestsMade.push(field);
           } else {
             updateFields[field] = newDate;
@@ -280,7 +302,34 @@ const updateLead = async (req, res) => {
         updateFields[field] = req.body[field];
       }
     }
-    if (req.body.followUp) updateFields.followUp = req.body.followUp;
+    if (req.body.followUp) {
+      // Ensure each attempt is always an object {done, remark}
+      const newFollowUp = {};
+      for (let i = 1; i <= 5; i++) {
+        const key = `attempt${i}`;
+        const val = req.body.followUp[key];
+        if (typeof val === "object" && val !== null) {
+          // Already in desired shape
+          newFollowUp[key] = {
+            done: !!val.done,
+            remark: val.remark || "",
+          };
+        } else if (typeof val === "boolean") {
+          // Legacy or quick toggle: just a boolean
+          newFollowUp[key] = {
+            done: val,
+            remark: "",
+          };
+        } else {
+          // Not provided, fallback (preserves previous value)
+          newFollowUp[key] =
+            lead.followUp && lead.followUp[key]
+              ? lead.followUp[key]
+              : { done: false, remark: "" };
+        }
+      }
+      updateFields.followUp = newFollowUp;
+    }
 
     Object.assign(lead, updateFields);
     await lead.save();
@@ -330,6 +379,99 @@ const decideDateChangeRequest = async (req, res) => {
   }
 };
 
+const getUpcomingMeetings = async (req, res) => {
+  try {
+    const today = new Date();
+    const next7 = new Date();
+    next7.setDate(next7.getDate() + 7);
+
+    const { companyName } = req.query;
+    const matchCompany = companyName ? { companyName } : {};
+
+    const leads = await Leads.find({
+      ...matchCompany,
+      $or: [
+        {
+          credentialDeckDate: {
+            $gte: today,
+            $lt: next7,
+          },
+        },
+        {
+          discoveryCallDate: {
+            $gte: today,
+            $lt: next7,
+          },
+        },
+        {
+          pitchDate: {
+            $gte: today,
+            $lt: next7,
+          },
+        },
+      ],
+    })
+      .select(
+        "companyName credentialDeckDate discoveryCallDate pitchDate status services category"
+      )
+      .lean();
+
+    const meetings = [];
+    leads.forEach((lead) => {
+      if (
+        lead.credentialDeckDate &&
+        new Date(lead.credentialDeckDate) >= today &&
+        new Date(lead.credentialDeckDate) <= next7
+      ) {
+        meetings.push({
+          type: "Credential Deck",
+          date: lead.credentialDeckDate,
+          companyName: lead.companyName,
+          cName: lead.cName,
+          status: lead.status,
+          services: lead.services,
+          category: lead.category,
+        });
+      }
+      if (
+        lead.discoveryCallDate &&
+        new Date(lead.discoveryCallDate) >= today &&
+        new Date(lead.discoveryCallDate) <= next7
+      ) {
+        meetings.push({
+          type: "Discovery Call",
+          date: lead.discoveryCallDate,
+          companyName: lead.companyName,
+          cName: lead.cName,
+          status: lead.status,
+          services: lead.services,
+          category: lead.category,
+        });
+      }
+      if (
+        lead.pitchDate &&
+        new Date(lead.pitchDate) >= today &&
+        new Date(lead.pitchDate) <= next7
+      ) {
+        meetings.push({
+          type: "Pitch",
+          date: lead.pitchDate,
+          companyName: lead.companyName,
+          cName: lead.cName,
+          status: lead.status,
+          services: lead.services,
+          category: lead.category,
+        });
+      }
+    });
+    meetings.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json({meetings});
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createLead,
   updateLead,
@@ -338,4 +480,5 @@ module.exports = {
   deleteLead,
   getLeadDashboardData,
   decideDateChangeRequest,
+  getUpcomingMeetings
 };

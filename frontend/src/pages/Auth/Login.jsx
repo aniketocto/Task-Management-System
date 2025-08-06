@@ -1,4 +1,4 @@
-import { use, useContext, useEffect, useState } from "react";
+import {  useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
@@ -10,8 +10,11 @@ import { UserContext } from "../../context/userContext";
 import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
+  // eslint-disable-next-line
   const [email, setEmail] = useState("");
+  // eslint-disable-next-line
   const [password, setPassword] = useState("");
+  // eslint-disable-next-line
   const [error, setError] = useState([]);
 
   const navigate = useNavigate();
@@ -113,7 +116,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin} className="mt-8">
-            {/* <Input
+          {/* <Input
             value={email}
             onChange={({ target }) => setEmail(target.value)}
             label="Email Address"
@@ -139,7 +142,7 @@ const Login = () => {
             onSuccess={handleGoogleSuccess}
             onError={() => console.log("Google login failed")}
           />
-           {/* <button
+          {/* <button
             type="submit"
             className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >

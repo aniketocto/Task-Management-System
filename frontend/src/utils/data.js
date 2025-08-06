@@ -209,6 +209,14 @@ export const MENU_DATA = [
     label: "Leads",
     children: [
       {
+        label: "Lead Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/leads",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "BusinessDevelopment"),
+      },
+      {
         label: "Manage Lead",
         icon: LuClipboardCheck,
         path: "/manage-lead",
@@ -319,17 +327,18 @@ export const infoCard = [
 ];
 
 export const leadStats = [
-  { label: "Onboarded Leads", key: "onboardedLeads", color: "bg-green-500" },
-  { label: "Follow-Up Leads", key: "followUpLeads", color: "bg-yellow-500" },
-  { label: "Argument Leads", key: "argumentLeads", color: "bg-blue-500" },
-  { label: "Pitch Leads", key: "pitchLeads", color: "bg-purple-500" },
+  { label: "Onboarded ", key: "onboardedLeads", color: "bg-green-500" },
+  { label: "Follow-Up ", key: "followUpLeads", color: "bg-yellow-500" },
+  { label: "New ", key: "newLeads", color: "bg-orange-500" },
+  { label: "Agreement ", key: "agreementLeads", color: "bg-blue-500" },
+  { label: "Pitch", key: "pitchLeads", color: "bg-purple-500" },
   {
-    label: "Negotiation Leads",
+    label: "Negotiation ",
     key: "negotiationLeads",
     color: "bg-indigo-500",
   },
-  { label: "Dead Leads", key: "deadLeads", color: "bg-red-500" },
-  { label: "Total Leads", key: "totalLeads", color: "bg-indigo-500" },
+  { label: "Dead ", key: "deadLeads", color: "bg-red-500" },
+  { label: "Total ", key: "totalLeads", color: "bg-white" },
 ];
 
 export const officeQuotes = {
@@ -441,7 +450,7 @@ export const OPPO_STATUS = [
   { value: "dead", label: "Dead" },
   { value: "onboarded", label: "Onboarded" },
   { value: "negotiation", label: "Negotiation" },
-  { value: "argument", label: "Argument" },
+  { value: "agreement", label: "Agreement" },
   { value: "pitch", label: "Pitch" },
 ];
 
