@@ -6,6 +6,7 @@ import {
 } from "react-icons/lu";
 
 import { RiTeamLine } from "react-icons/ri";
+import { CiCalendarDate } from "react-icons/ci";
 
 // export const SIDE_MENU_ADMIN_DATA = [
 //   {
@@ -246,12 +247,12 @@ export const MENU_DATA = [
   {
     label: "Account",
     children: [
-      // {
-      //   label: "Attendance",
-      //   icon: LuLogOut,
-      //   path: "/user/attendance",
-      //   access: () => true, // Everyone sees logout
-      // },
+      {
+        label: "Attendance",
+        icon: CiCalendarDate,
+        path: "/user/attendance",
+        access: () => true, // Everyone sees logout
+      },
       {
         label: "Logout",
         icon: LuLogOut,
@@ -463,7 +464,7 @@ export const OPPO_STATUS = [
 ];
 
 export const OPPO_TYPE = [
-  { value: "realEstate", label: "Retainer" },
+  { value: "retainer", label: "Retainer" },
   { value: "project", label: "Project" },
 ];
 
@@ -502,7 +503,7 @@ export const LEAD_SERVICE = [
 export const LEAD_SOURCE = [
   { value: "website", label: "Website" },
   { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
-  { value: "outboundWhatsApp", label: "Outbound Whatsapp" },
+  { value: "whatsAppReTarget", label: "Whatsapp Retarget" },
   { value: "inboundCall", label: "Inbound Call" },
   { value: "outboundCall", label: "Outbound Call" },
   { value: "inboundEmail", label: "Inbound Email" },

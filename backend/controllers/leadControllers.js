@@ -243,7 +243,6 @@ const updateLead = async (req, res) => {
     if (!lead) return res.status(404).json({ message: "Lead not found" });
 
     const dateFields = [
-      "leadCameDate",
       "credentialDeckDate",
       "discoveryCallDate",
       "pitchDate",
