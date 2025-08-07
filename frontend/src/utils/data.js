@@ -246,6 +246,12 @@ export const MENU_DATA = [
   {
     label: "Account",
     children: [
+      // {
+      //   label: "Attendance",
+      //   icon: LuLogOut,
+      //   path: "/user/attendance",
+      //   access: () => true, // Everyone sees logout
+      // },
       {
         label: "Logout",
         icon: LuLogOut,
