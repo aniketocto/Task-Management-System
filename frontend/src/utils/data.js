@@ -476,7 +476,7 @@ export const LEAD_TYPE = [
   { value: "fnb", label: "F&B" },
   { value: "agency", label: "Agency" },
   { value: "fashion", label: "Fashion" },
-  { value: "others", label: "Others" },
+  { value: "other", label: "Others" },
 ];
 
 export const LEAD_SERVICE = [
