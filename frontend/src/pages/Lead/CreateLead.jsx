@@ -614,11 +614,11 @@ const CreateLead = () => {
                   Lead Date
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.leadCameDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.leadCameDate
+                  // }
                   type="date"
                   className="form-input-date"
                   value={leadData.leadCameDate?.split("T")[0] ?? ""}
@@ -634,11 +634,11 @@ const CreateLead = () => {
                   Credential Deck Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.credentialDeckDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.credentialDeckDate
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -649,8 +649,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("credentialDeckDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 2)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 2)}
                 />
                 {user.role !== "superAdmin" && (
                   <button
@@ -674,11 +674,11 @@ const CreateLead = () => {
                   Discovery Call Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.discoveryCallDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.discoveryCallDate
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -689,8 +689,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("discoveryCallDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 4)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 4)}
                 />
                 {user.role !== "superAdmin" && (
                   <button
@@ -714,11 +714,11 @@ const CreateLead = () => {
                   Pitch Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    new Date(leadData.pitchDate).getTime() < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   new Date(leadData.pitchDate).getTime() < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -727,8 +727,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("pitchDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 6)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 6)}
                 />
                 {user.role !== "superAdmin" && (
                   <button
