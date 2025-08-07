@@ -95,6 +95,7 @@ const leadSchema = new mongoose.Schema(
         "negotiation",
         "agreement",
         "pitch",
+        "legal",
       ],
       default: "new",
       required: true,

@@ -338,6 +338,7 @@ export const leadStats = [
     color: "bg-indigo-500",
   },
   { label: "Dead ", key: "deadLeads", color: "bg-red-500" },
+  { label: "Legal ", key: "legalLeads", color: "bg-gray-500" },
   { label: "Total ", key: "totalLeads", color: "bg-white" },
 ];
 
@@ -452,6 +453,7 @@ export const OPPO_STATUS = [
   { value: "negotiation", label: "Negotiation" },
   { value: "agreement", label: "Agreement" },
   { value: "pitch", label: "Pitch" },
+  { value: "legal", label: "Legal" },
 ];
 
 export const OPPO_TYPE = [
