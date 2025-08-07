@@ -13,7 +13,7 @@ const Modal = ({ children, isOpen, onClose, title }) => {
       ></div>
       {/* Centered modal */}
       <div
-        className="fixed z-50 inset-0 flex items-center justify-center p-2 sm:p-0"
+        className="fixed z-50 h-dvh inset-0 flex items-center justify-center p-2 sm:p-0"
         style={{ pointerEvents: "none" }}
       >
         <div

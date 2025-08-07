@@ -152,6 +152,7 @@ const getLeadDashboardData = async (req, res) => {
     const followUpLeads = await Leads.countDocuments({ status: "followUp" });
     const deadLeads = await Leads.countDocuments({ status: "dead" });
     const onboardedLeads = await Leads.countDocuments({ status: "onboarded" });
+    const legalLeads = await Leads.countDocuments({ status: "legal" });
     const agreementLeads = await Leads.countDocuments({ status: "agreement" });
     const pitchLeads = await Leads.countDocuments({ status: "pitch" });
     const negotiationLeads = await Leads.countDocuments({
@@ -163,6 +164,7 @@ const getLeadDashboardData = async (req, res) => {
       "followUp",
       "dead",
       "onboarded",
+      "legal",
       "agreement",
       "pitch",
       "negotiation",
@@ -219,6 +221,7 @@ const getLeadDashboardData = async (req, res) => {
         followUpLeads,
         deadLeads,
         onboardedLeads,
+        legalLeads,
         agreementLeads,
         pitchLeads,
         negotiationLeads,

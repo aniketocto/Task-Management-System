@@ -126,6 +126,7 @@ const SideMenu = ({ activeMenu }) => {
   }, [activeMenu]);
 
   return (
+   <>
     <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="relative">
@@ -201,6 +202,9 @@ const SideMenu = ({ activeMenu }) => {
         </div>
       ))}
 
+      {loading && <SpinLoader />}
+    </div>
+    
       <Modal
         isOpen={openLogoutModal}
         onClose={() => setOpenLogoutModal(false)}
@@ -241,8 +245,7 @@ const SideMenu = ({ activeMenu }) => {
           Upload & Save
         </button>
       </Modal>
-      {loading && <SpinLoader />}
-    </div>
+   </>
   );
 };
 

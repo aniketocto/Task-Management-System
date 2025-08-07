@@ -246,6 +246,12 @@ export const MENU_DATA = [
   {
     label: "Account",
     children: [
+      // {
+      //   label: "Attendance",
+      //   icon: LuLogOut,
+      //   path: "/user/attendance",
+      //   access: () => true, // Everyone sees logout
+      // },
       {
         label: "Logout",
         icon: LuLogOut,
@@ -338,6 +344,7 @@ export const leadStats = [
     color: "bg-indigo-500",
   },
   { label: "Dead ", key: "deadLeads", color: "bg-red-500" },
+  { label: "Legal ", key: "legalLeads", color: "bg-gray-500" },
   { label: "Total ", key: "totalLeads", color: "bg-white" },
 ];
 
@@ -452,6 +459,7 @@ export const OPPO_STATUS = [
   { value: "negotiation", label: "Negotiation" },
   { value: "agreement", label: "Agreement" },
   { value: "pitch", label: "Pitch" },
+  { value: "legal", label: "Legal" },
 ];
 
 export const OPPO_TYPE = [
@@ -468,7 +476,7 @@ export const LEAD_TYPE = [
   { value: "fnb", label: "F&B" },
   { value: "agency", label: "Agency" },
   { value: "fashion", label: "Fashion" },
-  { value: "others", label: "Others" },
+  { value: "other", label: "Others" },
 ];
 
 export const LEAD_SERVICE = [

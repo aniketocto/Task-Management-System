@@ -338,12 +338,12 @@ const ManageTasksTable = ({
                   {task.priority}
                 </span>
               </td>
-              <td className="px-4 py-2 text-white text-[13px] hidden md:table-cell">
+              <td className="px-4 py-2 text-white text-[13px] table-cell">
                 {task.createdAt
                   ? moment(task.createdAt).format("Do MMM YYYY")
                   : "N/A"}
               </td>
-              <td className="px-4 py-2 text-white text-[13px] hidden md:table-cell">
+              <td className="px-4 py-2 text-white text-[13px] table-cell">
                 {task.dueDate
                   ? moment(task.dueDate).format("Do MMM YYYY")
                   : "N/A"}

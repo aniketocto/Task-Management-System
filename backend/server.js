@@ -5,7 +5,11 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
-const { backfillTaskApprovals, backfillPitchAndPresentation, migrateApprovalToLogs } = require("./config/helper");
+const {
+  backfillTaskApprovals,
+  backfillPitchAndPresentation,
+  migrateApprovalToLogs,
+} = require("./config/helper");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -14,6 +18,7 @@ const notifyRoutes = require("./routes/notifyRoutes");
 const leadRoutes = require("./routes/leadRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const companyRoutes = require("./routes/companyRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +49,7 @@ app.use("/api/notify", notifyRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Static Server upload folder
 const path = require("path");
