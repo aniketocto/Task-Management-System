@@ -4,7 +4,6 @@ const dateChangeRequestSchema = new mongoose.Schema({
   field: {
     type: String,
     enum: [
-      "leadCameDate",
       "credentialDeckDate",
       "discoveryCallDate",
       "pitchDate",
@@ -68,6 +67,8 @@ const leadSchema = new mongoose.Schema(
         "inboundWhatsApp",
         "whatsAppReTarget",
         "inboundEmail",
+        "inboundCall",
+        "outboundCall",
         "outboundEmail",
         "metaAds",
         "googleAds",

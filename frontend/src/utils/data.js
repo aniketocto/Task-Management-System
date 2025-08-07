@@ -463,7 +463,7 @@ export const OPPO_STATUS = [
 ];
 
 export const OPPO_TYPE = [
-  { value: "realEstate", label: "Retainer" },
+  { value: "retainer", label: "Retainer" },
   { value: "project", label: "Project" },
 ];
 
@@ -502,7 +502,7 @@ export const LEAD_SERVICE = [
 export const LEAD_SOURCE = [
   { value: "website", label: "Website" },
   { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
-  { value: "outboundWhatsApp", label: "Outbound Whatsapp" },
+  { value: "whatsAppReTarget", label: "Whatsapp Retarget" },
   { value: "inboundCall", label: "Inbound Call" },
   { value: "outboundCall", label: "Outbound Call" },
   { value: "inboundEmail", label: "Inbound Email" },

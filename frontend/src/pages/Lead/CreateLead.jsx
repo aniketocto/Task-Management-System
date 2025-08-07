@@ -246,22 +246,28 @@ const CreateLead = () => {
   };
 
   const handleDateRequestSubmit = async () => {
-    setLoading(true);
-    try {
-      await axiosInstance.put(API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId), {
-        [dateRequestModal.field]: newRequestedDate,
-        changeReason, // backend may or may not use this
-      });
-      toast.success("Date change request sent for approval.");
-      closeDateRequestModal();
-      getLead(); // reload data
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to send request.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (newRequestedDate === dateRequestModal.oldDate) {
+    toast.error("New date must be different from the current date.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await axiosInstance.put(API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId), {
+      [dateRequestModal.field]: newRequestedDate,
+      changeReason,
+    });
+    toast.success("Date change request sent for approval.");
+    closeDateRequestModal();
+    getLead();
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to send request.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleDateDecision = async (requestId, decision) => {
     setLoading(true);
