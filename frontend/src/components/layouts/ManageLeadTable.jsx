@@ -68,7 +68,7 @@ const ManageLeadTable = () => {
   };
 
   useEffect(() => {
-    fetchLeads();
+    fetchLeads(page);
   }, [page]);
 
   const handleNavigate = (leadId) => {
@@ -106,7 +106,9 @@ const ManageLeadTable = () => {
       case "agreement":
         return "bg-[#2b7fff] border border-blue-500";
       case "pitch":
-        return "bg-[#8B5CF6] border border-purple-500";
+        return "bg-[#8B5CF6] border border-purple-500"; 
+      case "legal":
+        return "bg-[#000] border border-black"; 
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }

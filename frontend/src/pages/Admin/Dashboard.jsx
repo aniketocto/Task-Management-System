@@ -303,7 +303,7 @@ const Dashboard = () => {
       {loading && <SpinLoader />}
       <div className="card my-5">
         <div>
-          <div className="flex items-center justify-between">
+          <div className="flex lg:items-center justify-between flex-col lg:flex-row gap-5 lg:gap-0">
             <div>
               <h2 className="text-xl md:text-2xl">
                 {getGreeting()}! {user?.name}
@@ -315,7 +315,7 @@ const Dashboard = () => {
                 {dailyQuote}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Month filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">
@@ -458,7 +458,7 @@ const Dashboard = () => {
           </div>
         </div>
         {/* Info cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4 mt-5">
           {infoCard.map(({ label, key, color, description }) => (
             <InfoCard
               key={key}

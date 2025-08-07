@@ -53,7 +53,7 @@ const AddAttachmentInputs = ({ attachments = [], setAttachments }) => {
         </div>
       ))}
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-1 md:gap-5">
         <div className="flex-1 flex items-center gap-3 bg-gray-50  border border-gray-100 rounded-md px-3">
           <LuPaperclip className="text-gray-400" />
 

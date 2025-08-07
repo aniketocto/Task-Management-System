@@ -105,7 +105,7 @@ const TodoListInput = ({
       {todoList.map((item, index) => (
         <div
           key={item._id || index}
-          className={`flex justify-between items-center gap-2 border px-3 py-2 rounded-md mb-3 mt-2
+          className={`flex flex-wrap justify-between items-center gap-2 border px-3 py-2 rounded-md mb-3 mt-2
             ${
               item.completed
                 ? "bg-green-100 border-green-100"
@@ -287,7 +287,7 @@ const TodoListInput = ({
         </div>
       ))}
 
-      <div className="flex items-center gap-5 ">
+      <div className="flex items-center gap-1 md:gap-5 ">
         <input
           type="text"
           placeholder="Enter Task"

@@ -126,80 +126,90 @@ const SideMenu = ({ activeMenu }) => {
   }, [activeMenu]);
 
   return (
-    <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
-      <div className="flex flex-col items-center justify-center mb-7 pt-5">
-        <div className="relative">
-          <img
-            src={user?.profileImageUrl || profileImg }
-            alt="profile"
-            className="w-20 h-20 border border-gray-500/40 rounded-full object-contain"
-          />
-          <button
-            className="absolute bottom-0 right-0 w-6 h-6 bg-[#E43941] rounded-full flex items-center justify-center text-white text-xs"
-            onClick={() => {
-              setSelectedFile(user?.profileImageUrl || "");
-              setName(user?.name || "");
-              setDesignation(user?.designation || "");
-              setOpenImageModal(true);
-            }}
-          >
-            <LuUpload />
-          </button>
+    <>
+      <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40  z-20">
+        <div className="flex flex-col items-center justify-center mb-7 pt-5">
+          <div className="relative">
+            <img
+              src={user?.profileImageUrl || profileImg}
+              alt="profile"
+              className="w-20 h-20 border border-gray-500/40 rounded-full object-contain"
+            />
+            <button
+              className="absolute bottom-0 right-0 w-6 h-6 bg-[#E43941] rounded-full flex items-center justify-center text-white text-xs"
+              onClick={() => {
+                setSelectedFile(user?.profileImageUrl || "");
+                setName(user?.name || "");
+                setDesignation(user?.designation || "");
+                setOpenImageModal(true);
+              }}
+            >
+              <LuUpload />
+            </button>
+          </div>
+
+          {(user?.role === "admin" || user?.role === "superAdmin") && (
+            <div className="text-[10px] font-medium text-white bg-[#E43941] px-3 py-0.5 rounded mt-1">
+              {user.role === "admin" ? "Admin" : "SuperAdmin"}
+            </div>
+          )}
+
+          <p className="text-white text-sm font-regular mt-3 ">
+            {user?.designation}
+          </p>
+          <p className="text-white text-xs font-light ">{user?.name}</p>
+          <p className="text-[10px] text-gray-500">
+            {" "}
+            {user?.department || ""}{" "}
+          </p>
+          <p className="text-[10px] text-gray-500 mb-5">
+            {" "}
+            {user?.email || ""}{" "}
+          </p>
         </div>
 
-        {(user?.role === "admin" || user?.role === "superAdmin") && (
-          <div className="text-[10px] font-medium text-white bg-[#E43941] px-3 py-0.5 rounded mt-1">
-            {user.role === "admin" ? "Admin" : "SuperAdmin"}
-          </div>
-        )}
-
-        <p className="text-white text-sm font-regular mt-3 ">
-          {user?.designation}
-        </p>
-        <p className="text-white text-xs font-light ">{user?.name}</p>
-        <p className="text-[10px] text-gray-500"> {user?.department || ""} </p>
-        <p className="text-[10px] text-gray-500 mb-5"> {user?.email || ""} </p>
-      </div>
-
-      {filteredMenu.map((section, idx) => (
-        <div key={section.label} className="mb-[1px]">
-          <button
-            className="flex items-center justify-between w-full px-6 py-2 text-white text-lg font-regular bg-[#1a1d23] hover:bg-[#22252b]transition"
-            onClick={() => setOpenSection(openSection === idx ? null : idx)}
-          >
-            <span>{section.label}</span>
-            <span>
-              {openSection === idx ? <LuChevronUp /> : <LuChevronDown />}
-            </span>
-          </button>
-          {openSection === idx && (
-            <div className="flex flex-col mt-1">
-              {section.children.map((item) => (
-                <button
-                  key={item.label + item.path}
-                  className={`flex items-center gap-4 text-[15px] py-3 px-8 mb-1 text-left  hover:bg-[#E43941]/20 transition
+        {filteredMenu.map((section, idx) => (
+          <div key={section.label} className="mb-[1px]">
+            <button
+              className="flex items-center justify-between w-full px-6 py-2 text-white text-lg font-regular bg-[#1a1d23] hover:bg-[#22252b]transition"
+              onClick={() => setOpenSection(openSection === idx ? null : idx)}
+            >
+              <span>{section.label}</span>
+              <span>
+                {openSection === idx ? <LuChevronUp /> : <LuChevronDown />}
+              </span>
+            </button>
+            {openSection === idx && (
+              <div className="flex flex-col mt-1">
+                {section.children.map((item) => (
+                  <button
+                    key={item.label + item.path}
+                    className={`flex items-center gap-4 text-[15px] py-3 px-8 mb-1 text-left  hover:bg-[#E43941]/20 transition
   ${
     activeMenu === item.label
       ? "text-[#E43941] font-bold bg-gradient-to-r from-[#E43941]/20 to-[#ffffff00]"
       : "text-white"
   }
 `}
-                  onClick={() => {
-                    if (item.path === "logout") {
-                      setOpenLogoutModal(true);
-                    } else {
-                      handleClick(item.path);
-                    }
-                  }}
-                >
-                  <item.icon className="text-xl" />
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+                    onClick={() => {
+                      if (item.path === "logout") {
+                        setOpenLogoutModal(true);
+                      } else {
+                        handleClick(item.path);
+                      }
+                    }}
+                  >
+                    <item.icon className="text-xl" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {loading && <SpinLoader />}
+      </div>
 
       <Modal
         isOpen={openLogoutModal}
@@ -241,8 +251,7 @@ const SideMenu = ({ activeMenu }) => {
           Upload & Save
         </button>
       </Modal>
-      {loading && <SpinLoader />}
-    </div>
+    </>
   );
 };
 

@@ -115,7 +115,7 @@ const LeadDashboard = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-8 gap-3 md:gap-4 mt-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3 md:gap-4 mt-5">
           {leadStats.map(({ label, key, color }) => (
             <InfoCard
               key={key}

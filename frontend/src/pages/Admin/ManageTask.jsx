@@ -244,8 +244,8 @@ const ManageTask = () => {
     <DashboardLayout activeMenu="Manage Tasks">
       <div className="my-5">
         <div className="flex flex-col gap-5 card justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex lg:items-center justify-between flex-col lg:flex-row gap-5 md:gap-0">
+            <div className="flex items-center gap-4 mb-5 lg:mb-0">
               <h2 className="text-lg text-white md:text-xl font-medium">
                 My Tasks
               </h2>
@@ -440,7 +440,7 @@ const ManageTask = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4 mt-5">
             {infoCard.map(({ label, key1, color, description }) => (
               <InfoCard
                 key={key1}
