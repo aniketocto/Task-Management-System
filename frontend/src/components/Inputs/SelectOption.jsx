@@ -14,7 +14,7 @@ const SelectOption = ({ options, value, onChange, placeholder, disabled }) => {
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md flex justify-between items-center ${
+        className={`w-full text-sm text-black outline-none bg-[#ffffffe3] border border-slate-100 px-2.5 py-3 rounded-md flex justify-between items-center ${
           disabled ? "cursor-not-allowed" : "cursor-pointer"
         }`}
       >
@@ -26,7 +26,7 @@ const SelectOption = ({ options, value, onChange, placeholder, disabled }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute w-full max-h-[250px] overflow-auto bg-white border-slate-100 rounded-md mt-1 shadow-md">
+        <div className="absolute w-full max-h-[250px] overflow-auto bg-white border-slate-100 rounded-md mt-1 shadow-md z-50">
           {options.map((opt) => (
             <div
               key={opt.value}

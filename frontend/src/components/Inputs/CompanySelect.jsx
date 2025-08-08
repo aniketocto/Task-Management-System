@@ -25,6 +25,7 @@ const CompanySelect = ({ value, onChange }) => {
           ...base,
           paddingTop: "3.5px",
           paddingBottom: "3.5px",
+          backgroundColor: "#ffffffe3",
         }),
       }}
     />

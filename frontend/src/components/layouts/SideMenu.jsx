@@ -361,11 +361,13 @@ const SideMenu = ({ activeMenu }) => {
           </div>
         )}
 
-        <div className="timer">
-          <span className="digits">{formattedTime.hours}.</span>
-          <span className="digits">{formattedTime.minutes}.</span>
-          <span className="digits mili-sec">{formattedTime.seconds}</span>
-        </div>
+        {user?.role !== "superAdmin" && (
+          <div className="timer">
+            <span className="digits">{formattedTime.hours}.</span>
+            <span className="digits">{formattedTime.minutes}.</span>
+            <span className="digits mili-sec">{formattedTime.seconds}</span>
+          </div>
+        )}
 
         {filteredMenu.map((section, idx) => (
           <div key={section.label} className="mb-[1px]">

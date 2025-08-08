@@ -348,7 +348,7 @@ const CreateTask = () => {
       getTaskById();
     }
     return () => {};
-  }, [taskId]);
+  }, [taskId, getTaskById]);
 
   const handleChecklistApprove = async (taskId, checklistId, currentStatus) => {
     // const newStatus = currentStatus === "approved" ? "rejected" : "approved";
@@ -411,7 +411,7 @@ const CreateTask = () => {
 
             <div className="mt-4">
               <label className="text-xs font-medium text-slate-200">
-                Company
+                Company <sup className="text-red-500 text-xs">*</sup>
               </label>
               <CompanySelect
                 value={taskData.companyName}
@@ -424,7 +424,7 @@ const CreateTask = () => {
             {/* Title */}
             <div className="mt-4">
               <label className="text-xs font-medium text-slate-200">
-                Task Title
+                Task Title <sup className="text-red-500 text-xs">*</sup>
               </label>
 
               <input
@@ -438,7 +438,9 @@ const CreateTask = () => {
             </div>
 
             <div className="col-span-12 md:col-span-4 mt-4">
-              <label className="text-xs font-medium text-slate-200">Type</label>
+              <label className="text-xs font-medium text-slate-200">
+                Type <sup className="text-red-500 text-xs">*</sup>
+              </label>
 
               <div className="flex gap-2">
                 <SelectOption
@@ -459,148 +461,152 @@ const CreateTask = () => {
               </div>
             </div>
 
-            {taskData.taskCategory === "operational" ? (
-              <div className="mt-3">
-                <label className="text-xs font-medium text-slate-200">
-                  Brief
-                </label>
-                <textarea
-                  placeholder="Descripe Brief"
-                  className="form-input"
-                  rows={4}
-                  value={taskData.description}
-                  onChange={({ target }) => {
-                    handleValueChange("description", target.value);
-                  }}
-                />
-              </div>
-            ) : (
-              <>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Creative Sizes
-                  </label>
-                  <textarea
-                    placeholder="Creative Sizes"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.creativeSizes}
-                    onChange={({ target }) => {
-                      handleValueChange("creativeSizes", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Objective / Goal
-                  </label>
-                  <textarea
-                    placeholder="Whats the goal of this task?"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.objective}
-                    onChange={({ target }) => {
-                      handleValueChange("objective", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Target Audience
-                  </label>
-                  <textarea
-                    placeholder="Who is the target audience?"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.targetAudience}
-                    onChange={({ target }) => {
-                      handleValueChange("targetAudience", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Unique Selling Points
-                  </label>
-                  <textarea
-                    placeholder="What are the unique selling points?"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.usps}
-                    onChange={({ target }) => {
-                      handleValueChange("usps", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Competetors
-                  </label>
-                  <textarea
-                    placeholder="Who are our competetors?"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.competetors}
-                    onChange={({ target }) => {
-                      handleValueChange("competetors", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    Channels
-                  </label>
-                  <textarea
-                    placeholder="Channels"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.channels}
-                    onChange={({ target }) => {
-                      handleValueChange("channels", target.value);
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-slate-200">
-                    SMPs
-                  </label>
-                  <textarea
-                    placeholder="SMPs"
-                    className="form-input"
-                    rows={1}
-                    value={taskData.smp}
-                    onChange={({ target }) => {
-                      handleValueChange("smp", target.value);
-                    }}
-                  />
-                </div>
+            {taskData.taskCategory ? (
+              taskData.taskCategory === "operational" ? (
                 <div className="mt-3">
                   <label className="text-xs font-medium text-slate-200">
-                    Reference
+                    Brief <sup className="text-red-500 text-xs">*</sup>
                   </label>
-                  <AddReference
-                    referance={taskData?.referance}
-                    setReference={(value) => {
-                      if (!Array.isArray(value)) {
-                        console.error(
-                          `Invalid value for referance:`,
-                          value,
-                          typeof value
-                        );
-                        throw new Error("referance must be array");
-                      }
-                      handleValueChange("referance", value);
+                  <textarea
+                    placeholder="Descripe Brief"
+                    className="form-input"
+                    rows={4}
+                    value={taskData.description}
+                    onChange={({ target }) => {
+                      handleValueChange("description", target.value);
                     }}
                   />
                 </div>
-              </>
+              ) : (
+                <>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Creative Sizes <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="Creative Sizes"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.creativeSizes}
+                      onChange={({ target }) => {
+                        handleValueChange("creativeSizes", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Objective / Goal <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="Whats the goal of this task?"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.objective}
+                      onChange={({ target }) => {
+                        handleValueChange("objective", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Target Audience <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="Who is the target audience?"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.targetAudience}
+                      onChange={({ target }) => {
+                        handleValueChange("targetAudience", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Unique Selling Points <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="What are the unique selling points?"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.usps}
+                      onChange={({ target }) => {
+                        handleValueChange("usps", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Competetors <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="Who are our competetors?"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.competetors}
+                      onChange={({ target }) => {
+                        handleValueChange("competetors", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      Channels <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="Channels"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.channels}
+                      onChange={({ target }) => {
+                        handleValueChange("channels", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="text-xs font-medium text-slate-200">
+                      SMPs <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <textarea
+                      placeholder="SMPs"
+                      className="form-input"
+                      rows={1}
+                      value={taskData.smp}
+                      onChange={({ target }) => {
+                        handleValueChange("smp", target.value);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <label className="text-xs font-medium text-slate-200">
+                      Reference <sup className="text-red-500 text-xs">*</sup>
+                    </label>
+                    <AddReference
+                      referance={taskData?.referance}
+                      setReference={(value) => {
+                        if (!Array.isArray(value)) {
+                          console.error(
+                            `Invalid value for referance:`,
+                            value,
+                            typeof value
+                          );
+                          throw new Error("referance must be array");
+                        }
+                        handleValueChange("referance", value);
+                      }}
+                    />
+                  </div>
+                </>
+              )
+            ) : (
+              <p></p>
             )}
 
             {/* Priority DueDate AssignTo */}
             <div className="grid grid-cols-12 gap-4 mt-2">
               <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-200">
-                  Priority
+                  Priority <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -620,7 +626,7 @@ const CreateTask = () => {
               {/* Assigned To */}
               <div className="col-span-12 md:col-span-4">
                 <label className="text-xs font-medium text-slate-200">
-                  Assign Owner
+                  Assign Owner <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectUsers
@@ -665,7 +671,7 @@ const CreateTask = () => {
             {/* Checklist */}
             <div className="mt-3">
               <label className="text-xs font-medium text-slate-200">
-                Checklist
+                Checklist <sup className="text-red-500 text-xs">*</sup>
               </label>
 
               <TodoListInput
@@ -690,7 +696,7 @@ const CreateTask = () => {
             {/* Attachments */}
             <div className="mt-3">
               <label className="text-xs font-medium text-slate-200">
-                Attachments
+                Attachments 
               </label>
 
               <AddAttachmentInputs

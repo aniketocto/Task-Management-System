@@ -419,7 +419,7 @@ const CreateLead = () => {
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xl md:text-2xl text-white font-semibold">
-                Comapny Details
+                Comapny Details 
               </h2>
 
               {leadId && (
@@ -437,7 +437,7 @@ const CreateLead = () => {
               {/* Company Name */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Company Name
+                  Company Name <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -453,7 +453,7 @@ const CreateLead = () => {
               {/* Category */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Category
+                  Category <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <SelectOption
                   options={LEAD_TYPE}
@@ -466,7 +466,7 @@ const CreateLead = () => {
               {/* Type */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Opportunity Type
+                  Opportunity Type <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -480,7 +480,7 @@ const CreateLead = () => {
               {/* Service */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Service Type
+                  Service Type <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -494,7 +494,7 @@ const CreateLead = () => {
               {/* Status */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Status
+                  Status <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -511,7 +511,7 @@ const CreateLead = () => {
               {/* POC Name */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Name
+                  POC Name <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -527,7 +527,7 @@ const CreateLead = () => {
               {/* POC Email */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Email
+                  POC Email <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -543,7 +543,7 @@ const CreateLead = () => {
               {/* POC Contact */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Contact
+                  POC Contact <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -559,7 +559,7 @@ const CreateLead = () => {
               {/* Job Profile */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Job Profile
+                  Job Profile <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -598,7 +598,7 @@ const CreateLead = () => {
             <div className="grid grid-cols-12 gap-2 mt-4">
               <div className="col-span-12 ">
                 <label className="text-xs font-medium text-slate-200">
-                  Brief
+                  Brief <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <textarea
                   className="form-input"
@@ -616,7 +616,7 @@ const CreateLead = () => {
               {/* Lead Came Date */}
               <div className="col-span-12 md:col-span-3">
                 <label className="text-xs font-medium text-slate-200">
-                  Lead Date
+                  Lead Date <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <input
                   disabled={
@@ -753,7 +753,7 @@ const CreateLead = () => {
               {/* leadsource */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Lead Source
+                  Lead Source <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
