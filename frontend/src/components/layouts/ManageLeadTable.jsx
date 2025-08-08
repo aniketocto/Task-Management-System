@@ -117,7 +117,7 @@ const ManageLeadTable = () => {
   return (
     <div className="relative bg-gray-900 rounded-lg shadow-lg p-4 w-full">
       {/* Container with controlled width and horizontal scroll */}
-      <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">
+  <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">    
         {/* Table wrapper with fixed width */}
         <div
           className={`relative ${

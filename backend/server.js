@@ -41,6 +41,8 @@ app.use(express.json()); // ✅ MUST come before routes
 // Connect to DB
 connectDB();
 
+require("./cronjobs/cronJob")
+
 // Mounting express Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

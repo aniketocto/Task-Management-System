@@ -70,4 +70,12 @@ export const API_PATHS = {
     CHECKLIST_APPROVAL: (taskId, checklistId) =>
       `/api/tasks/${taskId}/checklist/${checklistId}/approve`,
   },
+  ATTENDANCE: {
+    CHECK_IN: "/api/attendance/checkin",
+    CHECK_OUT: "/api/attendance/checkout",
+    GET_ATTENDANCE: "/api/attendance/me",
+    GET_ALL_ATTENDANCE: "/api/attendance",
+    GET_TODAY_ATTENDANCE: "/api/attendance/today",
+    UPDATE_ATTENDANCE: "/api/attendance/save",
+    EXPORT_ATTENDANCE: "/api/attendance/export",},
 };

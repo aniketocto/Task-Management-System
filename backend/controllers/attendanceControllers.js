@@ -65,18 +65,20 @@ const calculateAttendanceSummary = (records) => {
     present: 0,
     absent: 0,
     late: 0,
+    early: 0,
     halfDay: 0,
     totalWorkingDays: 0,
   };
 
   const uniqueDates = new Set();
+  const presentLike = new Set(["present", "late", "halfDay", "onTime"]);
 
   records.forEach((record) => {
     // Count checkInStatus
-    if (record.checkInStatus === "present") summary.present += 1;
-    else if (record.checkInStatus === "late") summary.late += 1;
-    else if (record.checkInStatus === "halfDay") summary.halfDay += 1;
-    else if (record.checkInStatus === "absent") summary.absent += 1;
+    if (presentLike.has(record.checkInStatus)) summary.present += 1;
+    if (record.checkInStatus === "late") summary.late += 1;
+    if (record.checkInStatus === "halfDay") summary.halfDay += 1;
+    if (record.checkInStatus === "absent") summary.absent += 1;
 
     // Add date to set
     const dateKey = new Date(record.date).toDateString(); // normalize to string date
@@ -90,6 +92,7 @@ const calculateAttendanceSummary = (records) => {
 
 const calculateSummaryPerUser = (records) => {
   const summaryMap = new Map();
+  const presentLike = new Set(["present", "late", "halfDay", "onTime"]);
 
   records.forEach((record) => {
     const userId = record.user._id.toString();
@@ -111,12 +114,19 @@ const calculateSummaryPerUser = (records) => {
     const userSummary = summaryMap.get(userId);
 
     // Count statuses
-    if (record.checkInStatus === "present") userSummary.present += 1;
-    else if (record.checkInStatus === "late") userSummary.late += 1;
-    else if (record.checkInStatus === "halfDay") userSummary.halfDay += 1;
-    else if (record.checkInStatus === "absent") userSummary.absent += 1;
+    if (presentLike.has(record.checkInStatus)) userSummary.present += 1;
+    if (record.checkInStatus === "late") userSummary.late += 1;
+    if (record.checkInStatus === "halfDay") userSummary.halfDay += 1;
+    if (record.checkInStatus === "absent") userSummary.absent += 1;
+    if (record.checkOutStatus === "early") userSummary.early += 1;
 
-    userSummary.totalWorkingDaysSet.add(dateKey); // add date
+    // Only count as working day if NOT absent
+    if (
+      record.checkInStatus !== "absent" &&
+      record.checkOutStatus !== "absent"
+    ) {
+      userSummary.totalWorkingDaysSet.add(dateKey);
+    }
   });
 
   // Convert Set to count
@@ -193,6 +203,9 @@ const checkIn = async (req, res, next) => {
     attendance.state = state;
     await attendance.save();
 
+    const io = req.app.get("io");
+    io.emit("attendance:sync");
+
     res.status(200).json({ message: "Check-in successful", attendance });
   } catch (error) {
     next(error);
@@ -260,6 +273,8 @@ const checkOut = async (req, res, next) => {
     const state = evaluateAttendanceState(attendance);
     attendance.state = state;
     await attendance.save();
+    const io = req.app.get("io");
+    io.emit("attendance:sync");
 
     res.status(200).json({ message: "Check-Out successful", attendance });
   } catch (error) {
@@ -305,7 +320,96 @@ const getMyAttendance = async (req, res) => {
   }
 };
 
-const updateAttendance = async (req, res) => {};
+const getTodayAttendance = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const record = await Attendance.findOne({
+      user: req.user._id,
+      date: today,
+    });
+
+    res.status(200).json({ attendance: record || null });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch today's attendance" });
+  }
+};
+
+// attendanceControllers.js
+const saveAttendanceAdmin = async (req, res) => {
+  try {
+    const { id, userId, date, checkIn, checkOut } = req.body;
+    if (!id && (!userId || !date)) {
+      return res
+        .status(400)
+        .json({ message: "Provide either id OR (userId and date)" });
+    }
+
+    // normalize date to start-of-day
+    const d = new Date(date || Date.now());
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    let doc;
+
+    if (id) {
+      // Update existing by id
+      doc = await Attendance.findById(id);
+      if (!doc)
+        return res.status(404).json({ message: "Attendance not found" });
+
+      // if date provided, move record to that day (watch unique constraint)
+      if (date) doc.date = dayStart;
+      if (typeof checkIn !== "undefined")
+        doc.checkIn = checkIn ? new Date(checkIn) : null;
+      if (typeof checkOut !== "undefined")
+        doc.checkOut = checkOut ? new Date(checkOut) : null;
+      doc.updatedBy = req.user._id;
+    } else {
+      // Upsert by (userId + date)
+      doc = await Attendance.findOne({ user: userId, date: dayStart });
+      if (!doc) {
+        doc = new Attendance({
+          user: userId,
+          date: dayStart,
+          checkIn: checkIn ? new Date(checkIn) : null,
+          checkOut: checkOut ? new Date(checkOut) : null,
+          updatedBy: req.user._id,
+        });
+      } else {
+        if (typeof checkIn !== "undefined")
+          doc.checkIn = checkIn ? new Date(checkIn) : null;
+        if (typeof checkOut !== "undefined")
+          doc.checkOut = checkOut ? new Date(checkOut) : null;
+        doc.updatedBy = req.user._id;
+      }
+    }
+
+    // recompute statuses / totalHours / state
+    applyBusinessRule(doc);
+    if (doc.checkIn && doc.checkOut) {
+      const ms = doc.checkOut - doc.checkIn;
+      doc.totalHours = parseFloat((ms / 36e5).toFixed(2));
+    } else {
+      doc.totalHours = 0;
+    }
+    doc.state = evaluateAttendanceState(doc);
+
+    await doc.save();
+    req.app.get("io")?.emit("attendance:sync");
+
+    return res.json({ message: "Saved", attendance: doc });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: "Another record exists for this user on that date" });
+    }
+    console.error(err);
+    return res.status(500).json({ message: "Save failed" });
+  }
+};
+
 const exportAttendance = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -370,6 +474,7 @@ module.exports = {
   checkIn,
   checkOut,
   getMyAttendance,
-  updateAttendance,
+  saveAttendanceAdmin,
   exportAttendance,
+  getTodayAttendance,
 };

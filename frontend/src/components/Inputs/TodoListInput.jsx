@@ -293,7 +293,7 @@ const TodoListInput = ({
           placeholder="Enter Task"
           value={option}
           onChange={(e) => setOption(e.target.value)}
-          className="w-full text-[13px] text-black bg-white border border-gray-100 px-3 py-2 rounded-md outline-none"
+          className="w-full text-[13px] text-black bg-[#ffffffe3] border border-gray-100 px-3 py-2 rounded-md outline-none"
         />
         <button
           type="button"

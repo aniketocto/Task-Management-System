@@ -1593,7 +1593,6 @@ const getUserDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt companyName");
 
-    const monthlyData = await getEnhancedMonthlyTaskData({});
 
     res.status(200).json({
       statistic: {

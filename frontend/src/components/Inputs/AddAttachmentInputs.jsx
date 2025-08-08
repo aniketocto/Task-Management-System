@@ -62,7 +62,7 @@ const AddAttachmentInputs = ({ attachments = [], setAttachments }) => {
             placeholder="Add File Link"
             value={option}
             onChange={(e) => setOption(e.target.value)}
-            className="w-full text-[13px] text-black outline-none bg-white py-2"
+            className="w-full text-[13px] text-black outline-none bg-[#ffffffe3] py-2"
           />
         </div>
 
