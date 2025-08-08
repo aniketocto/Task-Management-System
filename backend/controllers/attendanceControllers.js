@@ -118,8 +118,12 @@ const calculateSummaryPerUser = (records) => {
     else if (record.checkInStatus === "halfDay") userSummary.halfDay += 1;
     else if (record.checkInStatus === "absent") userSummary.absent += 1;
     else if (record.checkOutStatus === "early") userSummary.early += 1;
+    else if (record.checkOutStatus === "absent") userSummary.early += 1;
 
-    userSummary.totalWorkingDaysSet.add(dateKey); // add date
+    // Only count as working day if NOT absent
+    if (record.checkInStatus !== "absent" && record.checkOutStatus !== "absent") {
+      userSummary.totalWorkingDaysSet.add(dateKey);
+    }
   });
 
   // Convert Set to count

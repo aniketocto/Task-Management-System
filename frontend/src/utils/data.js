@@ -242,6 +242,14 @@ export const MENU_DATA = [
         path: "/admin/users",
         access: ({ role }) => role === "superAdmin",
       },
+      {
+        label: "Users Attendance",
+        icon: CiCalendarDate,
+        path: "/admin/attendance",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "HR"),
+      },
     ],
   },
   {
@@ -251,7 +259,7 @@ export const MENU_DATA = [
         label: "Attendance",
         icon: CiCalendarDate,
         path: "/user/attendance",
-       access: ({ role }) => role === "user" || role === "admin",
+        access: ({ role }) => role === "user" || role === "admin",
       },
       {
         label: "Logout",

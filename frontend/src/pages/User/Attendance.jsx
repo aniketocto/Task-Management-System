@@ -6,6 +6,7 @@ import { beautify } from "../../utils/helper";
 import { FiCalendar } from "react-icons/fi";
 import Calendar from "../../components/layouts/Calender";
 import { io } from "socket.io-client";
+import { API_PATHS } from "../../utils/apiPaths";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: {
@@ -23,7 +24,12 @@ const Attendance = () => {
   const fetchAttendance = useCallback(async () => {
     try {
       const { data } = await axiosInstance.get(
-        `/api/attendance/me?month=${selectedMonth}`
+        API_PATHS.ATTENDANCE.GET_ATTENDANCE,
+        {
+          params: {
+            month: selectedMonth,
+          },
+        }
       );
       setAttendances(data.attendances || []);
       setSummary(data.summary || {});

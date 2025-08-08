@@ -253,8 +253,8 @@ const SideMenu = ({ activeMenu }) => {
         fetchTodayAttendence();
       }
     } catch (error) {
-      toast.error("Failed to clock in");
-      console.error(error?.response?.data?.message || "Clock-in failed");
+      toast.error(error?.response?.data?.error || "Clock-in failed");
+      console.error(error || "Clock-in failed");
     } finally {
       setLoading(false);
     }
@@ -280,7 +280,7 @@ const SideMenu = ({ activeMenu }) => {
         toast.success("Successfully clocked out at " + moment().format("LT"));
       }
     } catch (error) {
-      toast.error("Failed to clock out");
+      toast.error(error?.response?.data?.error || "Clock-out failed");
       console.error("Error clocking out:", error);
     } finally {
       setLoading(false);
