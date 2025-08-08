@@ -87,7 +87,7 @@ const Attendance = () => {
 
         {/* Calendar Component - Replace the grid with your Calendar component */}
       </div>
-      <div className="card">
+      <div className="overflow-x-auto card">
         <Calendar
           monthStart={monthStart}
           daysInMonth={daysInMonth}

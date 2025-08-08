@@ -90,22 +90,30 @@ const SideMenu = ({ activeMenu }) => {
       interval = setInterval(() => {
         const savedTimerState = localStorage.getItem("timerState");
         if (savedTimerState) {
-          try {
-            const { checkInTime } = JSON.parse(savedTimerState);
-            const elapsedTime = calculateElapsedTime(checkInTime);
-            setTime(elapsedTime);
-          } catch (error) {
-            console.error("Error updating timer:", error);
+          const { checkInTime } = JSON.parse(savedTimerState);
+          setTime(calculateElapsedTime(checkInTime));
+        }
+      }, 1000);
+    } else {
+      // If clocked out, keep showing final duration until midnight
+      interval = setInterval(() => {
+        const savedTimerState = localStorage.getItem("timerState");
+        if (savedTimerState) {
+          const { checkInTime, checkOutTime } = JSON.parse(savedTimerState);
+          if (checkInTime && checkOutTime) {
+            setTime(moment(checkOutTime).diff(moment(checkInTime)));
           }
         }
-      }, 1000); // Update every second instead of every 10ms for better performance
-    } else {
-      clearInterval(interval);
+
+        // Reset at midnight
+        if (moment().isSame(moment(), "day") === false) {
+          localStorage.removeItem("timerState");
+          setTime(0);
+        }
+      }, 1000 * 60); // check once a minute
     }
 
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [isActive]);
 
   // Initialize timer when attendance data is fetched
@@ -272,12 +280,26 @@ const SideMenu = ({ activeMenu }) => {
       });
 
       if (res.status === 200) {
-        fetchTodayAttendence();
-        setIsActive(false);
+        const checkOutTime = moment().toISOString();
 
-        localStorage.removeItem("timerState");
+        // Store in localStorage so timer persists till midnight
+        localStorage.setItem(
+          "timerState",
+          JSON.stringify({
+            isActive: false,
+            checkInTime: todayAttendance.attendance.checkIn,
+            checkOutTime,
+          })
+        );
+
+        // Show the worked hours until midnight
+        setIsActive(false);
+        setTime(
+          moment(checkOutTime).diff(moment(todayAttendance.attendance.checkIn))
+        );
 
         toast.success("Successfully clocked out at " + moment().format("LT"));
+        fetchTodayAttendence();
       }
     } catch (error) {
       toast.error(error?.response?.data?.error || "Clock-out failed");

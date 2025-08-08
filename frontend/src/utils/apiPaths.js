@@ -76,6 +76,6 @@ export const API_PATHS = {
     GET_ATTENDANCE: "/api/attendance/me",
     GET_ALL_ATTENDANCE: "/api/attendance",
     GET_TODAY_ATTENDANCE: "/api/attendance/today",
-    UPDATE_ATTENDANCE: (id) => `/api/attendance/${id}`,
+    UPDATE_ATTENDANCE: "/api/attendance/save",
     EXPORT_ATTENDANCE: "/api/attendance/export",},
 };

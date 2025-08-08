@@ -5,7 +5,7 @@ const {
   checkOut,
   getMyAttendance,
   getAllAttendance,
-  updateAttendance,
+  saveAttendanceAdmin,
   exportAttendance,
   getTodayAttendance,
 } = require("../controllers/attendanceControllers");
@@ -23,10 +23,10 @@ router.get(
   getAllAttendance
 );
 router.put(
-  "/:id",
+  "/save",
   protect,
   allowRoleOrDept(["admin", "superAdmin"], ["HR"]),
-  updateAttendance
+  saveAttendanceAdmin
 );
 router.get(
   "/export",

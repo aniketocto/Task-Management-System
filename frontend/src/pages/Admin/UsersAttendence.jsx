@@ -6,6 +6,7 @@ import axiosInstance from "../../utils/axiosInstance";
 import { FiCalendar } from "react-icons/fi";
 import React from "react";
 import { io } from "socket.io-client";
+import Modal from "components/layouts/Modal";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: {
@@ -18,6 +19,43 @@ const UsersAttendence = () => {
   const [attendances, setAttendances] = useState([]);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [edit, setEdit] = useState(null);
+
+  const openEdit = (name, date, cell = {}) => {
+    setEdit({
+      id: cell.id || null,
+      userId: cell.userId || userIdByName[name], // ensures we have it for empty cells
+      name,
+      date, // "YYYY-MM-DD"
+      in: isoToTime(cell.in),
+      out: isoToTime(cell.out),
+    });
+  };
+
+  const saveEdit = async () => {
+    const checkIn = edit.inTime ? mergeDateTime(edit.date, edit.inTime) : null;
+    const checkOut = edit.outTime
+      ? mergeDateTime(edit.date, edit.outTime)
+      : null;
+
+    const payload = {
+      id: edit.id || undefined, // if present -> update by id
+      userId: edit.userId, // needed for upsert case
+      date: edit.date, // backend normalizes
+      checkIn,
+      checkOut,
+    };
+    try {
+      setLoading(true);
+      await axiosInstance.put(API_PATHS.ATTENDANCE.UPDATE_ATTENDANCE, payload);
+      fetchAttendance(selectMonth);
+      setEdit(null);
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetcher (stable reference)
   const fetchAttendance = useCallback(async (month) => {
@@ -44,7 +82,7 @@ const UsersAttendence = () => {
 
   useEffect(() => {
     socket.on("attendance:sync", () => {
-      fetchAttendance(selectMonth)
+      fetchAttendance(selectMonth);
     });
     return () => {
       socket.off("attendance:sync");
@@ -68,13 +106,14 @@ const UsersAttendence = () => {
     const m = {};
     attendances.forEach((a) => {
       const name = a.user?.name || "—";
-      const dateKey = moment(a.date).format("YYYY-MM-DD"); // normalize to match allDates
-
+      const dateKey = moment(a.date).format("YYYY-MM-DD");
       if (!m[name]) m[name] = {};
       m[name][dateKey] = {
+        id: a._id, // <-- needed for update
+        userId: a.user?._id, // <-- fallback for upsert
         in: a.checkIn || "",
         out: a.checkOut || "",
-        status: a.checkInStatus || "", // keep if you want styling
+        status: a.checkInStatus || "",
       };
     });
     return m;
@@ -85,7 +124,21 @@ const UsersAttendence = () => {
     [byUser]
   );
 
-  const fmt = (ts) => (ts ? moment(ts).format("hh:mm A") : "—");
+  const userIdByName = useMemo(() => {
+    const map = {};
+    summary?.forEach((s) => {
+      map[s.name] = s.userId;
+    });
+    // fallback from attendance list if needed
+    attendances.forEach((a) => {
+      const n = a.user?.name;
+      const id = a.user?._id;
+      if (n && id && !map[n]) map[n] = id;
+    });
+    return map;
+  }, [summary, attendances]);
+
+  const fmt = (ts) => ts && moment(ts).format("hh:mm A");
 
   const summaryByName = useMemo(() => {
     const map = {};
@@ -100,6 +153,13 @@ const UsersAttendence = () => {
     });
     return map;
   }, [summary]);
+
+  const mergeDateTime = (datestr, timestr) => {
+    if (!datestr || !timestr) return "";
+    return moment(`${datestr} ${timestr}`, "YYYY-MM-DD hh:mm").toISOString();
+  };
+
+  const isoToTime = (iso) => (iso ? moment(iso).format("hh:mm") : "");
 
   return (
     <DashboardLayout activeMenu="Users Attendance">
@@ -237,14 +297,16 @@ const UsersAttendence = () => {
                         return (
                           <>
                             <td
+                              onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-in`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-800 `}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer `}
                             >
                               {fmt(cell.in)}
                             </td>
                             <td
+                              onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-out`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-700 }`}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer }`}
                             >
                               {fmt(cell.out)}
                             </td>
@@ -274,6 +336,60 @@ const UsersAttendence = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={!!edit}
+        onClose={() => setEdit(null)}
+        title={`Edit Attendance - ${edit?.name || ""}`}
+      >
+        {/* Date (pre-filled from column) */}
+        <label className="block text-white text-sm">
+          Date
+          <input
+            type="date"
+            disabled
+            value={edit?.date || ""}
+            onChange={(e) => setEdit((s) => ({ ...s, date: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+          />
+        </label>
+
+        {/* In time */}
+        <label className="block text-white text-sm">
+          In Time
+          <input
+            type="time"
+            value={edit?.inTime || ""}
+            onChange={(e) => setEdit((s) => ({ ...s, inTime: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+          />
+        </label>
+
+        {/* Out time */}
+        <label className="block text-white text-sm">
+          Out Time
+          <input
+            type="time"
+            value={edit?.outTime || ""}
+            onChange={(e) =>
+              setEdit((s) => ({ ...s, outTime: e.target.value }))
+            }
+            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+          />
+        </label>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <button
+            onClick={() => setEdit(null)}
+            className="px-3 py-1 border border-gray-700 rounded"
+          >
+            Cancel
+          </button>
+          <button onClick={saveEdit} className="px-3 py-1 bg-white/10 rounded">
+            Save
+          </button>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 };
