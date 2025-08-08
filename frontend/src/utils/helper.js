@@ -167,3 +167,13 @@ export const beautify = (text) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 };
+
+export const formatDecimalHours = (decimalHours) => {
+  if (!decimalHours && decimalHours !== 0) return "—";
+
+  const hours = Math.floor(decimalHours); // whole hours
+  const minutes = Math.round((decimalHours - hours) * 60); // remaining minutes
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+

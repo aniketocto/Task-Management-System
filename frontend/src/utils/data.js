@@ -202,7 +202,7 @@ export const MENU_DATA = [
         label: "View Tasks",
         icon: LuClipboardCheck,
         path: "/user/tasks",
-        access: ({ role }) => role === "user",
+        access: ({ role }) => role === "user" || role === "admin",
       },
     ],
   },
@@ -251,7 +251,7 @@ export const MENU_DATA = [
         label: "Attendance",
         icon: CiCalendarDate,
         path: "/user/attendance",
-        access: () => true, // Everyone sees logout
+       access: ({ role }) => role === "user" || role === "admin",
       },
       {
         label: "Logout",

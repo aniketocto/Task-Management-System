@@ -65,6 +65,7 @@ const calculateAttendanceSummary = (records) => {
     present: 0,
     absent: 0,
     late: 0,
+    early: 0,
     halfDay: 0,
     totalWorkingDays: 0,
   };
@@ -77,6 +78,7 @@ const calculateAttendanceSummary = (records) => {
     else if (record.checkInStatus === "late") summary.late += 1;
     else if (record.checkInStatus === "halfDay") summary.halfDay += 1;
     else if (record.checkInStatus === "absent") summary.absent += 1;
+    else if (record.checkOutStatus === "early") summary.early += 1;
 
     // Add date to set
     const dateKey = new Date(record.date).toDateString(); // normalize to string date
@@ -115,6 +117,7 @@ const calculateSummaryPerUser = (records) => {
     else if (record.checkInStatus === "late") userSummary.late += 1;
     else if (record.checkInStatus === "halfDay") userSummary.halfDay += 1;
     else if (record.checkInStatus === "absent") userSummary.absent += 1;
+    else if (record.checkOutStatus === "early") userSummary.early += 1;
 
     userSummary.totalWorkingDaysSet.add(dateKey); // add date
   });
@@ -193,6 +196,9 @@ const checkIn = async (req, res, next) => {
     attendance.state = state;
     await attendance.save();
 
+    const io = req.app.get("io");
+    io.emit("attendance:sync");
+
     res.status(200).json({ message: "Check-in successful", attendance });
   } catch (error) {
     next(error);
@@ -260,6 +266,8 @@ const checkOut = async (req, res, next) => {
     const state = evaluateAttendanceState(attendance);
     attendance.state = state;
     await attendance.save();
+    const io = req.app.get("io");
+    io.emit("attendance:sync");
 
     res.status(200).json({ message: "Check-Out successful", attendance });
   } catch (error) {
@@ -302,6 +310,22 @@ const getMyAttendance = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getTodayAttendance = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const record = await Attendance.findOne({
+      user: req.user._id,
+      date: today,
+    });
+
+    res.status(200).json({ attendance: record || null });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch today's attendance" });
   }
 };
 
@@ -372,4 +396,5 @@ module.exports = {
   getMyAttendance,
   updateAttendance,
   exportAttendance,
+  getTodayAttendance,
 };
