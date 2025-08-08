@@ -146,8 +146,8 @@ const Login = () => {
             type="submit"
             className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >
-            Login */}
-          </button> 
+            Login
+          </button>  */}
           <p className="text-[13px] text-slate-50 mt-3">
             Don't have an account?{" "}
             <Link to="/sign-up" className="text-[#E43941] font-medium">
