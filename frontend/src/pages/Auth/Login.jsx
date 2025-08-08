@@ -116,7 +116,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin} className="mt-8">
-          <Input
+          {/* <Input
             value={email}
             onChange={({ target }) => setEmail(target.value)}
             label="Email Address"
@@ -129,7 +129,7 @@ const Login = () => {
             label="Password"
             placeholder="Password"
             type="password"
-          />  
+          />   */}
 
           {/* {Array.isArray(error) && error.length > 0 && (
             <ul className="text-red-500 text-sm pb-2.5">
@@ -142,11 +142,11 @@ const Login = () => {
             onSuccess={handleGoogleSuccess}
             onError={() => console.log("Google login failed")}
           />
-          <button
+          {/* <button
             type="submit"
             className="w-full bg-[#E43941] mt-2 hover:bg-[#C93036] text-white py-2 rounded-md cursor-pointer "
           >
-            Login
+            Login */}
           </button> 
           <p className="text-[13px] text-slate-50 mt-3">
             Don't have an account?{" "}
