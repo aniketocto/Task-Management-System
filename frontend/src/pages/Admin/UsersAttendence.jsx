@@ -9,11 +9,10 @@ import { io } from "socket.io-client";
 import Modal from "components/layouts/Modal";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
 });
-
 const UsersAttendence = () => {
   const [selectMonth, setSelectMonth] = useState(moment().format("YYYY-MM"));
   const [attendances, setAttendances] = useState([]);

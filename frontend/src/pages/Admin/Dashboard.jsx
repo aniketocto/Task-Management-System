@@ -31,9 +31,9 @@ import { userSOPs } from "../../utils/userSOPs";
 import DailySOP from "components/Inputs/DailySOP";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
 });
 
 const getDailyQuote = () => {
