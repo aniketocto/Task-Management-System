@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import axiosInstance from "../../utils/axiosInstance";
 import moment from "moment";
@@ -7,6 +7,7 @@ import { FiCalendar } from "react-icons/fi";
 import Calendar from "../../components/layouts/Calender";
 import { io } from "socket.io-client";
 import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -15,6 +16,7 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
 });
 
 const Attendance = () => {
+  const user = useContext(UserContext);
   const [attendances, setAttendances] = useState([]);
   const [summary, setSummary] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(
@@ -60,6 +62,11 @@ const Attendance = () => {
     attendanceMap[moment(a.date).format("YYYY-MM-DD")] = a;
   });
 
+  // Extract my summary from array or object
+  const mySummary = Array.isArray(summary)
+    ? summary.find((s) => s.userId === user?.user?._id) || {}
+    : summary || {};
+
   return (
     <DashboardLayout activeMenu="Attendance">
       <div className="my-5 text-white px-2 sm:px-6">
@@ -78,11 +85,11 @@ const Attendance = () => {
         </div>
         {/* Summary Boxes */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 card">
-          <SummaryBox label="Present" value={summary.present} />
-          <SummaryBox label="Late" value={summary.late} />
-          <SummaryBox label="Half Day" value={summary.halfDay} />
+          <SummaryBox label="Present" value={mySummary.present} />
+          <SummaryBox label="Late" value={mySummary.late} />
+          <SummaryBox label="Half Day" value={mySummary.halfDay} />
           <SummaryBox label="Absent" value={summary.absent} />
-          <SummaryBox label="Working Days" value={summary.totalWorkingDays} />
+          <SummaryBox label="Working Days" value={mySummary.totalWorkingDays} />
         </div>
 
         {/* Calendar Component - Replace the grid with your Calendar component */}
