@@ -60,43 +60,24 @@ const evaluateAttendanceState = (attendance) => {
   return "Unknown";
 };
 
-const calculateAttendanceSummary = (records) => {
-  const summary = {
-    present: 0,
-    absent: 0,
-    late: 0,
-    early: 0,
-    halfDay: 0,
-    totalWorkingDays: 0,
-  };
+const isPresentLike = (record) => {
+  return ["present", "late", "halfDay", "onTime"].includes(record.checkInStatus);
+}
 
-  const uniqueDates = new Set();
-  const presentLike = new Set(["present", "late", "halfDay", "onTime"]);
+const isAbsent = (record) => {
+  return !record.checkIn && !record.checkOut;
+}
 
-  records.forEach((record) => {
-    // Count checkInStatus
-    if (presentLike.has(record.checkInStatus)) summary.present += 1;
-    if (record.checkInStatus === "late") summary.late += 1;
-    if (record.checkInStatus === "halfDay") summary.halfDay += 1;
-    if (record.checkInStatus === "absent") summary.absent += 1;
+const isWorkingDay = (record) => {
+  return !!record.checkIn;
+}
 
-    // Add date to set
-    const dateKey = new Date(record.date).toDateString(); // normalize to string date
-    uniqueDates.add(dateKey);
-  });
-
-  summary.totalWorkingDays = uniqueDates.size;
-
-  return summary;
-};
-
-const calculateSummaryPerUser = (records) => {
+const calculateUnifiedSummary = (records) => {
   const summaryMap = new Map();
-  const presentLike = new Set(["present", "late", "halfDay", "onTime"]);
 
   records.forEach((record) => {
-    const userId = record.user._id.toString();
-    const userName = record.user.name;
+    const userId = record.user._id ? record.user._id.toString() : "single";
+    const userName = record.user.name || "N/A";
     const dateKey = new Date(record.date).toDateString();
 
     if (!summaryMap.has(userId)) {
@@ -107,37 +88,54 @@ const calculateSummaryPerUser = (records) => {
         absent: 0,
         late: 0,
         halfDay: 0,
-        totalWorkingDaysSet: new Set(), // store unique dates
+        early: 0,
+        totalWorkingDaysSet: new Set(),
       });
     }
 
     const userSummary = summaryMap.get(userId);
 
-    // Count statuses
-    if (presentLike.has(record.checkInStatus)) userSummary.present += 1;
-    if (record.checkInStatus === "late") userSummary.late += 1;
-    if (record.checkInStatus === "halfDay") userSummary.halfDay += 1;
-    if (record.checkInStatus === "absent") userSummary.absent += 1;
-    if (record.checkOutStatus === "early") userSummary.early += 1;
+    // Present
+    if (isPresentLike(record) || (record.checkIn && !record.checkOut)) {
+      userSummary.present++;
+    }
 
-    // Only count as working day if NOT absent
-    if (
-      record.checkInStatus !== "absent" &&
-      record.checkOutStatus !== "absent"
-    ) {
+    // Absent
+    if (isAbsent(record)) {
+      userSummary.absent++;
+    }
+
+    // Late
+    if (record.checkInStatus === "late") {
+      userSummary.late++;
+    }
+
+    // Half-day
+    if (record.checkInStatus === "halfDay") {
+      userSummary.halfDay++;
+    }
+
+    // Early checkout
+    if (record.checkOutStatus === "early") {
+      userSummary.early++;
+    }
+
+    // Working days
+    if (isWorkingDay(record)) {
       userSummary.totalWorkingDaysSet.add(dateKey);
     }
   });
 
-  // Convert Set to count
+  // Convert sets to counts
   const finalSummary = [...summaryMap.values()].map((entry) => ({
     ...entry,
     totalWorkingDays: entry.totalWorkingDaysSet.size,
-    totalWorkingDaysSet: undefined, // remove internal field
+    totalWorkingDaysSet: undefined,
   }));
 
   return finalSummary;
-};
+}
+
 
 const buildMonthlyDateFilter = (month) => {
   if (!month) return {}; // No filter if month not passed
@@ -173,7 +171,7 @@ const checkIn = async (req, res, next) => {
     if (distance > parseFloat(OFFICE_RADIUS_METERS)) {
       return res
         .status(400)
-        .json({ message: "Check-in Denied. You are not in the office" });
+        .json({ error: "Check-in Denied. You are not in the office" });
     }
 
     const now = new Date();
@@ -290,7 +288,7 @@ const getAllAttendance = async (req, res) => {
       "user",
       "name"
     );
-    const summary = calculateSummaryPerUser(attendances);
+    const summary = calculateUnifiedSummary(attendances);
 
     res.status(200).json({
       summary,
@@ -309,7 +307,7 @@ const getMyAttendance = async (req, res) => {
       user: req.user._id,
       ...dateFilter,
     });
-    const summary = calculateAttendanceSummary(attendances);
+    const summary = calculateUnifiedSummary(attendances);
 
     res.status(200).json({
       summary,
