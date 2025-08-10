@@ -11,7 +11,9 @@ import ReactPaginate from "react-paginate";
 const ManageLeadTable = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    return parseInt(sessionStorage.getItem("lastLeadPage")) || 1;
+  });
   const [pages, setPages] = useState(1);
   const navigate = useNavigate();
 
@@ -69,6 +71,7 @@ const ManageLeadTable = () => {
 
   useEffect(() => {
     fetchLeads(page);
+    sessionStorage.setItem("lastLeadPage", page);
   }, [page]);
 
   const handleNavigate = (leadId) => {
@@ -106,9 +109,9 @@ const ManageLeadTable = () => {
       case "agreement":
         return "bg-[#2b7fff] border border-blue-500";
       case "pitch":
-        return "bg-[#8B5CF6] border border-purple-500"; 
+        return "bg-[#8B5CF6] border border-purple-500";
       case "legal":
-        return "bg-[#000] border border-black"; 
+        return "bg-[#000] border border-black";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -117,7 +120,7 @@ const ManageLeadTable = () => {
   return (
     <div className="relative bg-gray-900 rounded-lg shadow-lg p-4 w-full">
       {/* Container with controlled width and horizontal scroll */}
-  <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">    
+      <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">
         {/* Table wrapper with fixed width */}
         <div
           className={`relative ${
