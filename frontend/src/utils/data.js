@@ -512,6 +512,7 @@ export const LEAD_SERVICE = [
 ];
 
 export const LEAD_SOURCE = [
+  { value: "self", label: "Self Generated" },
   { value: "website", label: "Website" },
   { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
   { value: "whatsAppReTarget", label: "Whatsapp Retarget" },
