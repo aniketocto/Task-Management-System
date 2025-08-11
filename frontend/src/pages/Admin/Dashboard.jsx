@@ -57,32 +57,32 @@ const Dashboard = () => {
   const [barChartData, setBarChartData] = useState([]);
 
   const [filterMonth, setFilterMonth] = useState(() => {
-    return sessionStorage.getItem("lastmonth") || "";
+    return sessionStorage.getItem("dashlastmonth") || "";
   });
   const [availableMonths, setAvailableMonths] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [filterDepartment, setFilterDepartment] = useState(() => {
-    return sessionStorage.getItem("lastdept") || "";
+    return sessionStorage.getItem("dashlastdept") || "";
   });
   useEffect(() => {
-    sessionStorage.setItem("lastdept", filterDepartment);
+    sessionStorage.setItem("dashlastdept", filterDepartment);
   }, [filterDepartment]);
   const [departments, setDepartments] = useState([]);
 
   const [availableCompanies, setAvailableCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(() => {
-    return sessionStorage.getItem("lastCompany") || "";
+    return sessionStorage.getItem("dashlastCompany") || "";
   });
   useEffect(() => {
-    sessionStorage.setItem("lastCompany", selectedCompany);
+    sessionStorage.setItem("dashlastCompany", selectedCompany);
   }, [selectedCompany]);
 
   const [filterTimeframe, setFilterTimeframe] = useState(() => {
-    return sessionStorage.getItem("lastTimeframe") || "";
+    return sessionStorage.getItem("dashlastTimeframe") || "";
   });
   useEffect(() => {
-    sessionStorage.setItem("lastTimeframe", filterTimeframe);
+    sessionStorage.setItem("dashlastTimeframe", filterTimeframe);
   }, [filterTimeframe]);
   
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -254,7 +254,7 @@ const Dashboard = () => {
   // Save filterMonth to sessionStorage when it changes
   useEffect(() => {
     if (filterMonth) {
-      sessionStorage.setItem("lastmonth", filterMonth);
+      sessionStorage.setItem("dashlastmonth", filterMonth);
     }
   }, [filterMonth]);
   useEffect(() => {
