@@ -43,10 +43,28 @@ const todoSchema = new mongoose.Schema({
   approvalLogs: [approvalLogSchema], // Admin approves/rejects
 });
 
+const remarksSchema = new mongoose.Schema(
+  {
+    text: { type: String },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    description: { type: String },  
+    description: { type: String },
     companyName: { type: String, required: true, trim: true },
     priority: {
       type: String,
@@ -81,7 +99,10 @@ const taskSchema = new mongoose.Schema(
 
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    attachments: [{ type: String }],
+    attachments: [{ 
+      name: { type: String, trim: true },  // human label
+      url: { type: String, trim: true },   // url
+     }],
     todoChecklist: [todoSchema],
     progress: { type: Number, default: 0 },
     serialNumber: {
@@ -124,7 +145,7 @@ const taskSchema = new mongoose.Schema(
     channels: { type: String },
     smp: { type: String },
     referance: [{ type: String }],
-    remarks: [{ type: String }],
+    remarks: [remarksSchema],
 
     // ---------------------------
   },

@@ -362,7 +362,7 @@ const CreateLead = () => {
   return (
     <DashboardLayout activeMenu="Create Leads">
       <div className="mt-5">
-        {currentLead?.leadInfo?.dateChangeRequests.length > 0 &&
+        {currentLead?.leadInfo?.dateChangeRequests &&
           Array.isArray(currentLead?.leadInfo?.dateChangeRequests) && (
             <div className="bg-gray-800 rounded-md p-4 my-6">
               <h3 className="text-lg font-semibold text-white mb-2">
@@ -370,6 +370,7 @@ const CreateLead = () => {
               </h3>
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status === "pending")
+
                 .map((request) => (
                   <div
                     key={request._id}

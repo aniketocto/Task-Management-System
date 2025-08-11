@@ -111,13 +111,11 @@ const ViewTaskDetails = () => {
   const addRemark = async (text) => {
     if (!text.trim()) return;
     try {
-      const newRemarks = [text.trim(), ...remarks]; // add newest first, or [...remarks, text.trim()] for bottom
-      // Update backend
+      const newRemarks = [text.trim(), ...remarks]; // send a string; backend normalizes
       await axiosInstance.put(API_PATHS.TASKS.UPDATE_TASK_BY_ID(task._id), {
         remarks: newRemarks,
       });
-      setRemarks(newRemarks);
-      setTask({ ...task, remarks: newRemarks }); // keep task in sync
+      await getTaskDetailsByID();
     } catch (e) {
       toast.error("Could not add remark");
       console.error(e);
@@ -125,10 +123,10 @@ const ViewTaskDetails = () => {
   };
 
   //handle attachment link
-  const handleLinkClick = (link) => {
-    if (!/^https?:\/\//i.test(link)) {
-      link = "https://" + link; // Default to HTTPS
-    }
+  const handleLinkClick = (att) => {
+    const raw = typeof att === "string" ? att : att?.url;
+    if (!raw) return;
+    const link = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
     window.open(link, "_blank");
   };
 
@@ -147,6 +145,9 @@ const ViewTaskDetails = () => {
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <div>
+                <h2 className="text-base md:text-xl text-slate-50 font-medium">
+                  Task: {task?.serialNumber}
+                </h2>
                 <h2 className="text-base md:text-2xl text-slate-50 font-medium">
                   {task?.companyName}
                 </h2>
@@ -293,14 +294,22 @@ const ViewTaskDetails = () => {
                   Attachments
                 </label>
 
-                {task?.attachments?.map((link, index) => (
-                  <Attachment
-                    key={`link_${index}`}
-                    link={link}
-                    index={index}
-                    onClick={() => handleLinkClick(link)}
-                  />
-                ))}
+                {task?.attachments?.map((att, index) => {
+                  const isString = typeof att === "string";
+                  const name = isString
+                    ? `Attachment ${index + 1}`
+                    : att.name || `Attachment ${index + 1}`;
+                  const url = isString ? att : att.url;
+                  return (
+                    <Attachment
+                      key={`link_${index}`}
+                      name={name}
+                      url={url}
+                      index={index}
+                      onClick={() => handleLinkClick(att)}
+                    />
+                  );
+                })}
               </div>
             )}
             <div className="mt-3">
@@ -311,18 +320,21 @@ const ViewTaskDetails = () => {
                 {remarks.length === 0 && (
                   <li className="text-gray-400 text-xs">No remarks yet</li>
                 )}
-                {remarks.map((r, idx) => (
-                  <li
-                    key={idx}
-                    className="bg-blue-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
-                  >
-                    <FaBookmark className="text-red-500 mr-2" />
-                    {r}
-                  </li>
-                ))}
+                {remarks.map((r, idx) => {
+                  const text = typeof r === "string" ? r : r?.text || "";
+
+                  return (
+                    <li
+                      key={idx}
+                      className="bg-blue-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
+                    >
+                      <FaBookmark className="text-red-500 mr-2" />
+                      {text}
+                    </li>
+                  );
+                })}
               </ul>
 
-              {/* Only allow user role to add */}
               <AddRemarkInput onAdd={addRemark} />
             </div>
           </div>

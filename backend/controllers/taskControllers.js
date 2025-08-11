@@ -121,11 +121,11 @@ const getTasks = async (req, res) => {
     let baseFilter = isPrivileged
       ? {}
       : {
-        $or: [
-          { assignedTo: { $in: [req.user._id] } },
-          { "todoChecklist.assignedTo": req.user._id },
-        ],
-      };
+          $or: [
+            { assignedTo: { $in: [req.user._id] } },
+            { "todoChecklist.assignedTo": req.user._id },
+          ],
+        };
 
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
@@ -615,10 +615,12 @@ const getTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
       .populate("assignedTo", "name email profileImageUrl")
-      .populate("todoChecklist.assignedTo", "name email profileImageUrl");
+      .populate("todoChecklist.assignedTo", "name email profileImageUrl")
+      .populate("remarks.user", "name email profileImageUrl");
 
     if (!task) return res.status(404).json({ message: "Task not found" });
     res.status(200).json({ task });
+    // console.log(task);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -780,6 +782,45 @@ const getAdminTasks = async (req, res) => {
   }
 };
 
+const normalizeRemarks = (remarks, authorId) => {
+  if (!Array.isArray(remarks)) return [];
+  return remarks
+    .map((r) => {
+      if (typeof r === "string") {
+        return {
+          text: r,
+          user: authorId,
+          date: new Date(),
+        };
+      }
+
+      const text = r?.text ?? String(r ?? "").trim();
+      const user = r?.user ?? authorId;
+      const date = r?.date ? new Date(r.date) : new Date();
+
+      return { text, user, date };
+    })
+    .filter((r) => r.text && r.text.trim().length > 0);
+};
+
+const normalizeAttachments = (arr = []) => {
+  return arr
+    .map((a, i) => {
+      if (typeof a === "string") {
+        return { name: `Attachment ${i + 1}`, url: a.trim() };
+      }
+
+      const name = (a?.name || "").trim();
+      const url = (a?.url || "").trim();
+
+      if (!url) return null; // no URL → skip
+
+      // Only use auto-generated name if none is provided
+      return { name: name || `Attachment ${i + 1}`, url };
+    })
+    .filter(Boolean);
+};
+
 const createTask = async (req, res) => {
   try {
     const {
@@ -867,6 +908,8 @@ const createTask = async (req, res) => {
       nextSerial = `U${String(newNum).padStart(3, "0")}`;
     }
 
+    const safeAttachments = normalizeAttachments(attachments);
+
     // ✅ Create the task
     const task = await Task.create({
       title,
@@ -875,7 +918,7 @@ const createTask = async (req, res) => {
       assignedTo,
       dueDate,
       priority,
-      attachments,
+      attachments: safeAttachments,
       todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
       serialNumber: nextSerial,
@@ -965,7 +1008,7 @@ const updateTask = async (req, res) => {
 
       // Allow update of remarks
       if (typeof req.body.remarks !== "undefined") {
-        task.remarks = req.body.remarks;
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
         changed = true;
       }
 
@@ -1005,7 +1048,9 @@ const updateTask = async (req, res) => {
       task.description = req.body.description || task.description;
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
-      task.attachments = req.body.attachments || task.attachments;
+      if (typeof req.body.attachments !== "undefined") {
+        task.attachments = normalizeAttachments(req.body.attachments);
+      }
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
       task.creativeSizes = req.body.creativeSizes || task.creativeSizes;
@@ -1015,8 +1060,9 @@ const updateTask = async (req, res) => {
       task.channels = req.body.channels || task.channels;
       task.smp = req.body.smp || task.smp;
       task.referance = req.body.referance || task.referance;
-      task.remarks = req.body.remarks || task.remarks;
-
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
+      }
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
@@ -1047,7 +1093,9 @@ const updateTask = async (req, res) => {
       task.companyName = req.body.companyName || task.companyName;
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
-      task.attachments = req.body.attachments || task.attachments;
+      if (typeof req.body.attachments !== "undefined") {
+        task.attachments = normalizeAttachments(req.body.attachments);
+      }
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
       task.creativeSizes = req.body.creativeSizes || task.creativeSizes;
@@ -1057,8 +1105,9 @@ const updateTask = async (req, res) => {
       task.channels = req.body.channels || task.channels;
       task.smp = req.body.smp || task.smp;
       task.referance = req.body.referance || task.referance;
-      task.remarks = req.body.remarks || task.remarks;
-
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
+      }
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
@@ -1603,7 +1652,6 @@ const getUserDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt companyName");
 
-
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -1667,8 +1715,9 @@ const requestDueDateChange = async (req, res) => {
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `${req.user.name} shifted the deadline for "${task.title
-            }" to ${date.toLocaleDateString()}.`,
+          message: `${req.user.name} shifted the deadline for "${
+            task.title
+          }" to ${date.toLocaleDateString()}.`,
           taskId: taskId,
           type: "info",
         })
@@ -1723,12 +1772,14 @@ const reviewDueDateChange = async (req, res) => {
     if (approve) {
       task.dueDateStatus = "approved";
       task.dueDate = task.pendingDueDate;
-      notificationMsg = `${req.user.name} has approved task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has approved task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
     } else {
       task.dueDateStatus = "rejected";
-      notificationMsg = `${req.user.name} has rejected task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has rejected task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
     }
 
     task.pendingDueDate = undefined;
