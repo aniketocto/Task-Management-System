@@ -145,8 +145,8 @@ const ViewTaskDetails = () => {
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base md:text-2xl text-slate-50 font-medium">
-                  {task?.serialNumber}
+                <h2 className="text-base md:text-xl text-slate-50 font-medium">
+                  Task: {task?.serialNumber}
                 </h2>
                 <h2 className="text-base md:text-2xl text-slate-50 font-medium">
                   {task?.companyName}
