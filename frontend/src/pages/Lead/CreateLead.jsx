@@ -17,7 +17,11 @@ import Modal from "components/layouts/Modal";
 import DeleteAlert from "components/layouts/DeleteAlert";
 import MultiSelectChips from "components/Inputs/MultiSelectChips";
 import { UserContext } from "../../context/userContext";
-import { addBusinessDays, beautify } from "../../utils/helper";
+import {
+  addBusinessDays,
+  beautify,
+  toLocalInputValue,
+} from "../../utils/helper";
 import moment from "moment";
 
 const CreateLead = () => {
@@ -191,10 +195,13 @@ const CreateLead = () => {
           status: leadInfo.status,
           type: leadInfo.type,
           category: leadInfo.category,
-          leadCameDate: leadInfo.leadCameDate || null,
-          credentialDeckDate: leadInfo.credentialDeckDate || null,
-          discoveryCallDate: leadInfo.discoveryCallDate || null,
-          pitchDate: leadInfo.pitchDate || null,
+          leadCameDate: leadInfo.leadCameDate
+            ? toLocalInputValue(leadInfo.leadCameDate).slice(0, 10)
+            : "",
+          // type="datetime-local":
+          credentialDeckDate: toLocalInputValue(leadInfo.credentialDeckDate),
+          discoveryCallDate: toLocalInputValue(leadInfo.discoveryCallDate),
+          pitchDate: toLocalInputValue(leadInfo.pitchDate),
           attachments: leadInfo.attachments || [],
           remark: leadInfo.remark,
           followUp: leadInfo.followUp || [],
@@ -230,20 +237,45 @@ const CreateLead = () => {
     }
   };
 
+  const sameDateInput = (apiISO, inputVal) => {
+    if (!apiISO && !inputVal) return true;
+    return toLocalInputValue(apiISO) === (inputVal || "");
+  };
+
   const updateLead = async () => {
     setLoading(true);
 
     try {
+      // Clone state so we can safely modify
+      const payload = { ...leadData };
+
+      // Remove unchanged datetime fields
+      ["credentialDeckDate", "discoveryCallDate", "pitchDate"].forEach((f) => {
+        const apiISO = currentLead?.leadInfo?.[f] || null; // original value from API
+        if (sameDateInput(apiISO, payload[f])) {
+          delete payload[f];
+        }
+      });
+
+      // Remove unchanged date-only field
+      const apiLeadCameDateLocal = currentLead?.leadInfo?.leadCameDate
+        ? toLocalInputValue(currentLead.leadInfo.leadCameDate).slice(0, 10)
+        : "";
+      if (apiLeadCameDateLocal === (payload.leadCameDate || "")) {
+        delete payload.leadCameDate;
+      }
+
       const response = await axiosInstance.put(
         API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId),
-        leadData
+        payload
       );
+
       if (response.status === 200) {
         toast.success("Lead updated successfully");
-        // getLead();
+        getLead();
         // navigate("/manage-lead");
       }
-      console.log(response.data);
+
     } catch (error) {
       console.error("Error updating lead:", error);
     } finally {
@@ -338,7 +370,7 @@ const CreateLead = () => {
               </h3>
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status === "pending")
-                .slice(0, 3)
+
                 .map((request) => (
                   <div
                     key={request._id}
@@ -636,16 +668,16 @@ const CreateLead = () => {
                   Lead Date <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.leadCameDate < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.leadCameDate < Date.now()
+                  // }
                   type="date"
                   className="form-input-date"
-                  value={leadData.leadCameDate?.split("T")[0] ?? ""}
-                  onChange={({ target }) =>
-                    handleValueChange("leadCameDate", target.value)
+                  value={leadData.leadCameDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("leadCameDate", e.target.value)
                   }
                 />
               </div>
@@ -663,13 +695,9 @@ const CreateLead = () => {
                   // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.credentialDeckDate
-                      ? leadData.credentialDeckDate.slice(0, 16)
-                      : ""
-                  }
-                  onChange={({ target }) =>
-                    handleValueChange("credentialDeckDate", target.value)
+                  value={leadData.credentialDeckDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("credentialDeckDate", e.target.value)
                   }
                   // min={new Date().toISOString().split("T")[0]}
                   // max={addBusinessDays(leadData.leadCameDate, 3)}
@@ -703,13 +731,9 @@ const CreateLead = () => {
                   // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.discoveryCallDate
-                      ? leadData.discoveryCallDate.slice(0, 16)
-                      : ""
-                  }
-                  onChange={({ target }) =>
-                    handleValueChange("discoveryCallDate", target.value)
+                  value={leadData.discoveryCallDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("discoveryCallDate", e.target.value)
                   }
                   // min={new Date().toISOString().split("T")[0]}
                   // max={addBusinessDays(leadData.leadCameDate, 5)}
@@ -743,11 +767,9 @@ const CreateLead = () => {
                   // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.pitchDate ? leadData.pitchDate.slice(0, 16) : ""
-                  }
-                  onChange={({ target }) =>
-                    handleValueChange("pitchDate", target.value)
+                  value={leadData.pitchDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("pitchDate", e.target.value)
                   }
                   // min={new Date().toISOString().split("T")[0]}
                   // max={addBusinessDays(leadData.leadCameDate, 7)}
