@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
@@ -11,7 +11,6 @@ import { UserContext } from "../../context/userContext";
 import { FaBookmark } from "react-icons/fa";
 
 const ViewTaskDetails = () => {
-  const { user } = useContext(UserContext);
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [createdBy, setCreatedBy] = useState(false);
@@ -324,7 +323,7 @@ const ViewTaskDetails = () => {
               </ul>
 
               {/* Only allow user role to add */}
-              {user?.role === "user" && <AddRemarkInput onAdd={addRemark} />}
+              <AddRemarkInput onAdd={addRemark} />
             </div>
           </div>
         </div>
