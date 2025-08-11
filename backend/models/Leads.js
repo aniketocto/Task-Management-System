@@ -59,6 +59,7 @@ const leadSchema = new mongoose.Schema(
     leadSource: {
       type: String,
       enum: [
+        "self",
         "website",
         "inboundWhatsApp",
         "whatsAppReTarget",
