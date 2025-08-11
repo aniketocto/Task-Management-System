@@ -81,7 +81,7 @@ const MeetingTable = ({ data }) => {
                 </span>
               </td>
               <td className="py-3 px-4 text-white text-[13px] hidden md:table-cell border-b border-gray-500">
-                {beautify(item.services)}
+                {item.services ? beautify(item.services.join(", ")) : "-"}
               </td>
               <td className="py-3 px-4 text-white text-[13px] hidden md:table-cell border-b border-gray-500">
                 {beautify(item.category)}

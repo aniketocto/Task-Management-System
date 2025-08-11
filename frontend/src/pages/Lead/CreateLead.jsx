@@ -15,6 +15,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { LuTrash } from "react-icons/lu";
 import Modal from "components/layouts/Modal";
 import DeleteAlert from "components/layouts/DeleteAlert";
+import MultiSelectChips from "components/Inputs/MultiSelectChips";
 import { UserContext } from "../../context/userContext";
 import { addBusinessDays, beautify } from "../../utils/helper";
 import moment from "moment";
@@ -104,7 +105,7 @@ const CreateLead = () => {
       status: "",
       type: "",
       category: "",
-      services: "",
+      services: [],
       brief: "",
       leadCameDate: null,
       credentialDeckDate: null,
@@ -198,8 +199,13 @@ const CreateLead = () => {
           remark: leadInfo.remark,
           followUp: leadInfo.followUp || [],
           brief: leadInfo.brief,
-          services: leadInfo.services,
+          services: Array.isArray(leadInfo.services)
+            ? leadInfo.services
+            : leadInfo.services
+            ? [leadInfo.services]
+            : [],
           leadSource: leadInfo.leadSource,
+          referral: leadInfo.referral,
         }));
 
         leadInfo?.dateChangeRequests?.map((request) =>
@@ -332,6 +338,7 @@ const CreateLead = () => {
               </h3>
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status === "pending")
+                .slice(0, 3)
                 .map((request) => (
                   <div
                     key={request._id}
@@ -383,6 +390,7 @@ const CreateLead = () => {
                 ))}
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status !== "pending")
+                .slice(0, 3)
                 .map((request) => (
                   <div
                     key={request._id}
@@ -419,7 +427,7 @@ const CreateLead = () => {
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xl md:text-2xl text-white font-semibold">
-                Comapny Details 
+                Comapny Details
               </h2>
 
               {leadId && (
@@ -479,14 +487,21 @@ const CreateLead = () => {
 
               {/* Service */}
               <div className="">
-                <label className="text-xs font-medium text-slate-200">
+                <label className="text-xs font-medium text-slate-200 mb-6">
                   Service Type <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
-                <SelectOption
+                {/* <SelectOption
                   options={LEAD_SERVICE}
                   value={leadData.services}
                   onChange={(value) => handleValueChange("services", value)}
+                  placeholder="Select Services"
+                  isMulti
+                /> */}
+                <MultiSelectChips
+                  options={LEAD_SERVICE} // [{label, value}]
+                  value={leadData.services || []} // array
+                  onChange={(vals) => handleValueChange("services", vals)}
                   placeholder="Select Services"
                 />
               </div>
@@ -547,12 +562,14 @@ const CreateLead = () => {
                 </label>
 
                 <input
+                  type="number"
                   placeholder="POC Contact  "
                   className="form-input"
                   value={leadData.contact}
                   onChange={({ target }) => {
                     handleValueChange("contact", target.value);
                   }}
+                  max={10}
                 />
               </div>
 
@@ -639,11 +656,11 @@ const CreateLead = () => {
                   Credential Deck Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.credentialDeckDate < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.credentialDeckDate < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -654,8 +671,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("credentialDeckDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 3)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 3)}
                 />
                 {user.role !== "superAdmin" && leadId && (
                   <button
@@ -679,11 +696,11 @@ const CreateLead = () => {
                   Discovery Call Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.discoveryCallDate < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.discoveryCallDate < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -694,8 +711,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("discoveryCallDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 5)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 5)}
                 />
                 {user.role !== "superAdmin" && leadId && (
                   <button
@@ -719,11 +736,11 @@ const CreateLead = () => {
                   Pitch Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    new Date(leadData.pitchDate).getTime() < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   new Date(leadData.pitchDate).getTime() < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
                   value={
@@ -732,8 +749,8 @@ const CreateLead = () => {
                   onChange={({ target }) =>
                     handleValueChange("pitchDate", target.value)
                   }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 7)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 7)}
                 />
                 {user.role !== "superAdmin" && leadId && (
                   <button
@@ -786,6 +803,22 @@ const CreateLead = () => {
                   />
                 </div>
               ))}
+              {leadData.leadSource === "referral" && (
+                <div className="">
+                  <label className="text-xs font-medium text-slate-200">
+                    Referral Name <sup className="text-red-500 text-xs">*</sup>
+                  </label>
+
+                  <input
+                    placeholder="Name"
+                    className="form-input"
+                    value={leadData.referral}
+                    onChange={({ target }) => {
+                      handleValueChange("referral", target.value);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-12 gap-2 mt-4">

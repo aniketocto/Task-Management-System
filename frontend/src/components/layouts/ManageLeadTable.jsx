@@ -335,7 +335,7 @@ const ManageLeadTable = () => {
                     {beautify(lead.category) || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
-                    {beautify(lead.services) || "-"}
+                    {lead.services ? beautify(lead.services.join(", ")) : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.credentialDeckDate
