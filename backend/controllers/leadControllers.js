@@ -28,6 +28,12 @@ const createLead = async (req, res) => {
       followUp,
     } = req.body;
 
+    const normalizedServices = Array.isArray(services)
+      ? [...new Set(services)]
+      : services
+      ? [services]
+      : [];
+
     let safeFollowUp = {};
     if (followUp) {
       for (let i = 1; i <= 5; i++) {
@@ -61,7 +67,7 @@ const createLead = async (req, res) => {
       status,
       type,
       category,
-      services,
+      services: normalizedServices,
       brief,
       leadCameDate,
       credentialDeckDate,
@@ -242,11 +248,7 @@ const updateLead = async (req, res) => {
     const lead = await Leads.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
 
-    const dateFields = [
-      "credentialDeckDate",
-      "discoveryCallDate",
-      "pitchDate",
-    ];
+    const dateFields = ["credentialDeckDate", "discoveryCallDate", "pitchDate"];
     let updateFields = {};
     let requestsMade = [];
     const globalReason = req.body.changeReason;
@@ -331,6 +333,15 @@ const updateLead = async (req, res) => {
         }
       }
       updateFields.followUp = newFollowUp;
+    }
+
+    if (req.body.services !== undefined) {
+      const raw = req.body.services;
+      updateFields.services = Array.isArray(raw)
+        ? [...new Set(raw)]
+        : raw
+        ? [raw]
+        : [];
     }
 
     Object.assign(lead, updateFields);
@@ -468,7 +479,7 @@ const getUpcomingMeetings = async (req, res) => {
     });
     meetings.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    res.json({meetings});
+    res.json({ meetings });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -482,5 +493,5 @@ module.exports = {
   deleteLead,
   getLeadDashboardData,
   decideDateChangeRequest,
-  getUpcomingMeetings
+  getUpcomingMeetings,
 };

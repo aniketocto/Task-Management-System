@@ -485,6 +485,7 @@ export const LEAD_TYPE = [
   { value: "fnb", label: "F&B" },
   { value: "agency", label: "Agency" },
   { value: "fashion", label: "Fashion" },
+  { value: "energy", label: "Energy" },
   { value: "other", label: "Others" },
 ];
 
@@ -492,8 +493,10 @@ export const LEAD_SERVICE = [
   { value: "logoDesign", label: "Logo Design" },
   { value: "socialMediaManagement", label: "Social Media Management" },
   { value: "leadGeneration", label: "Lead Generation" },
-  { value: "webDesignNDev", label: "Web Design & Development" },
-  { value: "appDesignNDev", label: "App Design & Development" },
+  { value: "webDesign", label: "Web Design" },
+  { value: "webDevelopment", label: "Web Development" },
+  { value: "appDesign", label: "App Design" },
+  { value: "appDevelopment", label: "App Development" },
   { value: "videoProduction", label: "Video Production" },
   { value: "branding", label: "Branding" },
   { value: "visualIdentity", label: "Visual Identity" },

@@ -9,6 +9,7 @@ const {
   backfillTaskApprovals,
   backfillPitchAndPresentation,
   migrateApprovalToLogs,
+  updateService,
 } = require("./config/helper");
 
 const authRoutes = require("./routes/authRoutes");
@@ -98,6 +99,7 @@ io.on("connection", (socket) => {
 // backfillTaskApprovals();
 // backfillPitchAndPresentation();
 // migrateApprovalToLogs();
+// updateService();
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
