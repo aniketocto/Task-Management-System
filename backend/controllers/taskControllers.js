@@ -620,6 +620,7 @@ const getTask = async (req, res) => {
 
     if (!task) return res.status(404).json({ message: "Task not found" });
     res.status(200).json({ task });
+    // console.log(task);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -802,6 +803,24 @@ const normalizeRemarks = (remarks, authorId) => {
     .filter((r) => r.text && r.text.trim().length > 0);
 };
 
+const normalizeAttachments = (arr = []) => {
+  return arr
+    .map((a, i) => {
+      if (typeof a === "string") {
+        return { name: `Attachment ${i + 1}`, url: a.trim() };
+      }
+
+      const name = (a?.name || "").trim();
+      const url = (a?.url || "").trim();
+
+      if (!url) return null; // no URL → skip
+
+      // Only use auto-generated name if none is provided
+      return { name: name || `Attachment ${i + 1}`, url };
+    })
+    .filter(Boolean);
+};
+
 const createTask = async (req, res) => {
   try {
     const {
@@ -889,6 +908,8 @@ const createTask = async (req, res) => {
       nextSerial = `U${String(newNum).padStart(3, "0")}`;
     }
 
+    const safeAttachments = normalizeAttachments(attachments);
+
     // ✅ Create the task
     const task = await Task.create({
       title,
@@ -897,7 +918,7 @@ const createTask = async (req, res) => {
       assignedTo,
       dueDate,
       priority,
-      attachments,
+      attachments: safeAttachments,
       todoChecklist: normalizedChecklist,
       createdBy: req.user._id,
       serialNumber: nextSerial,
@@ -1027,7 +1048,9 @@ const updateTask = async (req, res) => {
       task.description = req.body.description || task.description;
       task.companyName = req.body.companyName || task.companyName;
       task.priority = req.body.priority || task.priority;
-      task.attachments = req.body.attachments || task.attachments;
+      if (typeof req.body.attachments !== "undefined") {
+        task.attachments = normalizeAttachments(req.body.attachments);
+      }
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
       task.creativeSizes = req.body.creativeSizes || task.creativeSizes;
@@ -1070,7 +1093,9 @@ const updateTask = async (req, res) => {
       task.companyName = req.body.companyName || task.companyName;
       task.dueDate = req.body.dueDate || task.dueDate;
       task.priority = req.body.priority || task.priority;
-      task.attachments = req.body.attachments || task.attachments;
+      if (typeof req.body.attachments !== "undefined") {
+        task.attachments = normalizeAttachments(req.body.attachments);
+      }
       task.taskCategory = req.body.taskCategory || task.taskCategory;
       task.objective = req.body.objective || task.objective;
       task.creativeSizes = req.body.creativeSizes || task.creativeSizes;

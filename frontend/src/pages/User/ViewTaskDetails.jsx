@@ -1,4 +1,4 @@
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
@@ -123,10 +123,10 @@ const ViewTaskDetails = () => {
   };
 
   //handle attachment link
-  const handleLinkClick = (link) => {
-    if (!/^https?:\/\//i.test(link)) {
-      link = "https://" + link; // Default to HTTPS
-    }
+  const handleLinkClick = (att) => {
+    const raw = typeof att === "string" ? att : att?.url;
+    if (!raw) return;
+    const link = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
     window.open(link, "_blank");
   };
 
@@ -294,14 +294,22 @@ const ViewTaskDetails = () => {
                   Attachments
                 </label>
 
-                {task?.attachments?.map((link, index) => (
-                  <Attachment
-                    key={`link_${index}`}
-                    link={link}
-                    index={index}
-                    onClick={() => handleLinkClick(link)}
-                  />
-                ))}
+                {task?.attachments?.map((att, index) => {
+                  const isString = typeof att === "string";
+                  const name = isString
+                    ? `Attachment ${index + 1}`
+                    : att.name || `Attachment ${index + 1}`;
+                  const url = isString ? att : att.url;
+                  return (
+                    <Attachment
+                      key={`link_${index}`}
+                      name={name}
+                      url={url}
+                      index={index}
+                      onClick={() => handleLinkClick(att)}
+                    />
+                  );
+                })}
               </div>
             )}
             <div className="mt-3">

@@ -99,7 +99,10 @@ const taskSchema = new mongoose.Schema(
 
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    attachments: [{ type: String }],
+    attachments: [{ 
+      name: { type: String, trim: true },  // human label
+      url: { type: String, trim: true },   // url
+     }],
     todoChecklist: [todoSchema],
     progress: { type: Number, default: 0 },
     serialNumber: {
