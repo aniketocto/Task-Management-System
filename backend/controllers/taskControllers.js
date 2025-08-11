@@ -121,11 +121,11 @@ const getTasks = async (req, res) => {
     let baseFilter = isPrivileged
       ? {}
       : {
-        $or: [
-          { assignedTo: { $in: [req.user._id] } },
-          { "todoChecklist.assignedTo": req.user._id },
-        ],
-      };
+          $or: [
+            { assignedTo: { $in: [req.user._id] } },
+            { "todoChecklist.assignedTo": req.user._id },
+          ],
+        };
 
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
@@ -615,7 +615,8 @@ const getTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
       .populate("assignedTo", "name email profileImageUrl")
-      .populate("todoChecklist.assignedTo", "name email profileImageUrl");
+      .populate("todoChecklist.assignedTo", "name email profileImageUrl")
+      .populate("remarks.user", "name email profileImageUrl");
 
     if (!task) return res.status(404).json({ message: "Task not found" });
     res.status(200).json({ task });
@@ -778,6 +779,27 @@ const getAdminTasks = async (req, res) => {
     // 14) Handle any unexpected errors
     return res.status(500).json({ error: error.message });
   }
+};
+
+const normalizeRemarks = (remarks, authorId) => {
+  if (!Array.isArray(remarks)) return [];
+  return remarks
+    .map((r) => {
+      if (typeof r === "string") {
+        return {
+          text: r,
+          user: authorId,
+          date: new Date(),
+        };
+      }
+
+      const text = r?.text ?? String(r ?? "").trim();
+      const user = r?.user ?? authorId;
+      const date = r?.date ? new Date(r.date) : new Date();
+
+      return { text, user, date };
+    })
+    .filter((r) => r.text && r.text.trim().length > 0);
 };
 
 const createTask = async (req, res) => {
@@ -965,7 +987,7 @@ const updateTask = async (req, res) => {
 
       // Allow update of remarks
       if (typeof req.body.remarks !== "undefined") {
-        task.remarks = req.body.remarks;
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
         changed = true;
       }
 
@@ -1015,8 +1037,9 @@ const updateTask = async (req, res) => {
       task.channels = req.body.channels || task.channels;
       task.smp = req.body.smp || task.smp;
       task.referance = req.body.referance || task.referance;
-      task.remarks = req.body.remarks || task.remarks;
-
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
+      }
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
@@ -1057,8 +1080,9 @@ const updateTask = async (req, res) => {
       task.channels = req.body.channels || task.channels;
       task.smp = req.body.smp || task.smp;
       task.referance = req.body.referance || task.referance;
-      task.remarks = req.body.remarks || task.remarks;
-
+      if (typeof req.body.remarks !== "undefined") {
+        task.remarks = normalizeRemarks(req.body.remarks, req.user._id);
+      }
       if (req.body.todoChecklist) {
         task.todoChecklist = mergeChecklistPreservingCompletion(
           task.todoChecklist,
@@ -1603,7 +1627,6 @@ const getUserDashboardData = async (req, res) => {
       .limit(10)
       .select("title status priority dueDate createdAt companyName");
 
-
     res.status(200).json({
       statistic: {
         totalTasks,
@@ -1667,8 +1690,9 @@ const requestDueDateChange = async (req, res) => {
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `${req.user.name} shifted the deadline for "${task.title
-            }" to ${date.toLocaleDateString()}.`,
+          message: `${req.user.name} shifted the deadline for "${
+            task.title
+          }" to ${date.toLocaleDateString()}.`,
           taskId: taskId,
           type: "info",
         })
@@ -1723,12 +1747,14 @@ const reviewDueDateChange = async (req, res) => {
     if (approve) {
       task.dueDateStatus = "approved";
       task.dueDate = task.pendingDueDate;
-      notificationMsg = `${req.user.name} has approved task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has approved task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
     } else {
       task.dueDateStatus = "rejected";
-      notificationMsg = `${req.user.name} has rejected task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has rejected task "${
+        task.title
+      }", due date to ${task.dueDate.toLocaleDateString()}`;
     }
 
     task.pendingDueDate = undefined;
