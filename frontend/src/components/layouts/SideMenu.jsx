@@ -109,7 +109,6 @@ const SideMenu = ({ activeMenu }) => {
     localStorage.removeItem("taskManagerToken");
     localStorage.removeItem("taskTableSortBy");
     localStorage.removeItem("taskTableSortOrder");
-    localStorage.removeItem("lastPage");
     localStorage.removeItem("timerState"); // Clear timer state on logout
 
     clearUser();
@@ -337,8 +336,8 @@ const SideMenu = ({ activeMenu }) => {
 
         {user?.role !== "superAdmin" && (
           <div className="timer">
-            <span className="digits">{formattedTime.hours}.</span>
-            <span className="digits">{formattedTime.minutes}.</span>
+            <span className="digits">{formattedTime.hours}:</span>
+            <span className="digits">{formattedTime.minutes}:</span>
             <span className="digits mili-sec">{formattedTime.seconds}</span>
           </div>
         )}
