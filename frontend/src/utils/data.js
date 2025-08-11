@@ -507,7 +507,6 @@ export const LEAD_SERVICE = [
   { value: "influencerMarketing", label: "Influencer Marketing" },
   { value: "siteBranding", label: "Site Branding" },
   { value: "packaging", label: "Packaging" },
-  { value: "energy", label: "Energy" },
   { value: "others", label: "Others" },
 ];
 

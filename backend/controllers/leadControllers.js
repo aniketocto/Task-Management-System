@@ -3,6 +3,29 @@ const Leads = require("../models/Leads");
 const moment = require("moment");
 const User = require("../models/User");
 
+const BYPASS_DATE_APPROVAL = process.env.BYPASS_DATE_APPROVAL === "true";
+
+const parseLocalDateTime = (input) => {
+  if (input === null || input === undefined || input === "") return null;
+  if (input instanceof Date) return input;
+  const str = String(input).trim();
+  const onlyDate = /^\d{4}-\d{2}-\d{2}$/.test(str);
+  if (onlyDate) {
+    const [y, m, d] = str.split("-").map(Number);
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  }
+  const noTZ = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(str);
+  if (noTZ) {
+    const [datePart, timePart] = str.split("T");
+    const [y, m, d] = datePart.split("-").map(Number);
+    const [hh, mm] = timePart.split(":").map(Number);
+    return new Date(y, m - 1, d, hh, mm, 0, 0);
+  }
+  const dt = new Date(str);
+  if (isNaN(dt)) throw new Error(`Invalid date input: ${str}`);
+  return dt;
+};
+
 const createLead = async (req, res) => {
   try {
     const {
@@ -69,10 +92,10 @@ const createLead = async (req, res) => {
       category,
       services: normalizedServices,
       brief,
-      leadCameDate,
-      credentialDeckDate,
-      discoveryCallDate,
-      pitchDate,
+      leadCameDate: parseLocalDateTime(leadCameDate), // keep exact local time
+      credentialDeckDate: parseLocalDateTime(credentialDeckDate),
+      discoveryCallDate: parseLocalDateTime(discoveryCallDate),
+      pitchDate: parseLocalDateTime(pitchDate),
       attachments,
       remark,
       followUp: safeFollowUp,
@@ -242,9 +265,10 @@ const getLeadDashboardData = async (req, res) => {
   }
 };
 
+
 const updateLead = async (req, res) => {
   try {
-    const { role, _id: userId, name } = req.user;
+    const { role, _id: userId } = req.user;
     const lead = await Leads.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
 
@@ -253,36 +277,47 @@ const updateLead = async (req, res) => {
     let requestsMade = [];
     const globalReason = req.body.changeReason;
 
-    for (let field of dateFields) {
-      if (req.body[field] !== undefined && req.body[field] !== null) {
-        const newDate = new Date(req.body[field]);
-        const prevDate = lead[field];
+    for (const field of dateFields) {
+      if (!Object.prototype.hasOwnProperty.call(req.body, field)) continue;
 
-        if (role === "admin") {
-          // Correct date check!
-          if (prevDate && moment().isAfter(moment(prevDate), "day")) {
-            lead.dateChangeRequests = lead.dateChangeRequests || [];
-            lead.dateChangeRequests.push({
-              field,
-              oldDate: prevDate,
-              newDate, // <--- You missed this! Store the new date being requested
-              status: "pending",
-              requestedBy: userId,
-              requestedAt: new Date(),
-              reason: globalReason,
-            });
+      const incoming = req.body[field];
 
-            requestsMade.push(field);
-          } else {
-            updateFields[field] = newDate;
-          }
-        } else if (role === "superAdmin") {
-          // superadmin can always update directly
+      // 🔓 TEMP BYPASS: let anyone set/clear date/time directly
+      if (BYPASS_DATE_APPROVAL) {
+        updateFields[field] =
+          incoming === "" || incoming === null
+            ? null
+            : parseLocalDateTime(incoming);
+        continue; // skip approval logic entirely
+      }
+
+      // --- existing logic below stays as-is ---
+      const newDate =
+        incoming === "" || incoming === null
+          ? null
+          : parseLocalDateTime(incoming);
+      const prevDate = lead[field];
+
+      if (role === "admin") {
+        if (prevDate && moment(prevDate).isBefore(moment().startOf("day"))) {
+          lead.dateChangeRequests = lead.dateChangeRequests || [];
+          lead.dateChangeRequests.push({
+            field,
+            oldDate: prevDate,
+            newDate,
+            status: "pending",
+            requestedBy: userId,
+            requestedAt: new Date(),
+            reason: globalReason,
+          });
+          requestsMade.push(field);
+        } else {
           updateFields[field] = newDate;
         }
+      } else if (role === "superAdmin") {
+        updateFields[field] = newDate;
       }
     }
-
     // Regular allowed fields
     const allowedFields = [
       "cName",
