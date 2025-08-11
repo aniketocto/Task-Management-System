@@ -370,7 +370,6 @@ const CreateLead = () => {
               </h3>
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status === "pending")
-
                 .map((request) => (
                   <div
                     key={request._id}
