@@ -76,6 +76,16 @@ const getTasks = async (req, res) => {
           filter.createdAt = { $gte: last7, $lte: now };
           break;
 
+        case "last30Days":
+          const start = new Date();
+          start.setDate(start.getDate() - 30);
+          start.setHours(0, 0, 0, 0);
+
+          const endDate = new Date();
+          endDate.setHours(23, 59, 59, 999);
+
+          filter.createdAt = { $gte: start, $lte: endDate };
+          break;
         case "custom":
           if (startDate && !endDate) {
             const from = new Date(startDate);
@@ -111,11 +121,11 @@ const getTasks = async (req, res) => {
     let baseFilter = isPrivileged
       ? {}
       : {
-          $or: [
-            { assignedTo: { $in: [req.user._id] } },
-            { "todoChecklist.assignedTo": req.user._id },
-          ],
-        };
+        $or: [
+          { assignedTo: { $in: [req.user._id] } },
+          { "todoChecklist.assignedTo": req.user._id },
+        ],
+      };
 
     if (department) {
       const usersInDept = await User.find({ department }).select("_id");
@@ -1657,9 +1667,8 @@ const requestDueDateChange = async (req, res) => {
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `${req.user.name} shifted the deadline for "${
-            task.title
-          }" to ${date.toLocaleDateString()}.`,
+          message: `${req.user.name} shifted the deadline for "${task.title
+            }" to ${date.toLocaleDateString()}.`,
           taskId: taskId,
           type: "info",
         })
@@ -1714,14 +1723,12 @@ const reviewDueDateChange = async (req, res) => {
     if (approve) {
       task.dueDateStatus = "approved";
       task.dueDate = task.pendingDueDate;
-      notificationMsg = `${req.user.name} has approved task "${
-        task.title
-      }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has approved task "${task.title
+        }", due date to ${task.dueDate.toLocaleDateString()}`;
     } else {
       task.dueDateStatus = "rejected";
-      notificationMsg = `${req.user.name} has rejected task "${
-        task.title
-      }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has rejected task "${task.title
+        }", due date to ${task.dueDate.toLocaleDateString()}`;
     }
 
     task.pendingDueDate = undefined;

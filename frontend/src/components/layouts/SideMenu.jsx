@@ -40,81 +40,33 @@ const SideMenu = ({ activeMenu }) => {
 
   // Initialize timer based on attendance data
   const initializeTimer = useCallback(() => {
-    if (
-      todayAttendance?.attendance?.checkIn &&
-      !todayAttendance?.attendance?.checkOut
-    ) {
-      const elapsedTime = calculateElapsedTime(
-        todayAttendance.attendance.checkIn
-      );
+    const checkIn = todayAttendance?.attendance?.checkIn;
+    const checkOut = todayAttendance?.attendance?.checkOut;
+
+    if (checkIn && !checkOut) {
+      const elapsedTime = calculateElapsedTime(checkIn);
       setTime(elapsedTime);
       setIsActive(true);
-      localStorage.setItem(
-        "timerState",
-        JSON.stringify({
-          isActive: true,
-          checkInTime: todayAttendance.attendance.checkIn,
-        })
-      );
+    } else if (checkIn && checkOut) {
+      setTime(moment(checkOut).diff(moment(checkIn)));
+      setIsActive(false);
     } else {
       setIsActive(false);
       setTime(0);
-      localStorage.removeItem("timerState");
     }
   }, [todayAttendance]);
-
-  // Load timer state from localStorage on component mount
-  useEffect(() => {
-    const savedTimerState = localStorage.getItem("timerState");
-    if (savedTimerState) {
-      try {
-        const { isActive: savedIsActive, checkInTime } =
-          JSON.parse(savedTimerState);
-        if (savedIsActive && checkInTime) {
-          const elapsedTime = calculateElapsedTime(checkInTime);
-          setTime(elapsedTime);
-          setIsActive(true);
-        }
-      } catch (error) {
-        console.error("Error parsing saved timer state:", error);
-        localStorage.removeItem("timerState");
-      }
-    }
-  }, []);
 
   // Update timer every second when active
   useEffect(() => {
     let interval = null;
 
-    if (isActive) {
+    if (isActive && todayAttendance?.attendance?.checkIn) {
       interval = setInterval(() => {
-        const savedTimerState = localStorage.getItem("timerState");
-        if (savedTimerState) {
-          const { checkInTime } = JSON.parse(savedTimerState);
-          setTime(calculateElapsedTime(checkInTime));
-        }
+        setTime(calculateElapsedTime(todayAttendance.attendance.checkIn));
       }, 1000);
-    } else {
-      // If clocked out, keep showing final duration until midnight
-      interval = setInterval(() => {
-        const savedTimerState = localStorage.getItem("timerState");
-        if (savedTimerState) {
-          const { checkInTime, checkOutTime } = JSON.parse(savedTimerState);
-          if (checkInTime && checkOutTime) {
-            setTime(moment(checkOutTime).diff(moment(checkInTime)));
-          }
-        }
-
-        // Reset at midnight
-        if (moment().isSame(moment(), "day") === false) {
-          localStorage.removeItem("timerState");
-          setTime(0);
-        }
-      }, 1000 * 60); // check once a minute
     }
-
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, todayAttendance]);
 
   // Initialize timer when attendance data is fetched
   useEffect(() => {

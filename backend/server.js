@@ -28,6 +28,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // 🔧 Vite dev server
+      "https://crm.getunstoppable.in",
       "http://crm.getunstoppable.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -41,7 +42,7 @@ app.use(express.json()); // ✅ MUST come before routes
 // Connect to DB
 connectDB();
 
-require("./cronjobs/cronJob")
+require("./cronjobs/cronJob");
 
 // Mounting express Routes
 app.use("/api/auth", authRoutes);
@@ -60,7 +61,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Socket IO Setup
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://crm.getunstoppable.in"],
+    origin: [
+      "http://localhost:5173",
+      "http://crm.getunstoppable.in",
+      "https://crm.getunstoppable.in",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },

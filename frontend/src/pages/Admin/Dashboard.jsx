@@ -31,9 +31,9 @@ import { userSOPs } from "../../utils/userSOPs";
 import DailySOP from "components/Inputs/DailySOP";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
 });
 
 const getDailyQuote = () => {
@@ -56,17 +56,35 @@ const Dashboard = () => {
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
 
-  const [filterMonth, setFilterMonth] = useState("");
+  const [filterMonth, setFilterMonth] = useState(() => {
+    return sessionStorage.getItem("lastmonth") || "";
+  });
   const [availableMonths, setAvailableMonths] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState(() => {
+    return sessionStorage.getItem("lastdept") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lastdept", filterDepartment);
+  }, [filterDepartment]);
   const [departments, setDepartments] = useState([]);
 
   const [availableCompanies, setAvailableCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState(() => {
+    return sessionStorage.getItem("lastCompany") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lastCompany", selectedCompany);
+  }, [selectedCompany]);
 
-  const [filterTimeframe, setFilterTimeframe] = useState("");
+  const [filterTimeframe, setFilterTimeframe] = useState(() => {
+    return sessionStorage.getItem("lastTimeframe") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lastTimeframe", filterTimeframe);
+  }, [filterTimeframe]);
+  
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
@@ -222,20 +240,23 @@ const Dashboard = () => {
     // eslint-disable-next-line
   }, []);
 
-  // Set current month if available
   // useEffect(() => {
   //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
   //     const sorted = [...availableMonths].sort((a, b) =>
   //       b.value.localeCompare(a.value)
   //     );
-  //     const curr = new Date().toISOString().slice(0, 7);
-  //     const hasCurrent = sorted.some((m) => m.value === curr);
-  //     setFilterMonth(hasCurrent ? curr : sorted[0].value);
+  //     const recentWithData = sorted.find((m) => (m.count || 0) > 0);
+  //     setFilterMonth(recentWithData ? recentWithData.value : sorted[0].value);
+
   //   }
   // }, [availableMonths, filterMonth, filterTimeframe]);
 
-  // Filter chart data (do not spam network)
-
+  // Save filterMonth to sessionStorage when it changes
+  useEffect(() => {
+    if (filterMonth) {
+      sessionStorage.setItem("lastmonth", filterMonth);
+    }
+  }, [filterMonth]);
   useEffect(() => {
     if (!dashboardData) return;
     const chartsToUse = findChartsOrFallback({

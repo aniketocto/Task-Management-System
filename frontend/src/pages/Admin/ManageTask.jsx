@@ -19,9 +19,9 @@ import { infoCard } from "../../utils/data";
 import InfoCard from "../../components/Cards/InfoCard";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
 });
 
 const ManageTask = () => {
@@ -30,40 +30,59 @@ const ManageTask = () => {
   const userRole = user?.role;
 
   const [filterStatus, setFilterStatus] = useState("All");
-  const [filterMonth, setFilterMonth] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterMonth, setFilterMonth] = useState(() => {
+    return sessionStorage.getItem("lastmonth") || "";
+  });
+  const [filterDepartment, setFilterDepartment] = useState(() => {
+    return sessionStorage.getItem("lastdept") || "";
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("lastdept", filterDepartment);
+  }, [filterDepartment]);
+
   const [filterPriority, setFilterPriority] = useState("");
-  const [filterTimeframe, setFilterTimeframe] = useState("");
+  const [filterTimeframe, setFilterTimeframe] = useState(() => {
+    return sessionStorage.getItem("lastTimeframe") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lastTimeframe", filterTimeframe);
+  }, [filterTimeframe]);
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [searchSerial, setSearchSerial] = useState("");
   const [debouncedSearchSerial, setDebouncedSearchSerial] = useState("");
 
   const [page, setPage] = useState(() => {
-    return parseInt(localStorage.getItem("lastPage")) || 1;
+    return parseInt(sessionStorage.getItem("lastPage")) || 1;
   });
   const tasksPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [statusSummary, setStatusSummary] = useState({});
 
   const [allTasks, setAllTasks] = useState([]);
+  // eslint-disable-next-line
   const [tabs, setTabs] = useState([]);
   const [departments, setDepartments] = useState([]);
 
   const [availableMonths, setAvailableMonths] = useState([]);
   const [sortBy, setSortBy] = useState(() => {
-    return localStorage.getItem("taskSortBy") || "createdAt";
+    return sessionStorage.getItem("taskSortBy") || "createdAt";
   });
 
   const [sortOrder, setSortOrder] = useState(() => {
-    return localStorage.getItem("taskSortOrder") || "desc";
+    return sessionStorage.getItem("taskSortOrder") || "desc";
   });
 
   const [availableCompanies, setAvailableCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState(() => {
+    return sessionStorage.getItem("lastCompany") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lastCompany", selectedCompany);
+  }, [selectedCompany]);
 
   const [viewType, setViewType] = useState("table");
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -197,22 +216,31 @@ const ManageTask = () => {
 
   useEffect(() => {
     getAllTasks(page);
-    localStorage.setItem("lastPage", page);
+    sessionStorage.setItem("lastPage", page);
   }, [getAllTasks, page]);
 
+  // Set initial filterMonth if not set
   // useEffect(() => {
-  //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
-  //     // Sort months in descending order (latest first)
+  //   if (
+  //     availableMonths.length > 0 &&
+  //     !filterTimeframe &&
+  //     (filterMonth === null || filterMonth === undefined || filterMonth === "")
+  //   ) {
   //     const sorted = [...availableMonths].sort((a, b) =>
   //       b.value.localeCompare(a.value)
   //     );
-  //     // Try to find the most recent month with count > 0
   //     const recentWithData = sorted.find((m) => (m.count || 0) > 0);
-  //     // Set that as filterMonth, otherwise default to the first (most recent) month
   //     setFilterMonth(recentWithData ? recentWithData.value : sorted[0].value);
   //     setPage(1);
   //   }
   // }, [availableMonths, filterMonth, filterTimeframe]);
+
+  // Save filterMonth to sessionStorage when it changes
+  useEffect(() => {
+    if (filterMonth) {
+      sessionStorage.setItem("lastmonth", filterMonth);
+    }
+  }, [filterMonth]);
 
   // console.log("availableMonths", availableMonths);
 
@@ -288,7 +316,7 @@ const ManageTask = () => {
                   className="border rounded px-3 py-2 text-sm text-white"
                 >
                   <option className="text-black" value="">
-                    This Month
+                    All
                   </option>
                   <option className="text-black" value="today">
                     Today
@@ -417,8 +445,9 @@ const ManageTask = () => {
                   </select>
                 </div>
               )}
-              {/* User
-              {users.length > 0 && (
+
+              {/* User */}
+              {/* {users.length > 0 && (
                 <>
                   <label className="text-sm font-medium text-gray-100">User:</label>
                   <select value={filterUser} onChange={(e) => { setFilterUser(e.target.value); setPage(1); }} className="border rounded px-3 py-2 text-sm text-white">
@@ -483,12 +512,12 @@ const ManageTask = () => {
                 if (sortBy === "dueDate") {
                   const newOrder = sortOrder === "asc" ? "desc" : "asc";
                   setSortOrder(newOrder);
-                  localStorage.setItem("taskSortOrder", newOrder);
+                  sessionStorage.setItem("taskSortOrder", newOrder);
                 } else {
                   setSortBy("dueDate");
                   setSortOrder("asc");
-                  localStorage.setItem("taskSortBy", "dueDate");
-                  localStorage.setItem("taskSortOrder", "asc");
+                  sessionStorage.setItem("taskSortBy", "dueDate");
+                  sessionStorage.setItem("taskSortOrder", "asc");
                 }
                 setPage(1);
               }}
