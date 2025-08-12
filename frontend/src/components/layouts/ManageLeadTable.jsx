@@ -331,7 +331,7 @@ const ManageLeadTable = () => {
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
                     {lead.type || "-"}
                   </td>
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
+                  <td className="px-4 py-2 text-center text-sm  text-gray-300 border-b border-gray-700 uppercase">
                     {beautify(lead.category) || "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">

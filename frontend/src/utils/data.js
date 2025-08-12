@@ -342,11 +342,12 @@ export const infoCard = [
 ];
 
 export const leadStats = [
-  { label: "Onboarded ", key: "onboardedLeads", color: "bg-green-500" },
-  { label: "Follow-Up ", key: "followUpLeads", color: "bg-yellow-500" },
-  { label: "New ", key: "newLeads", color: "bg-orange-500" },
-  { label: "Agreement ", key: "agreementLeads", color: "bg-blue-500" },
+  { label: "Total ", key: "totalLeads", color: "bg-white" },
   { label: "Pitch", key: "pitchLeads", color: "bg-purple-500" },
+  { label: "New ", key: "newLeads", color: "bg-orange-500" },
+  { label: "Follow-Up ", key: "followUpLeads", color: "bg-yellow-500" },
+  { label: "Onboarded ", key: "onboardedLeads", color: "bg-green-500" },
+  { label: "Agreement ", key: "agreementLeads", color: "bg-blue-500" },
   {
     label: "Negotiation ",
     key: "negotiationLeads",
@@ -354,7 +355,6 @@ export const leadStats = [
   },
   { label: "Dead ", key: "deadLeads", color: "bg-red-500" },
   { label: "Legal ", key: "legalLeads", color: "bg-gray-500" },
-  { label: "Total ", key: "totalLeads", color: "bg-white" },
 ];
 
 export const officeQuotes = {
@@ -479,7 +479,7 @@ export const OPPO_TYPE = [
 export const LEAD_TYPE = [
   { value: "realEstate", label: "Real Estate" },
   { value: "hospitality", label: "Hospitality" },
-  { value: "bsfi", label: "BSFI" },
+  { value: "bfsi", label: "BFSI" },
   { value: "healthcare", label: "Healthcare" },
   { value: "wellness", label: "Wellness" },
   { value: "fnb", label: "F&B" },
