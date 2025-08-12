@@ -1,0 +1,1236 @@
+api:http://localhost:8000/api/tasks
+
+
+{
+    "tasks": [
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6899cbe26285ded0b79231d0",
+            "title": "check",
+            "description": "check1",
+            "companyName": "check1",
+            "priority": "low",
+            "status": "new",
+            "dueDate": "2025-08-12T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "68946010fc530c63bb329c5e",
+                    "name": "aniket bd",
+                    "email": "aniketBd@getunstoppable.in",
+                    "profileImageUrl": "",
+                    "department": "BusinessDevelopment"
+                }
+            ],
+            "createdBy": "686cff53a29445b1f2bf4d46",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "check1",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6899cbe46285ded0b79231d1",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U032",
+            "taskCategory": "operational",
+            "objective": "",
+            "creativeSizes": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-11T10:54:28.335Z",
+            "updatedAt": "2025-08-11T10:54:28.335Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "68948e0e02f32293cea94486",
+            "title": "Attachment name test",
+            "description": "iuefibweuifbiuwbv",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "new",
+            "dueDate": "2025-08-12T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "jehbfhrbfjcbjhjjfbweuiweuf",
+                    "completed": false,
+                    "assignedTo": [
+                        "6870a1cb292947107b015644"
+                    ],
+                    "completionLogs": [],
+                    "_id": "68948e0e02f32293cea94487",
+                    "approvalLogs": []
+                },
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "sdfsdfs dfsdf",
+                    "completed": false,
+                    "assignedTo": [
+                        "686d2d972fc900145b7c0f37"
+                    ],
+                    "completionLogs": [],
+                    "_id": "6899c80c5e24bcb53ccc5634",
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U031",
+            "taskCategory": "operational",
+            "objective": "",
+            "creativeSizes": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [
+                {
+                    "text": "sdsdfs",
+                    "date": "2025-08-11T10:44:11.672Z",
+                    "user": "6870a1cb292947107b015644"
+                },
+                {
+                    "text": "asdasdasd",
+                    "date": "2025-08-11T10:44:03.198Z",
+                    "user": "6870a1cb292947107b015644"
+                },
+                {
+                    "text": "remark by admin",
+                    "date": "2025-08-11T10:43:56.655Z",
+                    "user": "6870a1cb292947107b015644"
+                },
+                {
+                    "text": "sdfsdf sdfsdfsfd sfdsdfs dfsdfsdfsdf",
+                    "date": "2025-08-11T10:25:05.030Z",
+                    "user": "6870a1cb292947107b015644"
+                },
+                {
+                    "text": "sdsdsdfsdfsd sdsdf",
+                    "date": "2025-08-11T10:25:05.030Z",
+                    "user": "6870a1cb292947107b015644"
+                }
+            ],
+            "createdAt": "2025-08-07T11:29:18.034Z",
+            "updatedAt": "2025-08-11T12:17:04.143Z",
+            "__v": 32,
+            "attachments": [
+                {
+                    "name": "react icons",
+                    "url": "https://react-icons.github.io/react-icons/search/#q=cancel",
+                    "_id": "6899df40fda4d719cb869216"
+                },
+                {
+                    "name": "BTR Malshej Website",
+                    "url": "https://btrmalshej.com/",
+                    "_id": "6899df40fda4d719cb869217"
+                }
+            ],
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "68948dcb02f32293cea9430d",
+            "title": "jererkrnlner",
+            "description": "uygfiuebgf",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-09T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "jewbflf",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "68948dcb02f32293cea9430e",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U030",
+            "taskCategory": "operational",
+            "objective": "",
+            "creativeSizes": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:28:11.840Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "68948a1482d5c9132a7e6e2f",
+            "title": "nekjskjwr",
+            "description": "jhebffj kjr",
+            "companyName": "Bajaj",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "kjebhjwjf",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "68948a1482d5c9132a7e6e30",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U029",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:12:20.618Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "689487d377a531f7b649be8f",
+            "title": "bajaj11",
+            "description": "bajaj11",
+            "companyName": "Bajaj",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "bajaj11",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "689487d377a531f7b649be90",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U028",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:02:43.080Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6894879177a531f7b649bd88",
+            "title": "casadeveloper4",
+            "description": "casadeveloper3",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-09T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "casadeveloper3",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6894879177a531f7b649bd89",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U027",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:01:37.481Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6894877477a531f7b649bcb3",
+            "title": "casadeveloper3",
+            "description": "casadeveloper3",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "casadeveloper3",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6894877477a531f7b649bcb4",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U026",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:01:08.278Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6894875177a531f7b649bbaa",
+            "title": "casadeveloper2",
+            "description": "casadeveloper2",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "casadeveloper2",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6894875177a531f7b649bbab",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U025",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:00:33.290Z",
+            "updatedAt": "2025-08-10T09:50:17.469Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6894873477a531f7b649bacc",
+            "title": "casadeveloper1",
+            "description": "casadeveloper1",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "casadeveloper1",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6894873477a531f7b649bacd",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U024",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T11:00:04.456Z",
+            "updatedAt": "2025-08-10T09:50:17.438Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        },
+        {
+            "clientApproval": {
+                "status": "pending"
+            },
+            "superAdminApproval": {
+                "status": "pending"
+            },
+            "_id": "6894871277a531f7b649b9ee",
+            "title": "casadeveloper",
+            "description": "casadeveloper",
+            "companyName": "Casa Developers",
+            "priority": "low",
+            "status": "pending",
+            "dueDate": "2025-08-08T00:00:00.000Z",
+            "dueDateStatus": "none",
+            "assignedTo": [
+                {
+                    "_id": "6870a1cb292947107b015644",
+                    "name": "Aniket Admin",
+                    "email": "aniketAdmin@getunstoppable.in",
+                    "profileImageUrl": "https://res.cloudinary.com/dmrzxjo3p/image/upload/v1754472262/ojql4ddogol6l9dalocc.png",
+                    "department": "Digital"
+                }
+            ],
+            "createdBy": "6870a1cb292947107b015644",
+            "attachments": [],
+            "todoChecklist": [
+                {
+                    "approval": {
+                        "status": "pending"
+                    },
+                    "text": "casadeveloper",
+                    "completed": false,
+                    "assignedTo": [],
+                    "_id": "6894871277a531f7b649b9ef",
+                    "completionLogs": [],
+                    "approvalLogs": []
+                }
+            ],
+            "progress": 0,
+            "serialNumber": "U023",
+            "taskCategory": "operational",
+            "objective": "",
+            "targetAudience": "",
+            "usps": "",
+            "competetors": "",
+            "channels": "",
+            "smp": "",
+            "referance": [],
+            "remarks": [],
+            "createdAt": "2025-08-07T10:59:30.079Z",
+            "updatedAt": "2025-08-10T09:50:17.438Z",
+            "__v": 0,
+            "completedTodoCount": 0
+        }
+    ],
+    "totalCount": 31,
+    "statusSummary": {
+        "all": 31,
+        "newTasks": 3,
+        "pendingTasks": 24,
+        "inProgressTasks": 0,
+        "completedTasks": 0,
+        "delayedTasks": 4
+    },
+    "availableMonths": [
+        {
+            "label": "Jul 2025",
+            "value": "2025-07"
+        },
+        {
+            "label": "Aug 2025",
+            "value": "2025-08"
+        }
+    ],
+    "departmentSummary": {
+        "Digital": {
+            "total": 24,
+            "statusBreakdown": {
+                "new": 2,
+                "pending": 19,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 3
+            },
+            "priorityBreakdown": {
+                "high": 1,
+                "medium": 2,
+                "low": 21
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 2,
+                    "pending": 19,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 3,
+                    "All": 24
+                },
+                "taskPrioritiesLevels": {
+                    "high": 1,
+                    "medium": 2,
+                    "low": 21
+                }
+            }
+        },
+        "Other": {
+            "total": 8,
+            "statusBreakdown": {
+                "new": 0,
+                "pending": 6,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 2
+            },
+            "priorityBreakdown": {
+                "high": 1,
+                "medium": 2,
+                "low": 5
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 0,
+                    "pending": 6,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 2,
+                    "All": 8
+                },
+                "taskPrioritiesLevels": {
+                    "high": 1,
+                    "medium": 2,
+                    "low": 5
+                }
+            }
+        },
+        "BusinessDevelopment": {
+            "total": 3,
+            "statusBreakdown": {
+                "new": 1,
+                "pending": 2,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 0
+            },
+            "priorityBreakdown": {
+                "high": 0,
+                "medium": 0,
+                "low": 3
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 1,
+                    "pending": 2,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 0,
+                    "All": 3
+                },
+                "taskPrioritiesLevels": {
+                    "high": 0,
+                    "medium": 0,
+                    "low": 3
+                }
+            }
+        }
+    },
+    "userBreakdown": {
+        "6870a1cb292947107b015644": {
+            "name": "Aniket Admin",
+            "email": "aniketAdmin@getunstoppable.in",
+            "department": "Digital",
+            "total": 24,
+            "statusBreakdown": {
+                "new": 2,
+                "pending": 19,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 3
+            },
+            "priorityBreakdown": {
+                "high": 1,
+                "medium": 2,
+                "low": 21
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 2,
+                    "pending": 19,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 3,
+                    "All": 24
+                },
+                "taskPrioritiesLevels": {
+                    "high": 1,
+                    "medium": 2,
+                    "low": 21
+                }
+            }
+        },
+        "688dd05c94e7a8f4e5b11b17": {
+            "name": "Testing Admin",
+            "email": "testing@getunstoppable.in",
+            "department": "Other",
+            "total": 9,
+            "statusBreakdown": {
+                "new": 1,
+                "pending": 6,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 2
+            },
+            "priorityBreakdown": {
+                "high": 1,
+                "medium": 2,
+                "low": 6
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 1,
+                    "pending": 6,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 2,
+                    "All": 9
+                },
+                "taskPrioritiesLevels": {
+                    "high": 1,
+                    "medium": 2,
+                    "low": 6
+                }
+            }
+        },
+        "686d2d972fc900145b7c0f37": {
+            "name": "Saisha",
+            "email": "saisha@getunstoppable.in",
+            "department": "Creative",
+            "total": 6,
+            "statusBreakdown": {
+                "new": 1,
+                "pending": 1,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 4
+            },
+            "priorityBreakdown": {
+                "high": 0,
+                "medium": 3,
+                "low": 3
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 1,
+                    "pending": 1,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 4,
+                    "All": 6
+                },
+                "taskPrioritiesLevels": {
+                    "high": 0,
+                    "medium": 3,
+                    "low": 3
+                }
+            }
+        },
+        "68946010fc530c63bb329c5e": {
+            "name": "aniket bd",
+            "email": "aniketBd@getunstoppable.in",
+            "department": "BusinessDevelopment",
+            "total": 4,
+            "statusBreakdown": {
+                "new": 1,
+                "pending": 3,
+                "inProgress": 0,
+                "completed": 0,
+                "delayed": 0
+            },
+            "priorityBreakdown": {
+                "high": 0,
+                "medium": 0,
+                "low": 4
+            },
+            "charts": {
+                "taskDistribution": {
+                    "new": 1,
+                    "pending": 3,
+                    "inProgress": 0,
+                    "completed": 0,
+                    "delayed": 0,
+                    "All": 4
+                },
+                "taskPrioritiesLevels": {
+                    "high": 0,
+                    "medium": 0,
+                    "low": 4
+                }
+            }
+        }
+    },
+    "monthlyData": {
+        "monthsData": [
+            {
+                "label": "Jul 2025",
+                "value": "2025-07",
+                "count": 4,
+                "statusBreakdown": {
+                    "all": 4,
+                    "newTasks": 0,
+                    "pendingTasks": 1,
+                    "inProgressTasks": 0,
+                    "completedTasks": 0,
+                    "delayedTasks": 3
+                },
+                "priorityBreakdown": {
+                    "low": 1,
+                    "high": 1,
+                    "medium": 2
+                },
+                "departmentBreakdown": {
+                    "Digital": {
+                        "total": 3,
+                        "statusBreakdown": {
+                            "new": 0,
+                            "pending": 1,
+                            "inProgress": 0,
+                            "completed": 0,
+                            "delayed": 2
+                        },
+                        "priorityBreakdown": {
+                            "high": 1,
+                            "medium": 1,
+                            "low": 1
+                        },
+                        "charts": {
+                            "taskDistribution": {
+                                "new": 0,
+                                "pending": 1,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 2,
+                                "All": 3
+                            },
+                            "taskPrioritiesLevels": {
+                                "high": 1,
+                                "medium": 1,
+                                "low": 1
+                            }
+                        }
+                    },
+                    "Other": {
+                        "total": 3,
+                        "statusBreakdown": {
+                            "new": 0,
+                            "pending": 1,
+                            "inProgress": 0,
+                            "completed": 0,
+                            "delayed": 2
+                        },
+                        "priorityBreakdown": {
+                            "high": 1,
+                            "medium": 2,
+                            "low": 0
+                        },
+                        "charts": {
+                            "taskDistribution": {
+                                "new": 0,
+                                "pending": 1,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 2,
+                                "All": 3
+                            },
+                            "taskPrioritiesLevels": {
+                                "high": 1,
+                                "medium": 2,
+                                "low": 0
+                            }
+                        }
+                    }
+                },
+                "charts": {
+                    "taskDistribution": {
+                        "new": 0,
+                        "pending": 1,
+                        "inProgress": 0,
+                        "completed": 0,
+                        "delayed": 3,
+                        "All": 4
+                    },
+                    "taskPrioritiesLevels": {
+                        "high": 1,
+                        "medium": 2,
+                        "low": 1
+                    },
+                    "departmentDistribution": {
+                        "Digital": {
+                            "total": 3,
+                            "statusBreakdown": {
+                                "new": 0,
+                                "pending": 1,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 2
+                            },
+                            "priorityBreakdown": {
+                                "high": 1,
+                                "medium": 1,
+                                "low": 1
+                            },
+                            "charts": {
+                                "taskDistribution": {
+                                    "new": 0,
+                                    "pending": 1,
+                                    "inProgress": 0,
+                                    "completed": 0,
+                                    "delayed": 2,
+                                    "All": 3
+                                },
+                                "taskPrioritiesLevels": {
+                                    "high": 1,
+                                    "medium": 1,
+                                    "low": 1
+                                }
+                            }
+                        },
+                        "Other": {
+                            "total": 3,
+                            "statusBreakdown": {
+                                "new": 0,
+                                "pending": 1,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 2
+                            },
+                            "priorityBreakdown": {
+                                "high": 1,
+                                "medium": 2,
+                                "low": 0
+                            },
+                            "charts": {
+                                "taskDistribution": {
+                                    "new": 0,
+                                    "pending": 1,
+                                    "inProgress": 0,
+                                    "completed": 0,
+                                    "delayed": 2,
+                                    "All": 3
+                                },
+                                "taskPrioritiesLevels": {
+                                    "high": 1,
+                                    "medium": 2,
+                                    "low": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "label": "Aug 2025",
+                "value": "2025-08",
+                "count": 27,
+                "statusBreakdown": {
+                    "all": 27,
+                    "newTasks": 3,
+                    "pendingTasks": 23,
+                    "inProgressTasks": 0,
+                    "completedTasks": 0,
+                    "delayedTasks": 1
+                },
+                "priorityBreakdown": {
+                    "low": 26,
+                    "high": 0,
+                    "medium": 1
+                },
+                "departmentBreakdown": {
+                    "Digital": {
+                        "total": 21,
+                        "statusBreakdown": {
+                            "new": 2,
+                            "pending": 18,
+                            "inProgress": 0,
+                            "completed": 0,
+                            "delayed": 1
+                        },
+                        "priorityBreakdown": {
+                            "high": 0,
+                            "medium": 1,
+                            "low": 20
+                        },
+                        "charts": {
+                            "taskDistribution": {
+                                "new": 2,
+                                "pending": 18,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 1,
+                                "All": 21
+                            },
+                            "taskPrioritiesLevels": {
+                                "high": 0,
+                                "medium": 1,
+                                "low": 20
+                            }
+                        }
+                    },
+                    "Other": {
+                        "total": 5,
+                        "statusBreakdown": {
+                            "new": 0,
+                            "pending": 5,
+                            "inProgress": 0,
+                            "completed": 0,
+                            "delayed": 0
+                        },
+                        "priorityBreakdown": {
+                            "high": 0,
+                            "medium": 0,
+                            "low": 5
+                        },
+                        "charts": {
+                            "taskDistribution": {
+                                "new": 0,
+                                "pending": 5,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 0,
+                                "All": 5
+                            },
+                            "taskPrioritiesLevels": {
+                                "high": 0,
+                                "medium": 0,
+                                "low": 5
+                            }
+                        }
+                    },
+                    "BusinessDevelopment": {
+                        "total": 3,
+                        "statusBreakdown": {
+                            "new": 1,
+                            "pending": 2,
+                            "inProgress": 0,
+                            "completed": 0,
+                            "delayed": 0
+                        },
+                        "priorityBreakdown": {
+                            "high": 0,
+                            "medium": 0,
+                            "low": 3
+                        },
+                        "charts": {
+                            "taskDistribution": {
+                                "new": 1,
+                                "pending": 2,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 0,
+                                "All": 3
+                            },
+                            "taskPrioritiesLevels": {
+                                "high": 0,
+                                "medium": 0,
+                                "low": 3
+                            }
+                        }
+                    }
+                },
+                "charts": {
+                    "taskDistribution": {
+                        "new": 3,
+                        "pending": 23,
+                        "inProgress": 0,
+                        "completed": 0,
+                        "delayed": 1,
+                        "All": 27
+                    },
+                    "taskPrioritiesLevels": {
+                        "high": 0,
+                        "medium": 1,
+                        "low": 26
+                    },
+                    "departmentDistribution": {
+                        "Digital": {
+                            "total": 21,
+                            "statusBreakdown": {
+                                "new": 2,
+                                "pending": 18,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 1
+                            },
+                            "priorityBreakdown": {
+                                "high": 0,
+                                "medium": 1,
+                                "low": 20
+                            },
+                            "charts": {
+                                "taskDistribution": {
+                                    "new": 2,
+                                    "pending": 18,
+                                    "inProgress": 0,
+                                    "completed": 0,
+                                    "delayed": 1,
+                                    "All": 21
+                                },
+                                "taskPrioritiesLevels": {
+                                    "high": 0,
+                                    "medium": 1,
+                                    "low": 20
+                                }
+                            }
+                        },
+                        "Other": {
+                            "total": 5,
+                            "statusBreakdown": {
+                                "new": 0,
+                                "pending": 5,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 0
+                            },
+                            "priorityBreakdown": {
+                                "high": 0,
+                                "medium": 0,
+                                "low": 5
+                            },
+                            "charts": {
+                                "taskDistribution": {
+                                    "new": 0,
+                                    "pending": 5,
+                                    "inProgress": 0,
+                                    "completed": 0,
+                                    "delayed": 0,
+                                    "All": 5
+                                },
+                                "taskPrioritiesLevels": {
+                                    "high": 0,
+                                    "medium": 0,
+                                    "low": 5
+                                }
+                            }
+                        },
+                        "BusinessDevelopment": {
+                            "total": 3,
+                            "statusBreakdown": {
+                                "new": 1,
+                                "pending": 2,
+                                "inProgress": 0,
+                                "completed": 0,
+                                "delayed": 0
+                            },
+                            "priorityBreakdown": {
+                                "high": 0,
+                                "medium": 0,
+                                "low": 3
+                            },
+                            "charts": {
+                                "taskDistribution": {
+                                    "new": 1,
+                                    "pending": 2,
+                                    "inProgress": 0,
+                                    "completed": 0,
+                                    "delayed": 0,
+                                    "All": 3
+                                },
+                                "taskPrioritiesLevels": {
+                                    "high": 0,
+                                    "medium": 0,
+                                    "low": 3
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "allTimeTotal": 31
+    }
+}
