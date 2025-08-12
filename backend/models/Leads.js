@@ -1,3 +1,4 @@
+const { min } = require("moment");
 const mongoose = require("mongoose");
 
 const dateChangeRequestSchema = new mongoose.Schema({
@@ -77,7 +78,7 @@ const leadSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-     referral: {
+    referral: {
       type: String,
       trim: true,
     },
@@ -110,7 +111,7 @@ const leadSchema = new mongoose.Schema(
       enum: [
         "realEstate",
         "hospitality",
-        "bsfi",
+        "bfsi",
         "fmcg",
         "healthcare",
         "wellness",
@@ -218,11 +219,28 @@ const leadSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    amount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    onboardedAt: {
+      type: Date,
+    },
+    statusHistory: [
+      {
+        status: { type: String, trim: true },
+        changedAt: { type: Date },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
   },
   {
     // automatically adds `createdAt` & `updatedAt`
     timestamps: true,
   }
 );
+
+leadSchema.index({ onboardedAt: 1 }); // fast month filters
 
 module.exports = mongoose.model("Lead", leadSchema);

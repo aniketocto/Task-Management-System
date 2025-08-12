@@ -9,9 +9,17 @@ const {
   getLeadDashboardData,
   decideDateChangeRequest,
   getUpcomingMeetings,
+  getQuarterProgress,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
+
+router.get(
+  "/target-progress",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  getQuarterProgress
+);
 
 router.get(
   "/dashboard-data",

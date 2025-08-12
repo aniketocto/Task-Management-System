@@ -78,4 +78,10 @@ export const API_PATHS = {
     GET_TODAY_ATTENDANCE: "/api/attendance/today",
     UPDATE_ATTENDANCE: "/api/attendance/save",
     EXPORT_ATTENDANCE: "/api/attendance/export",},
+  
+    TARGETS: {
+      GET_TARGETS: "/api/targets/quarter",
+      SET_TARGETS: "/api/targets/quarter",
+      TARGET_PROGRESS: "/api/leads/target-progress"
+    }
 };

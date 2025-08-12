@@ -19,6 +19,7 @@ import MultiSelectChips from "components/Inputs/MultiSelectChips";
 import { UserContext } from "../../context/userContext";
 import {
   addBusinessDays,
+  addThousandsSeperator,
   beautify,
   toLocalInputValue,
 } from "../../utils/helper";
@@ -66,6 +67,7 @@ const CreateLead = () => {
       attempt4: false,
       attempt5: false,
     },
+    amount: "",
   });
 
   const [currentLead, setCurrentLead] = useState(null);
@@ -130,6 +132,7 @@ const CreateLead = () => {
         attempt4: false,
         attempt5: false,
       },
+      amount: "",
     });
   };
 
@@ -169,6 +172,7 @@ const CreateLead = () => {
       }
     } catch (error) {
       console.error("Error creating lead:", error);
+      toast.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -213,6 +217,7 @@ const CreateLead = () => {
             : [],
           leadSource: leadInfo.leadSource,
           referral: leadInfo.referral,
+          amount: leadInfo.amount,
         }));
 
         leadInfo?.dateChangeRequests?.map((request) =>
@@ -275,9 +280,9 @@ const CreateLead = () => {
         getLead();
         // navigate("/manage-lead");
       }
-
     } catch (error) {
       console.error("Error updating lead:", error);
+      toast.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -551,6 +556,25 @@ const CreateLead = () => {
                   placeholder="Select status"
                 />
               </div>
+
+              {leadData.status === "onboarded" && (
+                <div className="">
+                  <label className="text-xs font-medium text-slate-200">
+                    Amount <sup className="text-red-500 text-xs">*</sup>
+                  </label>
+
+                  <input
+                    placeholder="Amount Rs."
+                    className="form-input"
+                    value={`₹ ${addThousandsSeperator(leadData.amount || "")}`}
+                    onChange={({ target }) => {
+                      // Remove ₹ and commas before saving
+                      const cleanValue = target.value.replace(/[₹,\s]/g, "");
+                      handleValueChange("amount", cleanValue);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Pocs */}
