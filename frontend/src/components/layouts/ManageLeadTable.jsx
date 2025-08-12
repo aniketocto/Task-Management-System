@@ -51,18 +51,26 @@ const ManageLeadTable = () => {
 
   const handleFollowUpChange = async (leadId, attemptKey, { done, remark }) => {
     try {
-      // Find the target lead
       const leadToUpdate = leads.find((l) => l._id === leadId);
-      // Build new followUp object, preserving other attempts
-      const newFollowUp = { ...(leadToUpdate.followUp || {}) };
-      newFollowUp[attemptKey] = { done, remark };
+      if (!leadToUpdate) return;
 
-      // Call API
+      const prevFollowUp = leadToUpdate.followUp || {};
+      const prevAttempt = prevFollowUp[attemptKey] || {
+        done: false,
+        remark: "",
+      };
+      const wasDone = !!prevAttempt.done;
+
+      if (wasDone && done === false) {
+        return;
+      }
+      const newFollowUp = { ...prevFollowUp, [attemptKey]: { done, remark } };
+
       const { data } = await axiosInstance.put(
         API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId),
         { followUp: newFollowUp }
       );
-      // Update state
+
       setLeads((prev) => prev.map((l) => (l._id === leadId ? data.lead : l)));
     } catch (err) {
       console.error("Failed to update followUp:", err);
@@ -377,17 +385,21 @@ const ManageLeadTable = () => {
                             <input
                               type="checkbox"
                               checked={done}
-                              disabled={allow}
+                              disabled={allow }
                               onChange={() =>
                                 handleFollowUpChange(lead._id, attemptKey, {
                                   done: !done,
                                   remark,
                                 })
                               }
-                              className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${
-                                allow ? "cursor-not-allowed" : "cursor-pointer"
-                              }`}
+                              className={`w-4 h-4 rounded border-gray-600 focus:ring-red-500
+    accent-gray-400 checked:accent-red-600 disabled:checked:accent-red-600
+
+    ${allow ? "cursor-not-allowed" : "cursor-pointer"}
+    disabled:opacity-100
+  `}
                             />
+
                             {/* Remark input */}
                             <textarea
                               type="text"
