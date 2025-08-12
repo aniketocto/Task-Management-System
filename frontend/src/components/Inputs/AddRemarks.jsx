@@ -84,7 +84,7 @@ const AddRemarks = ({ remarks = [], setRemarks }) => {
               onClick={() => removeRemark(i)}
               title="Remove remark"
             >
-              {/* <HiOutlineTrash className="text-2xl" /> */}
+              <HiOutlineTrash className="text-2xl" />
             </button>
           </div>
         );

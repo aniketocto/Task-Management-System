@@ -1,6 +1,7 @@
 const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const User = require("../models/User");
+const { buildTaskFilter } = require("../utils/buildTaskFilter.js");
 
 const mongoose = require("mongoose");
 
@@ -10,10 +11,10 @@ const getTasks = async (req, res) => {
       department,
       status,
       companyName,
-      month, // e.g. "2025-06"
-      timeframe, // new: "today" | "yesterday" | "last7Days" | "custom"
-      startDate, // new: ISO date string, e.g. "2025-07-20"
-      endDate, // new: ISO date string, e.g. "2025-07-20"
+      month,
+      timeframe,
+      startDate,
+      endDate,
       page = 1,
       limit = 10,
       sortOrder = "desc",
@@ -21,6 +22,7 @@ const getTasks = async (req, res) => {
       priority,
       fields,
       serialNumber,
+      userId,
     } = req.query;
 
     // === figure out which sections to include ===
@@ -38,113 +40,20 @@ const getTasks = async (req, res) => {
 
     // === build your filter & pagination ===
     const skip = (page - 1) * limit;
-    let filter = {};
-    if (status) filter.status = status;
-    if (priority) filter.priority = priority;
-    if (companyName) filter.companyName = new RegExp(companyName, "i");
 
-    const now = new Date();
-    if (timeframe) {
-      switch (timeframe) {
-        case "today":
-          filter.createdAt = {
-            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-            $lte: now,
-          };
-          break;
-
-        case "yesterday":
-          const yd = new Date(now);
-          yd.setDate(now.getDate() - 1);
-          filter.createdAt = {
-            $gte: new Date(yd.getFullYear(), yd.getMonth(), yd.getDate()),
-            $lte: new Date(
-              yd.getFullYear(),
-              yd.getMonth(),
-              yd.getDate(),
-              23,
-              59,
-              59,
-              999
-            ),
-          };
-          break;
-
-        case "last7Days":
-          const last7 = new Date(now);
-          last7.setDate(now.getDate() - 7);
-          filter.createdAt = { $gte: last7, $lte: now };
-          break;
-
-        case "last30Days":
-          const start = new Date();
-          start.setDate(start.getDate() - 30);
-          start.setHours(0, 0, 0, 0);
-
-          const endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
-
-          filter.createdAt = { $gte: start, $lte: endDate };
-          break;
-        case "custom":
-          if (startDate && !endDate) {
-            const from = new Date(startDate);
-            const to = new Date(startDate);
-            to.setHours(23, 59, 59, 999);
-            filter.createdAt = { $gte: from, $lte: to };
-          } else if (!startDate && endDate) {
-            const to = new Date(endDate);
-            const from = new Date(endDate);
-            from.setHours(0, 0, 0, 0);
-            filter.createdAt = { $gte: from, $lte: to };
-          } else if (startDate && endDate) {
-            const from = new Date(startDate);
-            const to = new Date(endDate);
-            to.setHours(23, 59, 59, 999);
-            filter.createdAt = { $gte: from, $lte: to };
-          }
-          break;
-
-        default:
-          break;
-      }
-    } else if (month) {
-      const [y, m] = month.split("-");
-      filter.createdAt = {
-        $gte: new Date(y, m - 1, 1),
-        $lte: new Date(y, m, 0, 23, 59, 59, 999),
-      };
-    }
-
-    // === department ACL ===
-    const isPrivileged = req.user.role === "superAdmin";
-    let baseFilter = isPrivileged
-      ? {}
-      : {
-          $or: [
-            { assignedTo: { $in: [req.user._id] } },
-            { "todoChecklist.assignedTo": req.user._id },
-          ],
-        };
-
-    if (department) {
-      const usersInDept = await User.find({ department }).select("_id");
-      const deptIds = usersInDept.map((u) => u._id);
-      if (!isPrivileged) {
-        // non-privileged only see their own tasks
-        if (!deptIds.some((id) => id.equals(req.user._id))) return res.json({});
-        filter.assignedTo = { $in: [req.user._id] };
-      } else {
-        filter.assignedTo = { $in: deptIds };
-      }
-    } else {
-      filter = { ...filter, ...baseFilter };
-    }
-
-    if (serialNumber) {
-      filter.serialNumber = new RegExp("^" + serialNumber, "i"); // case-insensitive search
-    }
-
+    const filter = await buildTaskFilter({
+      reqUser: req.user,
+      department,
+      userId,
+      timeframe,
+      month,
+      startDate,
+      endDate,
+      status,
+      priority,
+      serialNumber,
+      companyName,
+    });
     // === fetch the raw Task documents ===
     let tasks = await Task.find(filter)
       .populate("assignedTo", "name email profileImageUrl department")
@@ -162,7 +71,7 @@ const getTasks = async (req, res) => {
     await Promise.all(
       tasks.map(async (taskDoc) => {
         // 1) completed vs total checklist items → progress%
-        approvedCount = taskDoc.todoChecklist.filter(
+        const approvedCount = taskDoc.todoChecklist.filter(
           (i) => i.completed && i.approval?.status === "approved"
         ).length;
 
@@ -267,10 +176,7 @@ const getTasks = async (req, res) => {
       include.includes("monthlyData") ||
       include.includes("availableMonths")
     ) {
-      fullMonthlyData = await getEnhancedMonthlyTaskData(
-        isPrivileged ? {} : { assignedTo: { $in: [req.user._id] } },
-        department
-      );
+      fullMonthlyData = await getEnhancedMonthlyTaskData(filter, department);
     }
     if (include.includes("availableMonths")) {
       result.availableMonths = fullMonthlyData.monthsData.map((m) => ({
@@ -517,27 +423,54 @@ const getDepartmentBreakdown = async (monthFilter) => {
 
 const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
   const pipeline = [
+    // 1) Apply the incoming filter first (should already include ACL, month/timeframe, company, etc.)
     { $match: monthFilter },
-    { $unwind: "$assignedTo" },
+
+    // 2) Flatten all checklist assignees into a single array: checklistAssignees
+    {
+      $addFields: {
+        checklistAssignees: {
+          $reduce: {
+            input: { $ifNull: ["$todoChecklist", []] }, // handle missing checklist safely
+            initialValue: [],
+            in: {
+              // union accumulated IDs with this item's assignedTo (also an array)
+              $setUnion: ["$$value", { $ifNull: ["$$this.assignedTo", []] }],
+            },
+          },
+        },
+      },
+    },
+
+    // 3) Merge top-level assignedTo with checklistAssignees → allAssignees
+    {
+      $addFields: {
+        allAssignees: {
+          $setUnion: [{ $ifNull: ["$assignedTo", []] }, "$checklistAssignees"],
+        },
+      },
+    },
+
+    // 4) Fan out one row per assignee
+    { $unwind: "$allAssignees" },
+
+    // 5) Join user details
     {
       $lookup: {
         from: "users",
-        localField: "assignedTo",
+        localField: "allAssignees",
         foreignField: "_id",
         as: "user",
       },
     },
     { $unwind: "$user" },
-  ];
 
-  // Add department filter if specified
-  if (departmentFilter) {
-    pipeline.push({
-      $match: { "user.department": departmentFilter },
-    });
-  }
+    // 6) (Optional) Only keep users from a specific department
+    ...(departmentFilter
+      ? [{ $match: { "user.department": departmentFilter } }]
+      : []),
 
-  pipeline.push(
+    // 7) Group per user and compute totals + status/priority buckets
     {
       $group: {
         _id: {
@@ -552,9 +485,6 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         inProgress: {
           $sum: { $cond: [{ $eq: ["$status", "inProgress"] }, 1, 0] },
         },
-        // startedWork: {
-        //   $sum: { $cond: [{ $eq: ["$status", "working"] }, 1, 0] },
-        // },
         completed: {
           $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
         },
@@ -564,11 +494,14 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         low: { $sum: { $cond: [{ $eq: ["$priority", "low"] }, 1, 0] } },
       },
     },
-    { $sort: { total: -1 } }
-  );
+
+    // 8) Sort by total tasks desc (nice for dropdown counts)
+    { $sort: { total: -1 } },
+  ];
 
   const results = await Task.aggregate(pipeline);
 
+  // 9) Shape the response as your UI expects
   const breakdown = {};
   results.forEach((user) => {
     breakdown[user._id.userId] = {
@@ -582,7 +515,6 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
         inProgress: user.inProgress,
         completed: user.completed,
         delayed: user.delayed,
-        // startedWork: user.startedWork,
       },
       priorityBreakdown: {
         high: user.high,
@@ -597,7 +529,6 @@ const getUserBreakdown = async (monthFilter, departmentFilter = null) => {
           completed: user.completed,
           delayed: user.delayed,
           All: user.total,
-          // startedWork: user.startedWork,
         },
         taskPrioritiesLevels: {
           high: user.high,
@@ -658,31 +589,20 @@ const getAdminTasks = async (req, res) => {
 
     // 4) Build the base MongoDB filter:
     //    match tasks where the admin is assigned at top level OR in any checklist item
-    const matchFilter = {
-      $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
-    };
-
-    // 5) Apply optional filters onto the same `matchFilter` object
-    if (serialNumber) {
-      matchFilter.serialNumber = new RegExp("^" + serialNumber, "i");
-    }
-    if (status) {
-      matchFilter.status = status;
-    }
-    if (priority) {
-      matchFilter.priority = priority;
-    }
-    if (month) {
-      const [year, mon] = month.split("-");
-      matchFilter.createdAt = {
-        $gte: new Date(year, mon - 1, 1),
-        $lte: new Date(year, mon, 0, 23, 59, 59, 999),
-      };
-    }
-
-    if (companyName) {
-      matchFilter.companyName = new RegExp("^" + companyName, "i");
-    }
+    const filter = await buildTaskFilter({
+      reqUser: req.user, // scopes to tasks the admin is on (main or checklist)
+      companyName,
+      month,
+      status,
+      priority,
+      serialNumber,
+      // Optional parity with getTasks:
+      timeframe: req.query.timeframe,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      // If you ever want to filter by a different user explicitly:
+      userId: req.query.userId,
+    });
 
     // 6) Calculate pagination offset
     const skip = (page - 1) * limit;
@@ -692,7 +612,7 @@ const getAdminTasks = async (req, res) => {
 
     // 8) Fetch paginated tasks if requested
     if (include.includes("tasks")) {
-      const tasks = await Task.find(matchFilter)
+      const tasks = await Task.find(filter)
         .populate("assignedTo", "name email profileImageUrl department")
         .sort(
           sortBy === "dueDate"
@@ -709,13 +629,13 @@ const getAdminTasks = async (req, res) => {
       }));
 
       // 10) Total count for pagination UI
-      result.totalCount = await Task.countDocuments(matchFilter);
+      result.totalCount = await Task.countDocuments(filter);
     }
 
     // 11) Compute status summary if requested
     if (include.includes("statusSummary")) {
       const countByStatus = (s) =>
-        Task.countDocuments({ ...matchFilter, status: s });
+        Task.countDocuments({ ...filter, status: s });
 
       const [
         allTasks,
@@ -725,7 +645,7 @@ const getAdminTasks = async (req, res) => {
         completedTasks,
         delayedTasks,
       ] = await Promise.all([
-        Task.countDocuments(matchFilter),
+        Task.countDocuments(filter),
         countByStatus("new"),
         countByStatus("pending"),
         countByStatus("inProgress"),
@@ -749,10 +669,7 @@ const getAdminTasks = async (req, res) => {
       include.includes("monthlyData") ||
       include.includes("availableMonths")
     ) {
-      fullMonthlyData = await getEnhancedMonthlyTaskData(
-        { assignedTo: userId },
-        null
-      );
+      fullMonthlyData = await getEnhancedMonthlyTaskData(filter, null);
     }
 
     if (include.includes("availableMonths")) {
@@ -1307,8 +1224,8 @@ const updateTaskChecklist = async (req, res) => {
       task.assignedTo.some(
         (userId) => userId.toString() === req.user._id.toString()
       ) ||
-      task.todoChecklist.some(
-        (item) => item.assignedTo?.toString() === req.user._id.toString()
+      task.todoChecklist.some((item) =>
+        item.assignedTo?.some((u) => u.toString() === req.user._id.toString())
       );
 
     if (!isAssigned && !isPrivileged) {
@@ -1403,154 +1320,81 @@ const updateTaskChecklist = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
-    const { timeframe, startDate, endDate, companyName } = req.query;
-    const now = new Date();
-
-    // === DATE FILTER ===
-    let dateFilter = {};
-    if (timeframe) {
-      switch (timeframe) {
-        case "today":
-          dateFilter.createdAt = {
-            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-            $lte: now,
-          };
-          break;
-
-        case "yesterday":
-          const yd = new Date(now);
-          yd.setDate(now.getDate() - 1);
-          dateFilter.createdAt = {
-            $gte: new Date(yd.getFullYear(), yd.getMonth(), yd.getDate()),
-            $lte: new Date(
-              yd.getFullYear(),
-              yd.getMonth(),
-              yd.getDate(),
-              23,
-              59,
-              59,
-              999
-            ),
-          };
-          break;
-
-        case "last7Days":
-          const last7 = new Date(now);
-          last7.setDate(now.getDate() - 7);
-          dateFilter.createdAt = { $gte: last7, $lte: now };
-          break;
-
-        case "custom":
-          if (startDate && endDate) {
-            dateFilter.createdAt = {
-              $gte: new Date(startDate),
-              $lte: new Date(endDate),
-            };
-          }
-          break;
-
-        default:
-          break;
-      }
-    }
-
-    // **why  it's not showing to the dashboard all tasks like pending, new and delayed
-    // **what   [used to  show the managed tasks to the dashboard ]
-
-    const isPrivileged = req.user.role === "superAdmin";
-    const userId = req.user._id;
-
-    let matchFilter;
-
-    if (isPrivileged) {
-      matchFilter = {
-        ...dateFilter,
-        ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
-        $or: [
-          { assignedTo: { $exists: true, $ne: [] } },
-          { "todoChecklist.assignedTo": userId },
-        ],
-      };
-    } else {
-      matchFilter = {
-        ...dateFilter,
-        ...(companyName ? { companyName: new RegExp(companyName, "i") } : {}),
-        $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
-      };
-    }
-
-    // === BASIC STATS ===
-    const totalTasks = await Task.countDocuments(matchFilter);
-    const newTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "new",
+    // 1) Build one filter for everything (ACL + 5 filters)
+    const filter = await buildTaskFilter({
+      reqUser: req.user,
+      department: req.query.department,
+      companyName: req.query.companyName,
+      userId: req.query.userId, // ✅ make sure this is included
+      timeframe: req.query.timeframe,
+      month: req.query.month,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
     });
-    const inProgressTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "inProgress",
-    });
-    const completedTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "completed",
-    });
-    const pendingTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "pending",
-    });
-    const delayedTasks = await Task.countDocuments({
-      ...matchFilter,
-      status: "delayed",
-    });
-    // const startedWorkTasks = await Task.countDocuments({
-    //   ...matchFilter,
-    //   status: "working",
-    // });
 
-    // === STATUS DISTRIBUTION ===
-    const taskStatuses = [
-      "new",
-      "pending",
-      "inProgress",
-      "completed",
-      "delayed",
-      // "working",
-    ];
-    const taskDistributionRaw = await Task.aggregate([
-      { $match: matchFilter },
-      { $group: { _id: "$status", count: { $sum: 1 } } },
+    // 2) Stats (all scoped by the same filter)
+    const [
+      totalTasks,
+      newTasks,
+      inProgressTasks,
+      completedTasks,
+      pendingTasks,
+      delayedTasks,
+    ] = await Promise.all([
+      Task.countDocuments(filter),
+      Task.countDocuments({ ...filter, status: "new" }),
+      Task.countDocuments({ ...filter, status: "inProgress" }),
+      Task.countDocuments({ ...filter, status: "completed" }),
+      Task.countDocuments({ ...filter, status: "pending" }),
+      Task.countDocuments({ ...filter, status: "delayed" }),
     ]);
-    const taskDistribution = taskStatuses.reduce((acc, status) => {
-      acc[status] =
-        taskDistributionRaw.find((item) => item._id === status)?.count || 0;
 
-      return acc;
-    }, {});
-    taskDistribution["All"] = totalTasks;
-
-    // === PRIORITY DISTRIBUTION ===
-    const taskPriorities = ["high", "medium", "low"];
-    const taskPrioritiesLevelsRaw = await Task.aggregate([
-      { $match: matchFilter },
-      { $group: { _id: "$priority", count: { $sum: 1 } } },
+    // 3) Charts (status + priority) – $match: filter
+    const [statusAgg, priorityAgg] = await Promise.all([
+      Task.aggregate([
+        { $match: filter },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Task.aggregate([
+        { $match: filter },
+        { $group: { _id: "$priority", count: { $sum: 1 } } },
+      ]),
     ]);
-    const taskPrioritiesLevels = taskPriorities.reduce((acc, priority) => {
-      acc[priority] =
-        taskPrioritiesLevelsRaw.find((item) => item._id === priority)?.count ||
-        0;
-      return acc;
-    }, {});
 
-    // === RECENT TASKS ===
-    const recentTasks = await Task.find(matchFilter)
+    // 4) Recent tasks – .find(filter)
+    const recentTasks = await Task.find(filter)
       .sort({ createdAt: -1 })
       .limit(10)
-      .select("companyName title status priority dueDate createdAt");
+      .select("title companyName priority status dueDate createdAt");
 
-    // === MONTHLY DATA (pass matchFilter)
-    const monthlyData = await getEnhancedMonthlyTaskData(matchFilter);
+    // 5) Monthly + availableMonths – use the same filter
+    const monthlyData = await getEnhancedMonthlyTaskData(filter);
 
-    // === FINAL RESPONSE ===
-    res.status(200).json({
+    // 6) User breakdown – use the same filter (and your new allAssignees logic)
+    const userBreakdown = await getUserBreakdown(
+      filter,
+      req.query.department || null
+    );
+
+    // 7) Respond (charts built from agg results)
+    const charts = {
+      taskDistribution: {
+        new: statusAgg.find((x) => x._id === "new")?.count || 0,
+        pending: statusAgg.find((x) => x._id === "pending")?.count || 0,
+        inProgress: statusAgg.find((x) => x._id === "inProgress")?.count || 0,
+        completed: statusAgg.find((x) => x._id === "completed")?.count || 0,
+        delayed: statusAgg.find((x) => x._id === "delayed")?.count || 0,
+        All: totalTasks,
+      },
+      taskPrioritiesLevels: {
+        high: priorityAgg.find((x) => x._id === "high")?.count || 0,
+        medium: priorityAgg.find((x) => x._id === "medium")?.count || 0,
+        low: priorityAgg.find((x) => x._id === "low")?.count || 0,
+      },
+      // departmentDistribution: keep your existing builder, but ensure it also uses `filter`
+    };
+
+    return res.json({
       statistic: {
         totalTasks,
         newTasks,
@@ -1558,14 +1402,11 @@ const getDashboardData = async (req, res) => {
         completedTasks,
         pendingTasks,
         delayedTasks,
-        // startedWorkTasks,
       },
-      charts: {
-        taskDistribution,
-        taskPrioritiesLevels,
-      },
+      charts,
       recentTasks,
       monthlyData,
+      userBreakdown,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -1577,11 +1418,12 @@ const getUserDashboardData = async (req, res) => {
     const userId = req.user._id; // Only to fetch data of logged-in user
 
     // Fetch statistics for the user
-    const matchFilter = {
-      $or: [{ assignedTo: userId }, { "todoChecklist.assignedTo": userId }],
-    };
+    const filter = await buildTaskFilter({
+      reqUser: req.user,
+      userId: req.user._id, // force scope to this user (main OR checklist)
+    });
 
-    const totalTasks = await Task.countDocuments(matchFilter);
+    const totalTasks = await Task.countDocuments(filter);
     const newTasks = await Task.countDocuments({
       status: "new",
       assignedTo: userId,
@@ -1602,10 +1444,6 @@ const getUserDashboardData = async (req, res) => {
       status: "delayed",
       assignedTo: userId,
     });
-    // const startedWorkTasks = await Task.countDocuments({
-    //   status: "working",
-    //   assignedTo: userId,
-    // });
 
     // Ensure all task status
     const taskStatuses = [
@@ -1618,7 +1456,7 @@ const getUserDashboardData = async (req, res) => {
     ];
 
     const taskDistributionRaw = await Task.aggregate([
-      { $match: matchFilter },
+      { $match: filter },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
@@ -1633,7 +1471,7 @@ const getUserDashboardData = async (req, res) => {
     // Ensure all priority level
     const taskPriorities = ["high", "medium", "low"];
     const taskPrioritiesLevelsRaw = await Task.aggregate([
-      { $match: matchFilter },
+      { $match: filter },
       { $group: { _id: "$priority", count: { $sum: 1 } } },
     ]);
 
@@ -1643,11 +1481,10 @@ const getUserDashboardData = async (req, res) => {
         0;
       return acc;
     }, {});
-
-    // === RECENT TASKS ===
+    const monthlyData = await getEnhancedMonthlyTaskData(filter);
 
     // Fetch recent 10 tasks
-    const recentTasks = await Task.find(matchFilter)
+    const recentTasks = await Task.find(filter)
       .sort({ createdAt: -1 })
       .limit(10)
       .select("title status priority dueDate createdAt companyName");
@@ -1660,14 +1497,13 @@ const getUserDashboardData = async (req, res) => {
         completedTasks,
         pendingTasks,
         delayedTasks,
-        // startedWorkTasks,
       },
       charts: {
         taskDistribution,
         taskPrioritiesLevels,
       },
       recentTasks,
-      // monthlyData,
+      monthlyData,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

@@ -2,7 +2,7 @@
 
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import { useEffect, useState, useCallback, useContext } from "react";
+import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import ManageTasksTable from "../../components/layouts/ManageTasksTable";
@@ -12,11 +12,11 @@ import { LuFileSpreadsheet, LuLayoutGrid } from "react-icons/lu";
 import TaskCard from "../../components/Cards/TaskCard";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { FiX } from "react-icons/fi";
-
 import { io } from "socket.io-client";
 import { addThousandsSeperator } from "../../utils/helper";
 import { infoCard } from "../../utils/data";
 import InfoCard from "../../components/Cards/InfoCard";
+import { RiResetLeftLine } from "react-icons/ri";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -29,14 +29,17 @@ const ManageTask = () => {
   const { user } = useContext(UserContext);
   const userRole = user?.role;
 
+  // ——— filters
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMonth, setFilterMonth] = useState(() => {
+    // prefer timeframe on first paint (UI parity with API)
+    const tf = sessionStorage.getItem("lastTimeframe") || "";
+    if (tf) return "";
     return sessionStorage.getItem("lastmonth") || "";
   });
   const [filterDepartment, setFilterDepartment] = useState(() => {
     return sessionStorage.getItem("lastdept") || "";
   });
-
   useEffect(() => {
     sessionStorage.setItem("lastdept", filterDepartment);
   }, [filterDepartment]);
@@ -48,8 +51,10 @@ const ManageTask = () => {
   useEffect(() => {
     sessionStorage.setItem("lastTimeframe", filterTimeframe);
   }, [filterTimeframe]);
+
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+
   const [searchSerial, setSearchSerial] = useState("");
   const [debouncedSearchSerial, setDebouncedSearchSerial] = useState("");
 
@@ -69,7 +74,6 @@ const ManageTask = () => {
   const [sortBy, setSortBy] = useState(() => {
     return sessionStorage.getItem("taskSortBy") || "createdAt";
   });
-
   const [sortOrder, setSortOrder] = useState(() => {
     return sessionStorage.getItem("taskSortOrder") || "desc";
   });
@@ -85,7 +89,24 @@ const ManageTask = () => {
   const [viewType, setViewType] = useState("table");
   const [loading, setLoading] = useState(false);
 
+  // ——— NEW: hydration guard (prevents mount-time effects from clearing session values)
+  const hydrated = useRef(false);
   useEffect(() => {
+    hydrated.current = true;
+  }, []);
+
+  // ——— NEW: user filter (superAdmin) + session
+  const [selectedUserId, setSelectedUserId] = useState(
+    () => sessionStorage.getItem("lastUser") || ""
+  );
+  useEffect(() => {
+    sessionStorage.setItem("lastUser", selectedUserId);
+  }, [selectedUserId]);
+  const [availableUsers, setAvailableUsers] = useState([]);
+
+  // keep timeframe/month mutually exclusive (but not on first mount)
+  useEffect(() => {
+    if (!hydrated.current) return;
     if (filterTimeframe) setFilterMonth("");
     if (filterTimeframe !== "custom") {
       setFilterStartDate("");
@@ -94,6 +115,7 @@ const ManageTask = () => {
   }, [filterTimeframe]);
 
   useEffect(() => {
+    if (!hydrated.current) return;
     if (filterMonth) {
       setFilterTimeframe("");
       setFilterStartDate("");
@@ -110,6 +132,7 @@ const ManageTask = () => {
       const resp = await axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
         params: {
           department: filterDepartment || undefined,
+          companyName: selectedCompany || undefined, // reflect company in month list
           fields: "availableMonths",
         },
       });
@@ -117,7 +140,7 @@ const ManageTask = () => {
     } catch (err) {
       console.error("Failed to load months:", err);
     }
-  }, [filterDepartment]);
+  }, [filterDepartment, selectedCompany]);
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -145,16 +168,22 @@ const ManageTask = () => {
             limit: tasksPerPage,
             sortOrder,
             sortBy,
-            fields: "tasks,statusSummary,availableMonths",
+            fields: "tasks,statusSummary,availableMonths,userBreakdown",
             serialNumber: debouncedSearchSerial || undefined,
             companyName: selectedCompany || undefined,
+            userId:
+              userRole === "superAdmin" && selectedUserId
+                ? selectedUserId
+                : undefined, // NEW: user filter
           },
         });
 
         const tasks = resp.data.tasks || [];
         setAllTasks(tasks);
         setStatusSummary(resp.data.statusSummary || {});
+        setAvailableMonths(resp.data.availableMonths || []);
 
+        // departments (static list for now)
         const staticDepartments = [
           "Creative",
           "Digital",
@@ -177,6 +206,19 @@ const ManageTask = () => {
           { label: "delayed", count: s.delayedTasks || 0 },
         ]);
 
+        // NEW: build user list from payload (mirrors Dashboard)
+        const rawUsers = resp.data.userBreakdown || {};
+        let users = Object.entries(rawUsers).map(([id, u]) => ({
+          _id: id,
+          name: u.name,
+          department: u.department,
+          total: u.total || 0,
+        }));
+        if (filterDepartment) {
+          users = users.filter((u) => u.department === filterDepartment);
+        }
+        setAvailableUsers(users);
+
         setTotalPages(Math.ceil((s.all || 0) / tasksPerPage));
       } catch (err) {
         console.error("Error fetching tasks:", err);
@@ -196,17 +238,25 @@ const ManageTask = () => {
       sortBy,
       debouncedSearchSerial,
       selectedCompany,
+      userRole,
+      selectedUserId,
     ]
   );
+
+  // validate selected user after list loads
+  useEffect(() => {
+    if (availableUsers.length === 0) return;
+    if (selectedUserId && !availableUsers.some((u) => u._id === selectedUserId))
+      setSelectedUserId("");
+  }, [availableUsers, selectedUserId]);
 
   // debounce search
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setDebouncedSearchSerial(searchSerial); // Apply after 400ms
-      // setPage(1); // Reset to page 1 on search
-    }, 1000); // adjust delay as needed
-
-    return () => clearTimeout(timeout); // Cleanup on next keystroke
+      setDebouncedSearchSerial(searchSerial); // Apply after 1s
+      // setPage(1); // optional: reset to page 1 on search
+    }, 1000);
+    return () => clearTimeout(timeout);
   }, [searchSerial]);
 
   useEffect(() => {
@@ -219,22 +269,6 @@ const ManageTask = () => {
     sessionStorage.setItem("lastPage", page);
   }, [getAllTasks, page]);
 
-  // Set initial filterMonth if not set
-  // useEffect(() => {
-  //   if (
-  //     availableMonths.length > 0 &&
-  //     !filterTimeframe &&
-  //     (filterMonth === null || filterMonth === undefined || filterMonth === "")
-  //   ) {
-  //     const sorted = [...availableMonths].sort((a, b) =>
-  //       b.value.localeCompare(a.value)
-  //     );
-  //     const recentWithData = sorted.find((m) => (m.count || 0) > 0);
-  //     setFilterMonth(recentWithData ? recentWithData.value : sorted[0].value);
-  //     setPage(1);
-  //   }
-  // }, [availableMonths, filterMonth, filterTimeframe]);
-
   // Save filterMonth to sessionStorage when it changes
   useEffect(() => {
     if (filterMonth) {
@@ -242,31 +276,49 @@ const ManageTask = () => {
     }
   }, [filterMonth]);
 
-  // console.log("availableMonths", availableMonths);
-
   useEffect(() => {
     socket.on("task:sync", () => {
       getAllTasks(page); // silently refresh tasks
-      // console.log("task:sync");
     });
-
     return () => {
-      socket.off("task:sync"); // clean up
+      socket.off("task:sync");
     };
   }, [getAllTasks, page]);
-
-  // useEffect(() => {
-  //   if (allTasks.length === 0 && selectedCompany) {
-  //     // clear the filter back to “All companies”
-  //     setSelectedCompany("");
-  //   }
-  // }, [allTasks, selectedCompany]);
 
   const handleRowClick = (taskId) => {
     navigate("/admin/create-task", { state: { taskId } });
   };
 
-  // console.log(statusSummary["all"]);
+  // main watcher: run when any filter changes (and custom timeframe complete)
+  useEffect(() => {
+    if (filterTimeframe === "custom" && (!filterStartDate || !filterEndDate))
+      return;
+    getAllTasks(page);
+    // eslint-disable-next-line
+  }, [
+    filterStatus,
+    filterMonth,
+    filterDepartment,
+    filterPriority,
+    filterTimeframe,
+    filterStartDate,
+    filterEndDate,
+    sortOrder,
+    sortBy,
+    debouncedSearchSerial,
+    selectedCompany,
+    selectedUserId,
+  ]);
+
+  const resetFilters = () => {
+    setFilterMonth("");
+    setFilterDepartment("");
+    setSelectedCompany("");
+    setFilterTimeframe("");
+    setFilterStartDate(null);
+    setFilterEndDate(null);
+    setSelectedUserId("");
+  };
 
   return (
     <DashboardLayout activeMenu="Manage Tasks">
@@ -363,6 +415,7 @@ const ManageTask = () => {
                   </>
                 )}
               </div>
+
               {/* Company */}
               <div className="flex gap-1 flex-col">
                 <label className="text-sm font-medium text-gray-600">
@@ -388,7 +441,7 @@ const ManageTask = () => {
               </div>
 
               {/* Department */}
-              {user.role === "superAdmin" && (
+              {userRole === "superAdmin" && (
                 <div className="flex gap-1 flex-col">
                   <label className="text-sm font-medium text-gray-600">
                     Department:
@@ -446,26 +499,42 @@ const ManageTask = () => {
                 </div>
               )}
 
-              {/* User */}
-              {/* {users.length > 0 && (
-                <>
-                  <label className="text-sm font-medium text-gray-100">User:</label>
-                  <select value={filterUser} onChange={(e) => { setFilterUser(e.target.value); setPage(1); }} className="border rounded px-3 py-2 text-sm text-white">
-                    <option value="">All Users</option>
-                    {users.map((u) => (<option key={u._id} value={u._id} className="text-black">{u.name}</option>))}
+              {/* User (superAdmin only) */}
+              {userRole === "superAdmin" && (
+                <div className="flex gap-1 flex-col">
+                  <label className="text-sm font-medium text-gray-600">
+                    User:
+                  </label>
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => {
+                      setSelectedUserId(e.target.value);
+                      setPage(1);
+                    }}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="" className="text-black">
+                      All
+                    </option>
+                    {availableUsers
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((u) => (
+                        <option
+                          key={u._id}
+                          value={u._id}
+                          className="text-black"
+                        >
+                          {u.name}
+                        </option>
+                      ))}
                   </select>
-                </>
-              )} */}
+                </div>
+              )}
 
-              {/* Status Tabs */}
-              {/* <TaskStatusTabs
-                tabs={tabs}
-                activeTab={filterStatus}
-                setActiveTab={(newStatus) => {
-                  setFilterStatus(newStatus);
-                  setPage(1);
-                }}
-              /> */}
+              <RiResetLeftLine
+                onClick={() => resetFilters()}
+                className="text-white text-2xl cursor-pointer "
+              />
             </div>
           </div>
 
@@ -481,7 +550,9 @@ const ManageTask = () => {
             ))}
           </div>
         </div>
+
         {loading && <SpinLoader />}
+
         <div className="mt-4 flex gap-2 items-center">
           <label className="text-white text-sm">Search Serial:</label>
           <div className="flex items-center">
@@ -569,7 +640,7 @@ const ManageTask = () => {
           pageRangeDisplayed={3}
           onPageChange={(e) => setPage(e.selected + 1)}
           containerClassName="flex gap-2 mt-4 justify-center"
-          pageClassName="" // leave this empty
+          pageClassName=""
           pageLinkClassName="px-3 py-1 border rounded text-white cursor-pointer transition-colors duration-200 block"
           activeLinkClassName="bg-[#E43941] border-[#E43941] text-white"
           previousLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
