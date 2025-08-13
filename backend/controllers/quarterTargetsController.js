@@ -48,6 +48,12 @@ const upsertQuaterTarget = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
+    const io = req.app.get("io");
+    if (io)
+      io.emit("lead:sync", {
+        source: "targets" | "leads",
+      });
+
     res.json({ message: "Quarter targets saved", id: doc._id, quarter: doc });
   } catch (err) {
     console.error("upsertQuarterTarget:", err);
@@ -88,7 +94,5 @@ const getQuarterTarget = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
-
 
 module.exports = { upsertQuaterTarget, getQuarterTarget, QUARTER_MONTHS };

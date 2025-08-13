@@ -430,7 +430,10 @@ const updateLead = async (req, res) => {
     await lead.save();
 
     const io = req.app.get("io");
-    io.emit("lead:sync");
+    if (io)
+      io.emit("lead:sync", {
+        source: "targets" | "leads",
+      });
 
     if (requestsMade.length) {
       return res.json({
@@ -570,6 +573,122 @@ const getUpcomingMeetings = async (req, res) => {
   }
 };
 
+const getMeetingCount = async (req, res) => {
+  try {
+    const now = new Date();
+    const year = Number(req.query.year) || now.getFullYear();
+    const month = Number(req.query.month) || now.getMonth() + 1;
+
+    const monthStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+    const monthEnd = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+
+    const pipeline = [
+      {
+        $match: {
+          $or: [
+            {
+              credentialDeckDate: {
+                $gte: monthStart,
+                $lt: monthEnd,
+              },
+            },
+            {
+              discoveryCallDate: {
+                $gte: monthStart,
+                $lt: monthEnd,
+              },
+            },
+            {
+              pitchDate: {
+                $gte: monthStart,
+                $lt: monthEnd,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          meetings: ["$credentialDeckDate", "$discoveryCallDate", "$pitchDate"],
+        },
+      },
+      {
+        $project: {
+          meeting: {
+            $filter: {
+              input: "$meetings",
+              as: "dt",
+              cond: {
+                $and: [
+                  { $ne: ["$$dt", null] },
+                  { $gte: ["$$dt", monthStart] },
+                  { $lt: ["$$dt", monthEnd] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $unwind: "$meeting" },
+      {
+        $addFields: {
+          weekIndex: {
+            $floor: {
+              $divide: [
+                { $subtract: ["$meeting", monthStart] },
+                1000 * 60 * 60 * 24 * 7,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$weekIndex",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          weekly: {
+            $push: {
+              week: { $add: ["$_id", 1] },
+              count: "$count",
+            },
+          },
+          totalMeetings: { $sum: "$count" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalMeetings: 1,
+          weekly: 1,
+        },
+      },
+    ];
+
+    const result = await Leads.aggregate(pipeline);
+    const data = result[0] || { totalMeetings: 0, weekly: [] };
+
+    const monthlyTarget = 60;
+    const weeklyTarget = monthlyTarget / 4;
+
+    res.json({
+      month: `${year}-${String(month).padStart(2, "0")}`,
+      totalMeetings: data.totalMeetings,
+      monthlyTarget,
+      remainingToMonthlyTarget: Math.max(0, monthlyTarget - data.totalMeetings),
+      weekly: data.weekly.sort((a, b) => a.week - b.week),
+      weeklyTarget,
+    });
+  } catch (error) {
+    console.error("Error in getMonthlyMeetingCounts:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 const QUARTER_MONTHS = {
   JFM: [1, 2, 3],
   AMJ: [4, 5, 6],
@@ -697,8 +816,6 @@ const getQuarterProgress = async (req, res) => {
     );
     totals.variance = totals.actual - totals.effectiveTarget;
 
-   
-
     return res.json({
       year,
       quarter,
@@ -724,4 +841,5 @@ module.exports = {
   decideDateChangeRequest,
   getUpcomingMeetings,
   getQuarterProgress,
+  getMeetingCount,
 };

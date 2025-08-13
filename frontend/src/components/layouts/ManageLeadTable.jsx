@@ -339,8 +339,12 @@ const ManageLeadTable = () => {
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
                     {lead.type || "-"}
                   </td>
-                  <td className="px-4 py-2 text-center text-sm  text-gray-300 border-b border-gray-700 uppercase">
-                    {beautify(lead.category) || "-"}
+                  <td className="px-4 py-2 text-center text-sm  text-gray-300 border-b border-gray-700 capitalize">
+                    {lead.category
+                      ? ["bfsi", "fnb"].includes(lead.category.toLowerCase())
+                        ? lead.category.toUpperCase()
+                        : beautify(lead.category)
+                      : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
                     {lead.services ? beautify(lead.services.join(", ")) : "-"}
@@ -385,7 +389,7 @@ const ManageLeadTable = () => {
                             <input
                               type="checkbox"
                               checked={done}
-                              disabled={allow }
+                              disabled={allow}
                               onChange={() =>
                                 handleFollowUpChange(lead._id, attemptKey, {
                                   done: !done,

@@ -10,6 +10,7 @@ const {
   decideDateChangeRequest,
   getUpcomingMeetings,
   getQuarterProgress,
+  getMeetingCount,
 } = require("../controllers/leadControllers");
 
 const router = express.Router();
@@ -26,6 +27,13 @@ router.get(
   protect,
   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getLeadDashboardData
+);
+
+router.get(
+  "/meetings-count",
+  protect,
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  getMeetingCount
 );
 
 router.get(

@@ -241,6 +241,9 @@ const leadSchema = new mongoose.Schema(
   }
 );
 
-leadSchema.index({ onboardedAt: 1 }); // fast month filters
+leadSchema.index({ onboardedAt: 1 });
+leadSchema.index({ credentialDeckDate: 1 });
+leadSchema.index({ discoveryCallDate: 1 });
+leadSchema.index({ pitchDate: 1 });
 
 module.exports = mongoose.model("Lead", leadSchema);

@@ -105,6 +105,8 @@ const LeadDashboard = () => {
   const [isLimitOpen, setIsLimitOpen] = useState(false);
   const [limitDraft, setLimitDraft] = useState({});
 
+  const [meetCount, setMeetCount] = useState(0);
+
   const isValidNumber = (v) => Number.isFinite(Number(v)) && Number(v) >= 0;
 
   const ymKey = (y, m) => `${y}-${String(m).padStart(2, "0")}`;
@@ -310,11 +312,18 @@ const LeadDashboard = () => {
         setLoading(false);
       }
     };
+    const meetCount = async () => {
+      const res = await axiosInstance.get(API_PATHS.LEADS.MEETING_COUNTS);
+      setMeetCount(res.data || 0);
+    };
 
+    meetCount();
     load();
 
+    socket.on("lead:sync", load);
     return () => {
       alive = false;
+      socket.off("lead:sync", load);
     };
   }, [qKey, qYear]);
 
@@ -525,7 +534,7 @@ const LeadDashboard = () => {
                           </div>
 
                           <div className="text-[11px] text-gray-400">
-                            Effective
+                            Effective Target
                           </div>
                           <div className="text-[11px] text-gray-200 text-right">
                             ₹{formatINR(row.effectiveTarget)}
@@ -557,9 +566,28 @@ const LeadDashboard = () => {
         </div>
       </div>
 
-      <div className="card h-[500px] flex flex-col">
+      <div className="card h-[350px] flex flex-col">
         <div className="flex items-center justify-between">
           <h5 className="font-medium">Upcoming meetings</h5>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              {meetCount.weekly?.map((w) => (
+                <div
+                  key={w.week}
+                  className="rounded-md px-3 py-2 bg-white/5 border border-white/10"
+                >
+                  <div className="text-[11px] text-gray-400">Week {w.week}</div>
+                  <div className="text-sm text-gray-200 text-center">{w.count}</div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-md px-3 py-2 bg-white/5 border border-white/10">
+              <div className="text-[11px] text-gray-400">Total </div>
+              <div className="text-sm text-gray-200 text-center">
+                {meetCount.totalMeetings}
+              </div>
+            </div>
+          </div>
         </div>
         <MeetingTable data={meetings} />
       </div>
