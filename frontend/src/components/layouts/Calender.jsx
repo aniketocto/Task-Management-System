@@ -7,8 +7,8 @@ const Calendar = ({
   attendanceMap,
   getStatusColor,
   beautify,
+  holidayDates,
 }) => {
-  const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const startOfMonth = monthStart.clone().startOf("month");
 
   const leadingBlanks = startOfMonth.isoWeekday() - 1; // 0=Mon, 6=Sun
@@ -38,7 +38,10 @@ const Calendar = ({
               // Extract data
               const key = dateObj.format("YYYY-MM-DD");
               const attendance = attendanceMap[key];
+              const holidayLabel = holidayDates?.[key];
+              const isHoliday = Boolean(holidayLabel);
               const statusColor = getStatusColor(attendance?.checkInStatus);
+              console.log({ holidayLabel, isHoliday });
 
               return (
                 <div
@@ -46,18 +49,20 @@ const Calendar = ({
                   className={[
                     "rounded-lg border transition-all duration-150",
                     "p-2 sm:p-3 md:p-4",
-                     // squares on phones
                     "min-h-[150px] sm:min-h-[96px] md:min-h-[110px]",
-                    statusColor ? `${statusColor} bg-opacity-20` : "",
+                    isHoliday
+                      ? "border-sky-400 bg-sky-900/30"
+                      : statusColor
+                      ? `${statusColor} `
+                      : "",
                     "hover:shadow-sm hover:-translate-y-[1px]",
-                    "overflow-hidden", // prevent overflow
+                    "overflow-hidden",
                   ].join(" ")}
                 >
                   <div className="flex items-start justify-between">
                     <div className="text-xs sm:text-sm text-white font-medium leading-tight">
                       {dateObj.format("DD MMM")}
                       <span className="block text-[10px] sm:text-[11px] md:text-[12px] leading-tight">
-                        {/* show short weekday on tiny screens */}
                         <span className="sm:hidden">
                           {dateObj.format("dd")}
                         </span>
@@ -110,6 +115,17 @@ const Calendar = ({
                     <div className="mt-2 text-[10px] sm:text-[11px] text-gray-300 italic hidden xs:block">
                       No entry
                     </div>
+                  )}
+                  {holidayLabel && (
+                    <span
+                      className={[
+                        "text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full shrink-0",
+                        "bg-sky-700",
+                        "text-sky-100",
+                      ].join(" ")}
+                    >
+                      {holidayLabel}
+                    </span>
                   )}
                 </div>
               );
