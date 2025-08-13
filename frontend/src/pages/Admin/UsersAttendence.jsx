@@ -7,6 +7,7 @@ import { FiCalendar } from "react-icons/fi";
 import React from "react";
 import { io } from "socket.io-client";
 import Modal from "components/layouts/Modal";
+import toast from "react-hot-toast";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -17,8 +18,36 @@ const UsersAttendence = () => {
   const [selectMonth, setSelectMonth] = useState(moment().format("YYYY-MM"));
   const [attendances, setAttendances] = useState([]);
   const [summary, setSummary] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(null);
+  const [createHoliday, setCreateHoliday] = useState("");
+  const [label, setLabel] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const openSetHoliday = () => {
+    setCreateHoliday("");
+    setOpen(true);
+  };
+  const closeSetHoliday = () => setOpen(false);
+
+  const saveHoliday = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post(API_PATHS.HOLIDAYS.SET_HOLIDAYS, {
+        label: label,
+        date: createHoliday,
+      });
+
+      toast.success(res.data.message);
+      fetchAttendance(selectMonth);
+      setOpen(false);
+    } catch (error) {
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openEdit = (name, date, cell = {}) => {
     const toTime = (iso) => (iso ? moment(iso).format("hh:mm") : "");
@@ -85,7 +114,7 @@ const UsersAttendence = () => {
       );
       setAttendances(data.attendances || []);
       setSummary(data.summary || []);
-      console.log("ATTENDANCE API →", data);
+      setHolidays(data.holidays || []);
     } catch (error) {
       console.error("Error loading attendance:", error);
     } finally {
@@ -174,6 +203,15 @@ const UsersAttendence = () => {
     return map;
   }, [summary]);
 
+  const holidayDates = useMemo(() => {
+    const map = {};
+    holidays.forEach((h) => {
+      const key = moment(h.date).format("YYYY-MM-DD");
+      map[key] = h.label;
+    });
+    return map;
+  }, [holidays]);
+
   const getStatusBgColor = (checkInStatus, checkOutStatus) => {
     const status = checkInStatus || checkOutStatus;
 
@@ -196,22 +234,31 @@ const UsersAttendence = () => {
   return (
     <DashboardLayout activeMenu="Users Attendance">
       <div className="my-5 text-white px-2 sm:px-6">
-        <div className="mb-6 flex items-center gap-2">
-          <label className="text-sm font-medium">Select Month:</label>
-          <div className="relative w-fit">
-            <input
-              type="month"
-              value={selectMonth}
-              onChange={(e) => setSelectMonth(e.target.value)}
-              className="text-white bg-gray-800 border border-gray-600 px-3 py-2 rounded pl-10 focus:outline-none"
-            />
-            <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white text-sm pointer-events-none" />
+        <div className="mb-6 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Select Month:</label>
+            <div className="relative w-fit">
+              <input
+                type="month"
+                value={selectMonth}
+                onChange={(e) => setSelectMonth(e.target.value)}
+                className="text-white bg-gray-800 border border-gray-600 px-3 py-2 rounded pl-10 focus:outline-none"
+              />
+              <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white text-sm pointer-events-none" />
+            </div>
           </div>
+
+          <button
+            onClick={openSetHoliday}
+            className="px-3 py-1.5 text-sm rounded border border-gray-100 bg-gray-700 text-white hover:bg-gray-600 cursor-pointer"
+          >
+            Set Holiday
+          </button>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">
-          <div className="relative min-w-[4000px]">
+          <div className="relative min-w-[4500px]">
             <table className="min-w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-700">
@@ -325,20 +372,30 @@ const UsersAttendence = () => {
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-in`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer ${getStatusBgColor(
-                                cell?.checkInStatus
-                              )} `}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer
+  ${
+    holidayDates[d]
+      ? "bg-blue-200 text-blue-800"
+      : getStatusBgColor(cell?.checkInStatus)
+  }`}
+                              title={holidayDates[d] || ""}
                             >
-                              {fmt(cell.in)}
+                              {holidayDates[d] ? holidayDates[d] : fmt(cell.in)}
                             </td>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-out`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer ${getStatusBgColor(
-                                cell?.checkOutStatus
-                              )}}`}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer
+  ${
+    holidayDates[d]
+      ? "bg-blue-200 text-blue-800"
+      : getStatusBgColor(cell?.checkOutStatus)
+  }`}
+                              title={holidayDates[d] || ""}
                             >
-                              {fmt(cell.out)}
+                              {holidayDates[d]
+                                ? holidayDates[d]
+                                : fmt(cell.out)}
                             </td>
                           </React.Fragment>
                         );
@@ -407,12 +464,54 @@ const UsersAttendence = () => {
         <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={() => setEdit(null)}
-            className="px-3 py-1 border border-gray-700 rounded"
+            className="px-3 py-1.5 text-sm rounded bg-gray-700 text-white hover:bg-gray-600 cursor-pointer"
           >
             Cancel
           </button>
-          <button onClick={saveEdit} className="px-3 py-1 bg-white/10 rounded">
+          <button
+            onClick={saveEdit}
+            disabled={loading}
+            className="px-3 py-1.5 text-sm rounded bg-red-500/80 hover:bg-red-200 text-white hover:text-gray-800 cursor-pointer"
+          >
             Save
+          </button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={open} onClose={closeSetHoliday} title={"Set Holiday"}>
+        <label className="block text-white text-sm">
+          Label
+          <input
+            type="text"
+            value={label || ""}
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+          />
+        </label>
+        <label className="block text-white text-sm">
+          Date
+          <input
+            type="date"
+            value={createHoliday || ""}
+            onChange={(e) => setCreateHoliday(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+          />
+        </label>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            onClick={closeSetHoliday}
+            className="px-3 py-1.5 text-sm rounded bg-gray-700 text-white hover:bg-gray-600 cursor-pointer"
+          >
+            Close
+          </button>
+          <button
+            onClick={saveHoliday}
+            disabled={loading}
+            className="px-3 py-1.5 text-sm rounded bg-red-500/80 hover:bg-red-200 text-white hover:text-gray-800 cursor-pointer"
+            title="Next step will enable Save"
+          >
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </Modal>

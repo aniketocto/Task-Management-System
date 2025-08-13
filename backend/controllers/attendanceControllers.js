@@ -8,6 +8,9 @@ const {
 const Attendance = require("../models/attendanceModel");
 
 const { startOfDayIST } = require("../utils/date");
+const Holiday = require("../models/Holiday");
+const { TZ } = require("../utils/holidays");
+const moment = require("moment-timezone");
 
 const applyBusinessRule = (attendence) => {
   const { checkIn, checkOut } = attendence;
@@ -293,9 +296,23 @@ const getAllAttendance = async (req, res) => {
       .lean();
     const summary = calculateUnifiedSummary(attendances);
 
+    if (month) {
+      const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
+      const mEnd = moment.tz(month, "YYYY-MM", TZ).endOf("month").toDate();
+
+      var holidays = await Holiday.find({
+        date: { $gte: mStart, $lte: mEnd },
+      })
+        .sort({ date: 1 })
+        .lean();
+    } else {
+      var holidays = [];
+    }
+
     res.status(200).json({
       summary,
       attendances,
+      holidays,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -312,9 +329,23 @@ const getMyAttendance = async (req, res) => {
     });
     const summary = calculateUnifiedSummary(attendances);
 
+    if (month) {
+      const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
+      const mEnd = moment.tz(month, "YYYY-MM", TZ).endOf("month").toDate();
+
+      var holidays = await Holiday.find({
+        date: { $gte: mStart, $lte: mEnd },
+      })
+        .sort({ date: 1 })
+        .lean();
+    } else {
+      var holidays = [];
+    }
+
     res.status(200).json({
       summary,
       attendances,
+      holidays,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

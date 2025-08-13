@@ -1,8 +1,8 @@
-// cron-job.js
 const cron = require("node-cron");
 const moment = require("moment-timezone");
 const Attendance = require("../models/attendanceModel");
 const User = require("../models/User");
+const { isHoliday } = require("../utils/holidays");
 
 cron.schedule(
   "0 0 * * *",
@@ -17,6 +17,14 @@ cron.schedule(
 
     const yStart = yesterdayMoment.toDate();
 
+    if (await isHoliday(yStart)) {
+      console.log(
+        `${yesterdayMoment.format(
+          "YYYY-MM-DD"
+        )} is a holiday - skipping attendance marking`
+      );
+      return;
+    }
     try {
       const users = await User.find(
         { role: { $ne: "superAdmin" } },
@@ -33,7 +41,7 @@ cron.schedule(
           update: {
             $setOnInsert: {
               user: u._id,
-              date: targetDate,
+              date: yStart,
               checkInStatus: "absent",
               checkOutStatus: "absent",
               state: "absent",

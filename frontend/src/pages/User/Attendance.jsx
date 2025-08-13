@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import axiosInstance from "../../utils/axiosInstance";
 import moment from "moment";
@@ -19,9 +19,19 @@ const Attendance = () => {
   const user = useContext(UserContext);
   const [attendances, setAttendances] = useState([]);
   const [summary, setSummary] = useState({});
+  const [holidays, setHolidays] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(
     moment().format("YYYY-MM")
   );
+
+  const holidayDates = useMemo(() => {
+    const map = {};
+    holidays.forEach((h) => {
+      const key = moment(h.date).format("YYYY-MM-DD");
+      map[key] = h.label;
+    });
+    return map;
+  }, [holidays]);
 
   const fetchAttendance = useCallback(async () => {
     try {
@@ -35,6 +45,7 @@ const Attendance = () => {
       );
       setAttendances(data.attendances || []);
       setSummary(data.summary || {});
+      setHolidays(data.holidays || []);
     } catch (err) {
       console.error("Error loading attendance:", err);
     }
@@ -101,6 +112,7 @@ const Attendance = () => {
           attendanceMap={attendanceMap}
           getStatusColor={getStatusColor}
           beautify={beautify}
+          holidayDates={holidayDates}
         />
       </div>
     </DashboardLayout>
@@ -118,13 +130,13 @@ const SummaryBox = ({ label, value }) => (
 const getStatusColor = (status) => {
   switch (status) {
     case "present":
-      return "border-green-500";
+      return "border-green-500 bg-green-500/10";
     case "late":
-      return "border-yellow-500";
+      return "border-yellow-500 bg-yellow-500/10";
     case "halfDay":
-      return "border-orange-500";
+      return "border-orange-500 bg-orange-500/10";
     case "absent":
-      return "border-red-500";
+      return "border-red-500 bg-red-500/10";
     default:
       return "border-white";
   }

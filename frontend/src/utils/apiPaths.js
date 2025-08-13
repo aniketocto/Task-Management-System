@@ -78,11 +78,17 @@ export const API_PATHS = {
     GET_ALL_ATTENDANCE: "/api/attendance",
     GET_TODAY_ATTENDANCE: "/api/attendance/today",
     UPDATE_ATTENDANCE: "/api/attendance/save",
-    EXPORT_ATTENDANCE: "/api/attendance/export",},
-  
-    TARGETS: {
-      GET_TARGETS: "/api/targets/quarter",
-      SET_TARGETS: "/api/targets/quarter",
-      TARGET_PROGRESS: "/api/leads/target-progress"
-    }
+    EXPORT_ATTENDANCE: "/api/attendance/export",
+  },
+
+  TARGETS: {
+    GET_TARGETS: "/api/targets/quarter",
+    SET_TARGETS: "/api/targets/quarter",
+    TARGET_PROGRESS: "/api/leads/target-progress",
+  },
+
+  HOLIDAYS: {
+    SET_HOLIDAYS: "/api/holidays",
+    DELETE_HOLIDAY_BY_ID: (holidayId) => `/api/holidays/${holidayId}`,
+  },
 };

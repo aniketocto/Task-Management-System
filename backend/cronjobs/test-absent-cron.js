@@ -1,9 +1,9 @@
-// testAbsentFill.bulk.js
 require("dotenv").config();
 const mongoose = require("mongoose");
 const moment = require("moment-timezone");
 const Attendance = require("../models/attendanceModel");
 const User = require("../models/User");
+const { isHoliday } = require("../utils/holidays");
 
 (async () => {
   try {
@@ -15,10 +15,24 @@ const User = require("../models/User");
 
     const tz = "Asia/Kolkata";
     const y = moment.tz(tz).startOf("day").subtract(1, "day");
+    // const y = moment.tz("2025-08-17", "YYYY-MM-DD", tz).startOf("day");
+
     const yDate = y.toDate();
     console.log("📅 Marking absents for:", y.format("YYYY-MM-DD"));
 
-    const users = await User.find({ role: { $ne: "superAdmin" } }, "_id name").lean();
+    if (await isHoliday(yDate)) {
+      console.log(
+        `🏖  ${y.format("YYYY-MM-DD")} is a holiday — skipping absent upserts`
+      );
+      await mongoose.disconnect();
+      console.log("🔌 Disconnected");
+      return;
+    }
+
+    const users = await User.find(
+      { role: { $ne: "superAdmin" } },
+      "_id name"
+    ).lean();
 
     // build one bulkWrite with upserts
     const ops = users.map((u) => ({
@@ -42,7 +56,9 @@ const User = require("../models/User");
 
     const inserted = result.upsertedCount || 0;
     const skipped = users.length - inserted;
-    console.log(`✅ Bulk summary → inserted: ${inserted}, existing: ${skipped}`);
+    console.log(
+      `✅ Bulk summary → inserted: ${inserted}, existing: ${skipped}`
+    );
   } catch (err) {
     console.error("❌ Error:", err);
     process.exitCode = 1;
