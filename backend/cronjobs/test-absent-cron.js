@@ -1,60 +1,53 @@
+// testAbsentFill.bulk.js
 require("dotenv").config();
 const mongoose = require("mongoose");
 const moment = require("moment-timezone");
-const Attendence = require("../models/attendanceModel");
+const Attendance = require("../models/attendanceModel");
 const User = require("../models/User");
 
 (async () => {
   try {
-    // 1. Connect to DB
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
     console.log("✅ Connected to MongoDB");
 
-    // 2. Get yesterday's date in IST (midnight)
     const tz = "Asia/Kolkata";
-    const yesterday = moment.tz(tz).startOf("day").subtract(1, "day").toDate();
-    console.log(
-      "📅 Marking absents for:",
-      moment(yesterday).format("YYYY-MM-DD")
-    );
+    const y = moment.tz(tz).startOf("day").subtract(1, "day");
+    const yDate = y.toDate();
+    console.log("📅 Marking absents for:", y.format("YYYY-MM-DD"));
 
-    // 3. Fetch all users
-    const users = await User.find(
-      { role: { $ne: "superAdmin" } }, // not equal to superAdmin
-      "_id name role"
-    );
-    // 4. Mark absent if no record exists
-    for (const u of users) {
-      const res = await Attendence.updateOne(
-        { user: u._id, date: yesterday }, // match unique index
-        {
+    const users = await User.find({ role: { $ne: "superAdmin" } }, "_id name").lean();
+
+    // build one bulkWrite with upserts
+    const ops = users.map((u) => ({
+      updateOne: {
+        filter: { user: u._id, date: yDate },
+        update: {
           $setOnInsert: {
             user: u._id,
-            date: yesterday,
+            date: yDate,
             checkInStatus: "absent",
             checkOutStatus: "absent",
             state: "absent",
             updatedBy: u._id,
           },
         },
-        { upsert: true }
-      );
+        upsert: true,
+      },
+    }));
 
-      if (res.upsertedCount > 0) {
-        console.log(`➕ Marked absent for ${u.name}`);
-      } else {
-        console.log(`ℹ Already has record for ${u.name}`);
-      }
-    }
+    const result = await Attendance.bulkWrite(ops, { ordered: false });
 
-    // 5. Close DB
-    await mongoose.disconnect();
-    console.log("✅ Done");
+    const inserted = result.upsertedCount || 0;
+    const skipped = users.length - inserted;
+    console.log(`✅ Bulk summary → inserted: ${inserted}, existing: ${skipped}`);
   } catch (err) {
     console.error("❌ Error:", err);
-    process.exit(1);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+    console.log("🔌 Disconnected");
   }
 })();

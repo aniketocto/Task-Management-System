@@ -88,7 +88,7 @@ const Attendance = () => {
           <SummaryBox label="Present" value={mySummary.present} />
           <SummaryBox label="Late" value={mySummary.late} />
           <SummaryBox label="Half Day" value={mySummary.halfDay} />
-          <SummaryBox label="Absent" value={summary.absent} />
+          <SummaryBox label="Absent" value={mySummary.absent} />
           <SummaryBox label="Working Days" value={mySummary.totalWorkingDays} />
         </div>
 

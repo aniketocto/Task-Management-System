@@ -4,47 +4,58 @@ const moment = require("moment-timezone");
 const Attendance = require("../models/attendanceModel");
 const User = require("../models/User");
 
-// Runs daily at 00:00 IST
-cron.schedule("0 0 * * *", async () => {
-  const tz = "Asia/Kolkata";
-  // const yStart = moment.tz(tz).startOf("day").subtract(1, "day").toDate();
-  const yesterdayMoment = moment.tz(tz).startOf("day").subtract(1, "day");
+cron.schedule(
+  "0 0 * * *",
+  async () => {
+    const tz = "Asia/Kolkata";
+    const yesterdayMoment = moment.tz(tz).startOf("day").subtract(1, "day");
 
-  if (yesterdayMoment.day() === 0) {
-    console.log("⏭ Skipping attendance marking for Sunday");
-    return;
-  }
+    if (yesterdayMoment.day() === 0) {
+      console.log("Skipping attendance marking for Sunday");
+      return;
+    }
 
-  const yStart = yesterdayMoment.toDate();
+    const yStart = yesterdayMoment.toDate();
 
-  try {
-    const users = await User.find(
-      { role: { $ne: "superAdmin" } }, // not equal to superAdmin
-      "_id name role"
-    );
-    for (const u of users) {
-      await Attendance.updateOne(
-        { user: u._id, date: yStart },
-        {
-          $setOnInsert: {
-            user: u._id,
-            date: yStart,
-            checkInStatus: "absent",
-            checkOutStatus: "absent",
-            state: "absent",
-            updatedBy: u._id,
-          },
-        },
-        { upsert: true }
+    try {
+      const users = await User.find(
+        { role: { $ne: "superAdmin" } },
+        "_id name role"
       );
-    }
 
-    if (res.upsertedCount > 0) {
-      console.log(`➕ Marked absent for ${u.name}`);
-    } else {
-      console.log(`ℹ Already has record for ${u.name}`);
+      if (users.length === 0) {
+        console.log("No users to mark absent");
+        return;
+      }
+      const ops = users.map((u) => ({
+        updateOne: {
+          filter: { user: u._id, date: yStart },
+          update: {
+            $setOnInsert: {
+              user: u._id,
+              date: targetDate,
+              checkInStatus: "absent",
+              checkOutStatus: "absent",
+              state: "absent",
+              updatedBy: u._id,
+            },
+          },
+          upsert: true,
+        },
+      }));
+
+      const result = await Attendance.bulkWrite(ops, { ordered: false });
+
+      const inserted = result.upsertedCount || 0;
+      const skipped = users.length - inserted;
+      console.log(
+        `✅ Absent cron: inserted ${inserted}, existing ${skipped} for ${yStart.format(
+          "YYYY-MM-DD"
+        )}`
+      );
+    } catch (err) {
+      console.error("Absent cron error:", err);
     }
-  } catch (err) {
-    console.error("Absent cron error:", err);
-  }
-});
+  },
+  { timezone: "Asia/Kolkata" }
+);

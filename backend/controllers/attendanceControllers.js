@@ -7,6 +7,8 @@ const {
 } = require("../config/geofence");
 const Attendance = require("../models/attendanceModel");
 
+const { startOfDayIST } = require("../utils/date");
+
 const applyBusinessRule = (attendence) => {
   const { checkIn, checkOut } = attendence;
 
@@ -61,16 +63,18 @@ const evaluateAttendanceState = (attendance) => {
 };
 
 const isPresentLike = (record) => {
-  return ["present", "late", "halfDay", "onTime"].includes(record.checkInStatus);
-}
+  return ["present", "late", "halfDay", "onTime"].includes(
+    record.checkInStatus
+  );
+};
 
 const isAbsent = (record) => {
   return !record.checkIn && !record.checkOut;
-}
+};
 
 const isWorkingDay = (record) => {
   return !!record.checkIn;
-}
+};
 
 const calculateUnifiedSummary = (records) => {
   const summaryMap = new Map();
@@ -134,8 +138,7 @@ const calculateUnifiedSummary = (records) => {
   }));
 
   return finalSummary;
-}
-
+};
 
 const buildMonthlyDateFilter = (month) => {
   if (!month) return {}; // No filter if month not passed
@@ -175,7 +178,7 @@ const checkIn = async (req, res, next) => {
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = startOfDayIST();
 
     let attendance = await Attendance.findOne({
       user: req.user._id,
@@ -238,7 +241,7 @@ const checkOut = async (req, res, next) => {
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = startOfDayIST();
 
     let attendance = await Attendance.findOne({
       user: req.user._id,
@@ -284,10 +287,10 @@ const getAllAttendance = async (req, res) => {
   try {
     const { month } = req.query;
     const dateFilter = buildMonthlyDateFilter(month);
-    const attendances = await Attendance.find(dateFilter).populate(
-      "user",
-      "name"
-    );
+    const attendances = await Attendance.find(dateFilter)
+      .sort({ date: 1 })
+      .populate("user", "name")
+      .lean();
     const summary = calculateUnifiedSummary(attendances);
 
     res.status(200).json({
@@ -320,9 +323,7 @@ const getMyAttendance = async (req, res) => {
 
 const getTodayAttendance = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    const today = startOfDayIST();
     const record = await Attendance.findOne({
       user: req.user._id,
       date: today,
@@ -346,7 +347,7 @@ const saveAttendanceAdmin = async (req, res) => {
 
     // normalize date to start-of-day
     const d = new Date(date || Date.now());
-    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayStart = startOfDayIST(date ? new Date(date) : new Date());
 
     let doc;
 
@@ -436,9 +437,9 @@ const exportAttendance = async (req, res) => {
     const exportData = records.map((r) => ({
       Name: r.user.name,
       Email: r.user.email || "",
-      Date: r.date.toISOString().split("T")[0],
-      CheckIn: r.checkIn ? new Date(r.checkIn).toLocaleTimeString() : "—",
-      CheckOut: r.checkOut ? new Date(r.checkOut).toLocaleTimeString() : "—",
+      Date: moment.tz(r.date, TZ).format("YYYY-MM-DD"),
+      CheckIn: r.checkIn ? moment.tz(r.checkIn, TZ).format("HH:mm") : "—",
+      CheckOut: r.checkOut ? moment.tz(r.checkOut, TZ).format("HH:mm") : "—",
       CheckInStatus: r.checkInStatus,
       CheckOutStatus: r.checkOutStatus,
       TotalHours: r.totalHours,

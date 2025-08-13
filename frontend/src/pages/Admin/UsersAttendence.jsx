@@ -21,29 +21,48 @@ const UsersAttendence = () => {
   const [edit, setEdit] = useState(null);
 
   const openEdit = (name, date, cell = {}) => {
+    const toTime = (iso) => (iso ? moment(iso).format("hh:mm") : "");
+
+    const inTime = toTime(cell.in);
+    const outTime = toTime(cell.out);
     setEdit({
       id: cell.id || null,
-      userId: cell.userId || userIdByName[name], // ensures we have it for empty cells
+      userId: cell.userId || userIdByName[name],
       name,
-      date, // "YYYY-MM-DD"
-      in: isoToTime(cell.in),
-      out: isoToTime(cell.out),
+      date,
+      inTime,
+      outTime,
+      _initial: { inTime, outTime },
     });
   };
 
   const saveEdit = async () => {
-    const checkIn = edit.inTime ? mergeDateTime(edit.date, edit.inTime) : null;
-    const checkOut = edit.outTime
-      ? mergeDateTime(edit.date, edit.outTime)
-      : null;
+    const mergeDateTime = (datestr, timestr) => {
+      if (!datestr || !timestr) return "";
+      return moment(`${datestr} ${timestr}`, "YYYY-MM-DD hh:mm").toISOString();
+    };
+
+    const changedIn = edit.inTime !== edit._initial.inTime;
+    const changedOut = edit.outTime !== edit._initial.outTime;
 
     const payload = {
-      id: edit.id || undefined, // if present -> update by id
-      userId: edit.userId, // needed for upsert case
-      date: edit.date, // backend normalizes
-      checkIn,
-      checkOut,
+      id: edit.id || undefined,
+      userId: edit.userId,
+      date: edit.date,
     };
+
+    if (changedIn) {
+      payload.checkIn = edit.inTime
+        ? mergeDateTime(edit.date, edit.inTime)
+        : null;
+    }
+
+    if (changedOut) {
+      payload.checkOut = edit.outTime
+        ? mergeDateTime(edit.date, edit.outTime) // set/replace
+        : null; // explicit clear
+    }
+
     try {
       setLoading(true);
       await axiosInstance.put(API_PATHS.ATTENDANCE.UPDATE_ATTENDANCE, payload);
@@ -112,7 +131,9 @@ const UsersAttendence = () => {
         userId: a.user?._id, // <-- fallback for upsert
         in: a.checkIn || "",
         out: a.checkOut || "",
-        status: a.checkInStatus || "",
+        checkInStatus: a.checkInStatus || "",
+        checkOutStatus: a.checkOutStatus || "",
+        work: a.totalHours || "",
       };
     });
     return m;
@@ -153,17 +174,28 @@ const UsersAttendence = () => {
     return map;
   }, [summary]);
 
-  const mergeDateTime = (datestr, timestr) => {
-    if (!datestr || !timestr) return "";
-    return moment(`${datestr} ${timestr}`, "YYYY-MM-DD hh:mm").toISOString();
-  };
+  const getStatusBgColor = (checkInStatus, checkOutStatus) => {
+    const status = checkInStatus || checkOutStatus;
 
-  const isoToTime = (iso) => (iso ? moment(iso).format("hh:mm") : "");
+    switch (status) {
+      case "present":
+        return "bg-green-100 text-green-800 ";
+      case "absent":
+        return "bg-red-400 text-red-800";
+      case "halfDay":
+        return "bg-orange-100 text-orange-800";
+      case "late":
+        return "bg-yellow-100 text-yellow-800 ";
+      case "early":
+        return "bg-yellow-100 text-yellow-800 ";
+      default:
+        return;
+    }
+  };
 
   return (
     <DashboardLayout activeMenu="Users Attendance">
       <div className="my-5 text-white px-2 sm:px-6">
-        {/* Month Selector */}
         <div className="mb-6 flex items-center gap-2">
           <label className="text-sm font-medium">Select Month:</label>
           <div className="relative w-fit">
@@ -182,7 +214,6 @@ const UsersAttendence = () => {
           <div className="relative min-w-[4000px]">
             <table className="min-w-full text-left border-collapse">
               <thead>
-                {/* Row 1: Day headers */}
                 <tr className="border-b border-gray-700">
                   <th
                     rowSpan={3}
@@ -230,8 +261,6 @@ const UsersAttendence = () => {
                     Total
                   </th>
                 </tr>
-
-                {/* Row 2: Date headers */}
                 <tr className="border-b border-gray-700">
                   {allDates.map((d) => (
                     <th
@@ -243,8 +272,6 @@ const UsersAttendence = () => {
                     </th>
                   ))}
                 </tr>
-
-                {/* Row 3: In/Out sub-headers */}
                 <tr className="border-b border-gray-800">
                   {allDates.map((d) => (
                     <React.Fragment key={`${d}-sub`}>
@@ -294,22 +321,26 @@ const UsersAttendence = () => {
                       {allDates.map((d) => {
                         const cell = byUser[name]?.[d] || {};
                         return (
-                          <>
+                          <React.Fragment key={d}>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-in`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer `}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer ${getStatusBgColor(
+                                cell?.checkInStatus
+                              )} `}
                             >
                               {fmt(cell.in)}
                             </td>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-out`}
-                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer }`}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer ${getStatusBgColor(
+                                cell?.checkOutStatus
+                              )}}`}
                             >
                               {fmt(cell.out)}
                             </td>
-                          </>
+                          </React.Fragment>
                         );
                       })}
                       <td className="px-2 py-3 text-center text-md border-l border-gray-700">
@@ -341,7 +372,6 @@ const UsersAttendence = () => {
         onClose={() => setEdit(null)}
         title={`Edit Attendance - ${edit?.name || ""}`}
       >
-        {/* Date (pre-filled from column) */}
         <label className="block text-white text-sm">
           Date
           <input
@@ -363,8 +393,6 @@ const UsersAttendence = () => {
             className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
           />
         </label>
-
-        {/* Out time */}
         <label className="block text-white text-sm">
           Out Time
           <input
@@ -376,7 +404,6 @@ const UsersAttendence = () => {
             className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
           />
         </label>
-
         <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={() => setEdit(null)}
