@@ -37,7 +37,7 @@ cron.schedule(
       }
       const ops = users.map((u) => ({
         updateOne: {
-          filter: { user: u._id, date: yStart },
+          filter: { user: u._id, date: yStart }, 
           update: {
             $setOnInsert: {
               user: u._id,

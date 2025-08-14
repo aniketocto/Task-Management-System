@@ -221,12 +221,13 @@ const getLeadDashboardData = async (req, res) => {
     const leadCategories = [
       "realEstate",
       "hospitality",
-      "bsfi",
+      "bfsi",
       "fmcg",
       "healthcare",
       "wellness",
       "fnb",
       "agency",
+      "energy",
       "fashion",
       "other",
     ];

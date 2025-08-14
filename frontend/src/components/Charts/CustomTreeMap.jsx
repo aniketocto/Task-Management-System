@@ -3,16 +3,17 @@ import { ResponsiveContainer, Treemap, Tooltip } from "recharts";
 
 // Map category to a color
 const CATEGORY_COLORS = {
-  realEstate: "#60a5fa",
-  hospitality: "#34d399",
-  bsfi: "#fbbf24",
-  fmcg: "#f87171",
-  healthcare: "#c084fc",
-  wellness: "#f472b6",
-  fnb: "#38bdf8",
-  agency: "#a3e635",
-  fashion: "#fb7185",
-  other: "#64748b",
+  realEstate: "#2563EB", 
+  hospitality: "#059669", 
+  bfsi: "#C2410C", 
+  fmcg: "#DC2626", 
+  healthcare: "#7C3AED",
+  wellness: "#BE185D", 
+  fnb: "#0284C7",
+  agency: "#22C55E",
+  fashion: "#DB2777",
+  energy: "#CA8A04", 
+  other: "#475569", 
 };
 
 // All-caps and spaced utility
@@ -56,7 +57,7 @@ const renderCustomContent = (props) => {
         fontSize={13}
         fontWeight={400}
         fill="#1e293b"
-        style={{ textTransform: "uppercase", letterSpacing: "1.2px",  }}
+        style={{ textTransform: "uppercase", letterSpacing: "1.2px" }}
         pointerEvents="none"
         dominantBaseline="middle"
       >
