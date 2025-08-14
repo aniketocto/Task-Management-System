@@ -7,9 +7,10 @@ import { UserContext } from "../../context/userContext";
 import { beautify } from "../../utils/helper";
 import { FaInstagram, FaLinkedin, FaRegFileAlt } from "react-icons/fa";
 import ReactPaginate from "react-paginate";
+import { FiCalendar } from "react-icons/fi";
 
 const CATEGORY_OPTIONS = [
-  { value: "All", label: "" },
+  { value: "", label: "All" },
   { value: "realEstate", label: "Real Estate" },
   { value: "hospitality", label: "Hospitality" },
   { value: "bfsi", label: "BFSI" },
@@ -34,15 +35,20 @@ const STATUS_OPTIONS = [
   { label: "Legal", value: "legal" },
 ];
 
-const ManageLeadTable = () => {
+const ManageLeadTable = ({ selectMonth }) => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState("");
+  const [category, setCategory] = useState(() => {
+    return sessionStorage.getItem("lastLeadCategory") || "";
+  });
+  const [status, setStatus] = useState(() => {
+    return sessionStorage.getItem("lastLeadStatus") || "";
+  });
 
   const [page, setPage] = useState(() => {
     return parseInt(sessionStorage.getItem("lastLeadPage")) || 1;
   });
+
   const [pages, setPages] = useState(1);
   const navigate = useNavigate();
 
@@ -62,6 +68,7 @@ const ManageLeadTable = () => {
           params: {
             page: pageNumber,
             limit: 10,
+            month: selectMonth,
             category: category || undefined,
             status: status || undefined,
           },
@@ -75,7 +82,7 @@ const ManageLeadTable = () => {
         setLoading(false);
       }
     },
-    [category, status]
+    [category, status, selectMonth]
   );
 
   const getAttemptObj = (attempt) => {
@@ -117,6 +124,8 @@ const ManageLeadTable = () => {
   useEffect(() => {
     fetchLeads(page);
     sessionStorage.setItem("lastLeadPage", page);
+    sessionStorage.setItem("lastLeadCategory", category);
+    sessionStorage.setItem("lastLeadStatus", status);
   }, [page, category, status, fetchLeads]);
 
   const handleNavigate = (leadId) => {
@@ -214,6 +223,17 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Status
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+                  >
+                    {STATUS_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </th>
                 <th
                   rowSpan="2"

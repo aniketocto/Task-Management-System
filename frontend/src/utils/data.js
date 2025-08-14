@@ -198,12 +198,7 @@ export const MENU_DATA = [
         path: "/user/tasks",
         access: ({ role }) => role === "user",
       },
-      {
-        label: "View Tasks",
-        icon: LuClipboardCheck,
-        path: "/user/tasks",
-        access: ({ role }) => role === "user" || role === "admin",
-      },
+       
     ],
   },
   {
