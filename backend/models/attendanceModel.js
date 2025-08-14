@@ -10,7 +10,6 @@ const attendanceSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
-      index: true, // normalized to midnight UTC of that day
     },
     checkIn: {
       type: Date,
