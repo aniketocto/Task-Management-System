@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -8,9 +8,38 @@ import { beautify } from "../../utils/helper";
 import { FaInstagram, FaLinkedin, FaRegFileAlt } from "react-icons/fa";
 import ReactPaginate from "react-paginate";
 
+const CATEGORY_OPTIONS = [
+  { value: "All", label: "" },
+  { value: "realEstate", label: "Real Estate" },
+  { value: "hospitality", label: "Hospitality" },
+  { value: "bfsi", label: "BFSI" },
+  { value: "healthcare", label: "Healthcare" },
+  { value: "wellness", label: "Wellness" },
+  { value: "fnb", label: "F&B" },
+  { value: "agency", label: "Agency" },
+  { value: "fashion", label: "Fashion" },
+  { value: "energy", label: "Energy" },
+  { value: "other", label: "Others" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "New", value: "new" },
+  { label: "Follow Up", value: "followUp" },
+  { label: "Dead", value: "dead" },
+  { label: "Onboarded", value: "onboarded" },
+  { label: "Negotiation", value: "negotiation" },
+  { label: "Agreement", value: "agreement" },
+  { label: "Pitch", value: "pitch" },
+  { label: "Legal", value: "legal" },
+];
+
 const ManageLeadTable = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("");
+
   const [page, setPage] = useState(() => {
     return parseInt(sessionStorage.getItem("lastLeadPage")) || 1;
   });
@@ -25,21 +54,29 @@ const ManageLeadTable = () => {
     (user.role !== "admin" && user.department === "BusinessDevelopment")
   );
 
-  const fetchLeads = async (pageNumber = 1) => {
-    setLoading(true);
-    try {
-      const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
-        params: { page: pageNumber, limit: 10 },
-      });
-      setLeads(data.leads || []);
-      setPage(data.page || 1);
-      setPages(data.pages || 1);
-    } catch (err) {
-      console.error("Error fetching leads:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchLeads = useCallback(
+    async (pageNumber = 1) => {
+      setLoading(true);
+      try {
+        const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
+          params: {
+            page: pageNumber,
+            limit: 10,
+            category: category || undefined,
+            status: status || undefined,
+          },
+        });
+        setLeads(data.leads || []);
+        setPage(data.page || 1);
+        setPages(data.pages || 1);
+      } catch (err) {
+        console.error("Error fetching leads:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [category, status]
+  );
 
   const getAttemptObj = (attempt) => {
     if (typeof attempt === "object" && attempt !== null) {
@@ -80,7 +117,7 @@ const ManageLeadTable = () => {
   useEffect(() => {
     fetchLeads(page);
     sessionStorage.setItem("lastLeadPage", page);
-  }, [page]);
+  }, [page, category, status, fetchLeads]);
 
   const handleNavigate = (leadId) => {
     navigate("/leads-create", { state: { leadId: leadId } });
@@ -141,7 +178,7 @@ const ManageLeadTable = () => {
               <col style={{ width: "200px" }} />
               <col style={{ width: "100px" }} />
               <col style={{ width: "100px" }} />
-              <col style={{ width: "150px" }} />
+              <col style={{ width: "250px" }} />
               <col style={{ width: "200px" }} />
               <col style={{ width: "150px" }} />
               <col style={{ width: "150px" }} />
@@ -189,6 +226,17 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Category
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+                  >
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </th>
                 <th
                   rowSpan="2"
