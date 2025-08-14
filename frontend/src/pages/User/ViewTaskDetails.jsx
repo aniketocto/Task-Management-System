@@ -8,7 +8,8 @@ import moment from "moment";
 import { LuFileUp, LuPaperclip, LuSquareArrowOutUpRight } from "react-icons/lu";
 import toast from "react-hot-toast";
 import { UserContext } from "../../context/userContext";
-import { FaBookmark } from "react-icons/fa";
+import { FaBookmark, FaLink } from "react-icons/fa";
+import { beautify } from "../../utils/helper";
 
 const ViewTaskDetails = () => {
   const { id } = useParams();
@@ -326,7 +327,7 @@ const ViewTaskDetails = () => {
                   return (
                     <li
                       key={idx}
-                      className="bg-blue-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
+                      className="bg-gray-50 flex items-center px-3 py-2 rounded text-gray-800 text-sm"
                     >
                       <FaBookmark className="text-red-500 mr-2" />
                       {text}
@@ -434,20 +435,20 @@ const TodoCheckList = ({
   );
 };
 
-const Attachment = ({ link, index, onClick }) => {
+const Attachment = ({ onClick, name }) => {
   return (
     <div
       className="flex justify-between bg-gray-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex-1 flex items-center gap-3">
-        <span className="text-xs text-gray-400 font-semibold mr-2">
-          {index < 9 ? `0${index + 1}` : index + 1}
+        <span className="text-xl text-gray-400 mr-1">
+          <LuPaperclip />
         </span>
-        <p className="text-xs text-black">{link}</p>
+        <p className="text-sm font-regular text-gray-800">{beautify(name)}</p>
       </div>
 
-      <LuSquareArrowOutUpRight className="text-gray-400" />
+      <LuSquareArrowOutUpRight className="text-blue-400" />
     </div>
   );
 };
@@ -455,7 +456,7 @@ const Attachment = ({ link, index, onClick }) => {
 const ReferenceLink = ({ link, onClick }) => {
   return (
     <div
-      className="flex justify-between bg-gray-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2 cursor-pointer"
+      className="flex justify-between bg-blue-50 border border-gray-100 px-3 py-2 rounded-md mb-3 mt-2 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex-1 flex items-center gap-3">

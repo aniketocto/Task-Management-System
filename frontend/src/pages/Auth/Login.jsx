@@ -116,6 +116,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin} className="mt-8">
+       
           <Input
             value={email}
             onChange={({ target }) => setEmail(target.value)}
@@ -129,7 +130,7 @@ const Login = () => {
             label="Password"
             placeholder="Password"
             type="password"
-          />  
+          />   
 
           {/* {Array.isArray(error) && error.length > 0 && (
             <ul className="text-red-500 text-sm pb-2.5">

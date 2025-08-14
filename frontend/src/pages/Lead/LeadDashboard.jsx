@@ -123,7 +123,7 @@ const LeadDashboard = () => {
       const p = (progress?.months || []).find(
         (mm) => mm.year === year && mm.month === month
       )?.plannedTarget;
-      draft[key] = Number.isFinite(t) ? t : Number(p) || 0;
+      draft[key] = Number.isFinite(t) ? t : Number(p) || "";
     });
 
     return draft;
@@ -136,11 +136,13 @@ const LeadDashboard = () => {
   const closeSetLimit = () => setIsLimitOpen(false);
 
   const updateDraft = (key, val) => {
-    const num = Number(val);
-    setLimitDraft((prev) => ({
-      ...prev,
-      [key]: Number.isFinite(num) ? num : 0,
-    }));
+    if (val === "") {
+      setLimitDraft((prev) => ({ ...prev, [key]: "" }));
+      return;
+    }
+    if (/^\d+$/.test(val)) {
+      setLimitDraft((prev) => ({ ...prev, [key]: val }));
+    }
   };
 
   const monthList = QUARTER_MONTHS[qKey].map((m) => ({
@@ -577,7 +579,9 @@ const LeadDashboard = () => {
                   className="rounded-md px-3 py-2 bg-white/5 border border-white/10"
                 >
                   <div className="text-[11px] text-gray-400">Week {w.week}</div>
-                  <div className="text-sm text-gray-200 text-center">{w.count}</div>
+                  <div className="text-sm text-gray-200 text-center">
+                    {w.count}
+                  </div>
                 </div>
               ))}
             </div>
@@ -632,7 +636,7 @@ const LeadDashboard = () => {
                     type="number"
                     inputMode="numeric"
                     className="w-full rounded-md bg-gray-800 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none  focus:ring-0"
-                    value={limitDraft[key] ?? 0}
+                    value={limitDraft[key] ?? ""}
                     onChange={(e) => updateDraft(key, e.target.value)}
                     placeholder="0"
                     min="0"

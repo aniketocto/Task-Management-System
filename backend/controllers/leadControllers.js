@@ -114,13 +114,21 @@ const createLead = async (req, res) => {
 
 const getLeads = async (req, res) => {
   try {
-    const { status, type, category, page = 1, limit = 10 } = req.query;
+    const { status, type, category, month, page = 1, limit = 10 } = req.query;
 
     const filter = {};
 
     if (status) filter.status = status;
     if (type) filter.type = type;
     if (category) filter.category = category;
+
+    if (month) {
+      const [year, monthNum] = month.split('-').map(Number);
+      filter.createdAt = {
+        $gte: new Date(year, monthNum - 1, 1),
+        $lt: new Date(year, monthNum, 1),
+      };
+    }
 
     const pageNum = Math.max(1, Number(page));
     const pageSize = Math.max(1, Number(limit));

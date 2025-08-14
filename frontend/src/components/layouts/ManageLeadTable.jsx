@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -7,13 +7,48 @@ import { UserContext } from "../../context/userContext";
 import { beautify } from "../../utils/helper";
 import { FaInstagram, FaLinkedin, FaRegFileAlt } from "react-icons/fa";
 import ReactPaginate from "react-paginate";
+import { FiCalendar } from "react-icons/fi";
 
-const ManageLeadTable = () => {
+const CATEGORY_OPTIONS = [
+  { value: "", label: "All" },
+  { value: "realEstate", label: "Real Estate" },
+  { value: "hospitality", label: "Hospitality" },
+  { value: "bfsi", label: "BFSI" },
+  { value: "healthcare", label: "Healthcare" },
+  { value: "wellness", label: "Wellness" },
+  { value: "fnb", label: "F&B" },
+  { value: "agency", label: "Agency" },
+  { value: "fashion", label: "Fashion" },
+  { value: "energy", label: "Energy" },
+  { value: "other", label: "Others" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "New", value: "new" },
+  { label: "Follow Up", value: "followUp" },
+  { label: "Dead", value: "dead" },
+  { label: "Onboarded", value: "onboarded" },
+  { label: "Negotiation", value: "negotiation" },
+  { label: "Agreement", value: "agreement" },
+  { label: "Pitch", value: "pitch" },
+  { label: "Legal", value: "legal" },
+];
+
+const ManageLeadTable = ({ selectMonth }) => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState(() => {
+    return sessionStorage.getItem("lastLeadCategory") || "";
+  });
+  const [status, setStatus] = useState(() => {
+    return sessionStorage.getItem("lastLeadStatus") || "";
+  });
+
   const [page, setPage] = useState(() => {
     return parseInt(sessionStorage.getItem("lastLeadPage")) || 1;
   });
+
   const [pages, setPages] = useState(1);
   const navigate = useNavigate();
 
@@ -25,21 +60,30 @@ const ManageLeadTable = () => {
     (user.role !== "admin" && user.department === "BusinessDevelopment")
   );
 
-  const fetchLeads = async (pageNumber = 1) => {
-    setLoading(true);
-    try {
-      const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
-        params: { page: pageNumber, limit: 10 },
-      });
-      setLeads(data.leads || []);
-      setPage(data.page || 1);
-      setPages(data.pages || 1);
-    } catch (err) {
-      console.error("Error fetching leads:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchLeads = useCallback(
+    async (pageNumber = 1) => {
+      setLoading(true);
+      try {
+        const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
+          params: {
+            page: pageNumber,
+            limit: 10,
+            month: selectMonth,
+            category: category || undefined,
+            status: status || undefined,
+          },
+        });
+        setLeads(data.leads || []);
+        setPage(data.page || 1);
+        setPages(data.pages || 1);
+      } catch (err) {
+        console.error("Error fetching leads:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [category, status, selectMonth]
+  );
 
   const getAttemptObj = (attempt) => {
     if (typeof attempt === "object" && attempt !== null) {
@@ -80,7 +124,9 @@ const ManageLeadTable = () => {
   useEffect(() => {
     fetchLeads(page);
     sessionStorage.setItem("lastLeadPage", page);
-  }, [page]);
+    sessionStorage.setItem("lastLeadCategory", category);
+    sessionStorage.setItem("lastLeadStatus", status);
+  }, [page, category, status, fetchLeads]);
 
   const handleNavigate = (leadId) => {
     navigate("/leads-create", { state: { leadId: leadId } });
@@ -141,7 +187,7 @@ const ManageLeadTable = () => {
               <col style={{ width: "200px" }} />
               <col style={{ width: "100px" }} />
               <col style={{ width: "100px" }} />
-              <col style={{ width: "150px" }} />
+              <col style={{ width: "250px" }} />
               <col style={{ width: "200px" }} />
               <col style={{ width: "150px" }} />
               <col style={{ width: "150px" }} />
@@ -177,6 +223,17 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Status
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+                  >
+                    {STATUS_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </th>
                 <th
                   rowSpan="2"
@@ -189,6 +246,17 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Category
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+                  >
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </th>
                 <th
                   rowSpan="2"

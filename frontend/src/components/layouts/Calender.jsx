@@ -41,8 +41,6 @@ const Calendar = ({
               const holidayLabel = holidayDates?.[key];
               const isHoliday = Boolean(holidayLabel);
               const statusColor = getStatusColor(attendance?.checkInStatus);
-              console.log({ holidayLabel, isHoliday });
-
               return (
                 <div
                   key={key}
