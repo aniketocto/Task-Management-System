@@ -83,7 +83,7 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
         </div>
 
         {userInfo?.role === "admin" ? (
-          <div className="grid grid-cols-4 gap-3 border-t border-gray-200 py-3 mt-5">
+          <div className="grid grid-cols-3 lg:grid-cols-4 gap-3 border-t border-gray-200 py-3 mt-5">
             <StatCard label="Total" count={userInfo?.totalTask} />
             <StatCard label="New" count={userInfo?.newTask} />
             <StatCard label="InProgress" count={userInfo?.inProgressTask} />

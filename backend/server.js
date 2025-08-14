@@ -5,7 +5,12 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
-const { backfillTaskApprovals, backfillPitchAndPresentation, migrateApprovalToLogs } = require("./config/helper");
+const {
+  backfillTaskApprovals,
+  backfillPitchAndPresentation,
+  migrateApprovalToLogs,
+  updateService,
+} = require("./config/helper");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -14,6 +19,9 @@ const notifyRoutes = require("./routes/notifyRoutes");
 const leadRoutes = require("./routes/leadRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const companyRoutes = require("./routes/companyRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
+const targetRoutes = require("./routes/targetRoutes");
+const holidaysRoutes = require("./routes/holidayRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +31,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // 🔧 Vite dev server
+      "https://crm.getunstoppable.in",
       "http://crm.getunstoppable.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -36,6 +45,8 @@ app.use(express.json()); // ✅ MUST come before routes
 // Connect to DB
 connectDB();
 
+require("./cronjobs/cronJob");
+
 // Mounting express Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -44,6 +55,10 @@ app.use("/api/notify", notifyRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/targets", targetRoutes);
+app.use("/api/holidays", holidaysRoutes)
+
 
 // Static Server upload folder
 const path = require("path");
@@ -52,7 +67,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Socket IO Setup
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://crm.getunstoppable.in"],
+    origin: [
+      "http://localhost:5173",
+      "http://crm.getunstoppable.in",
+      "https://crm.getunstoppable.in",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -85,6 +104,7 @@ io.on("connection", (socket) => {
 // backfillTaskApprovals();
 // backfillPitchAndPresentation();
 // migrateApprovalToLogs();
+// updateService();
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

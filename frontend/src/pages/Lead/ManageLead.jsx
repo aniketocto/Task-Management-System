@@ -1,6 +1,5 @@
-import { useNavigate } from "react-router-dom";
+
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import React, { useState } from "react";
 import ManageLeadTable from "../../components/layouts/ManageLeadTable";
 
 const ManageLead = () => {

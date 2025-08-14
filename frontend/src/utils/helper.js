@@ -167,3 +167,28 @@ export const beautify = (text) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 };
+
+export const formatDecimalHours = (decimalHours) => {
+  if (!decimalHours && decimalHours !== 0) return "—";
+
+  const hours = Math.floor(decimalHours); // whole hours
+  const minutes = Math.round((decimalHours - hours) * 60); // remaining minutes
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0"
+  )}`;
+};
+
+export const toLocalInputValue = (value) => {
+  if (!value) return "";
+  const d = new Date(value); // ISO from API (UTC)
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+};

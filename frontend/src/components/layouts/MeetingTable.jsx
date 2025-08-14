@@ -25,6 +25,8 @@ const MeetingTable = ({ data }) => {
         return "bg-[#2b7fff] border border-blue-500";
       case "pitch":
         return "bg-[#8B5CF6] border border-purple-500";
+      case "legal":
+        return "bg-[#000] border border-black";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -79,7 +81,7 @@ const MeetingTable = ({ data }) => {
                 </span>
               </td>
               <td className="py-3 px-4 text-white text-[13px] hidden md:table-cell border-b border-gray-500">
-                {beautify(item.services)}
+                {item.services ? beautify(item.services.join(", ")) : "-"}
               </td>
               <td className="py-3 px-4 text-white text-[13px] hidden md:table-cell border-b border-gray-500">
                 {beautify(item.category)}

@@ -1,14 +1,10 @@
+const { min } = require("moment");
 const mongoose = require("mongoose");
 
 const dateChangeRequestSchema = new mongoose.Schema({
   field: {
     type: String,
-    enum: [
-      "leadCameDate",
-      "credentialDeckDate",
-      "discoveryCallDate",
-      "pitchDate",
-    ],
+    enum: ["credentialDeckDate", "discoveryCallDate", "pitchDate"],
     required: true,
   },
   oldDate: { type: Date, required: true },
@@ -64,10 +60,13 @@ const leadSchema = new mongoose.Schema(
     leadSource: {
       type: String,
       enum: [
+        "self",
         "website",
         "inboundWhatsApp",
         "whatsAppReTarget",
         "inboundEmail",
+        "inboundCall",
+        "outboundCall",
         "outboundEmail",
         "metaAds",
         "googleAds",
@@ -80,7 +79,8 @@ const leadSchema = new mongoose.Schema(
       trim: true,
     },
     referral: {
-      name: { type: String, trim: true },
+      type: String,
+      trim: true,
     },
     // ——— Basic COP lead info ———
 
@@ -95,6 +95,7 @@ const leadSchema = new mongoose.Schema(
         "negotiation",
         "agreement",
         "pitch",
+        "legal",
       ],
       default: "new",
       required: true,
@@ -110,12 +111,13 @@ const leadSchema = new mongoose.Schema(
       enum: [
         "realEstate",
         "hospitality",
-        "bsfi",
+        "bfsi",
         "fmcg",
         "healthcare",
         "wellness",
         "fnb",
         "agency",
+        "energy",
         "fashion",
         "other",
       ],
@@ -123,31 +125,34 @@ const leadSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    services: {
-      type: String,
-      enum: [
-        "logoDesign",
-        "socialMediaManagement",
-        "leadGeneration",
-        "webDesignNDev",
-        "appDesignNDev",
-        "videoProduction",
-        "branding",
-        "visualIdentity",
-        "coffeeTableBook",
-        "brochures",
-        "merchandise",
-        "stallDesign",
-        "influencerMarketing",
-        "siteBranding",
-        "packaging",
-        "energy",
-        "others",
-      ],
-      default: "others",
-      required: true,
-      trim: true,
-    },
+    services: [
+      {
+        type: String,
+        enum: [
+          "logoDesign",
+          "socialMediaManagement",
+          "leadGeneration",
+          "webDesign",
+          "webDevelopment",
+          "appDesign",
+          "appDevelopment",
+          "videoProduction",
+          "branding",
+          "visualIdentity",
+          "coffeeTableBook",
+          "brochures",
+          "merchandise",
+          "stallDesign",
+          "influencerMarketing",
+          "siteBranding",
+          "packaging",
+          "others",
+        ],
+        default: "others",
+        required: true,
+        trim: true,
+      },
+    ],
     brief: {
       type: String,
       trim: true,
@@ -214,11 +219,31 @@ const leadSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    amount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    onboardedAt: {
+      type: Date,
+    },
+    statusHistory: [
+      {
+        status: { type: String, trim: true },
+        changedAt: { type: Date },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
   },
   {
     // automatically adds `createdAt` & `updatedAt`
     timestamps: true,
   }
 );
+
+leadSchema.index({ onboardedAt: 1 });
+leadSchema.index({ credentialDeckDate: 1 });
+leadSchema.index({ discoveryCallDate: 1 });
+leadSchema.index({ pitchDate: 1 });
 
 module.exports = mongoose.model("Lead", leadSchema);

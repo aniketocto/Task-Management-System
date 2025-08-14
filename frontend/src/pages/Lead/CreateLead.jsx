@@ -15,8 +15,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { LuTrash } from "react-icons/lu";
 import Modal from "components/layouts/Modal";
 import DeleteAlert from "components/layouts/DeleteAlert";
+import MultiSelectChips from "components/Inputs/MultiSelectChips";
 import { UserContext } from "../../context/userContext";
-import { addBusinessDays, beautify } from "../../utils/helper";
+import {
+  addBusinessDays,
+  addThousandsSeperator,
+  beautify,
+  toLocalInputValue,
+} from "../../utils/helper";
 import moment from "moment";
 
 const CreateLead = () => {
@@ -61,6 +67,7 @@ const CreateLead = () => {
       attempt4: false,
       attempt5: false,
     },
+    amount: "",
   });
 
   const [currentLead, setCurrentLead] = useState(null);
@@ -104,7 +111,7 @@ const CreateLead = () => {
       status: "",
       type: "",
       category: "",
-      services: "",
+      services: [],
       brief: "",
       leadCameDate: null,
       credentialDeckDate: null,
@@ -125,6 +132,7 @@ const CreateLead = () => {
         attempt4: false,
         attempt5: false,
       },
+      amount: "",
     });
   };
 
@@ -164,6 +172,7 @@ const CreateLead = () => {
       }
     } catch (error) {
       console.error("Error creating lead:", error);
+      toast.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -190,16 +199,25 @@ const CreateLead = () => {
           status: leadInfo.status,
           type: leadInfo.type,
           category: leadInfo.category,
-          leadCameDate: leadInfo.leadCameDate || null,
-          credentialDeckDate: leadInfo.credentialDeckDate || null,
-          discoveryCallDate: leadInfo.discoveryCallDate || null,
-          pitchDate: leadInfo.pitchDate || null,
+          leadCameDate: leadInfo.leadCameDate
+            ? toLocalInputValue(leadInfo.leadCameDate).slice(0, 10)
+            : "",
+          // type="datetime-local":
+          credentialDeckDate: toLocalInputValue(leadInfo.credentialDeckDate),
+          discoveryCallDate: toLocalInputValue(leadInfo.discoveryCallDate),
+          pitchDate: toLocalInputValue(leadInfo.pitchDate),
           attachments: leadInfo.attachments || [],
           remark: leadInfo.remark,
           followUp: leadInfo.followUp || [],
           brief: leadInfo.brief,
-          services: leadInfo.services,
+          services: Array.isArray(leadInfo.services)
+            ? leadInfo.services
+            : leadInfo.services
+            ? [leadInfo.services]
+            : [],
           leadSource: leadInfo.leadSource,
+          referral: leadInfo.referral,
+          amount: leadInfo.amount,
         }));
 
         leadInfo?.dateChangeRequests?.map((request) =>
@@ -224,37 +242,67 @@ const CreateLead = () => {
     }
   };
 
+  const sameDateInput = (apiISO, inputVal) => {
+    if (!apiISO && !inputVal) return true;
+    return toLocalInputValue(apiISO) === (inputVal || "");
+  };
+
   const updateLead = async () => {
     setLoading(true);
 
     try {
+      // Clone state so we can safely modify
+      const payload = { ...leadData };
+
+      // Remove unchanged datetime fields
+      ["credentialDeckDate", "discoveryCallDate", "pitchDate"].forEach((f) => {
+        const apiISO = currentLead?.leadInfo?.[f] || null; // original value from API
+        if (sameDateInput(apiISO, payload[f])) {
+          delete payload[f];
+        }
+      });
+
+      // Remove unchanged date-only field
+      const apiLeadCameDateLocal = currentLead?.leadInfo?.leadCameDate
+        ? toLocalInputValue(currentLead.leadInfo.leadCameDate).slice(0, 10)
+        : "";
+      if (apiLeadCameDateLocal === (payload.leadCameDate || "")) {
+        delete payload.leadCameDate;
+      }
+
       const response = await axiosInstance.put(
         API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId),
-        leadData
+        payload
       );
+
       if (response.status === 200) {
         toast.success("Lead updated successfully");
-        // getLead();
+        getLead();
         // navigate("/manage-lead");
       }
-      console.log(response.data);
     } catch (error) {
       console.error("Error updating lead:", error);
+      toast.error(error.response.data.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDateRequestSubmit = async () => {
+    if (newRequestedDate === dateRequestModal.oldDate) {
+      toast.error("New date must be different from the current date.");
+      return;
+    }
+
     setLoading(true);
     try {
       await axiosInstance.put(API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId), {
         [dateRequestModal.field]: newRequestedDate,
-        changeReason, // backend may or may not use this
+        changeReason,
       });
       toast.success("Date change request sent for approval.");
       closeDateRequestModal();
-      getLead(); // reload data
+      getLead();
     } catch (err) {
       console.error(err);
       toast.error("Failed to send request.");
@@ -327,6 +375,7 @@ const CreateLead = () => {
               </h3>
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status === "pending")
+
                 .map((request) => (
                   <div
                     key={request._id}
@@ -378,6 +427,7 @@ const CreateLead = () => {
                 ))}
               {currentLead.leadInfo.dateChangeRequests
                 .filter((r) => r.status !== "pending")
+                .slice(0, 3)
                 .map((request) => (
                   <div
                     key={request._id}
@@ -432,7 +482,7 @@ const CreateLead = () => {
               {/* Company Name */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Company Name
+                  Company Name <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -448,7 +498,7 @@ const CreateLead = () => {
               {/* Category */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Category
+                  Category <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <SelectOption
                   options={LEAD_TYPE}
@@ -461,7 +511,7 @@ const CreateLead = () => {
               {/* Type */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Opportunity Type
+                  Opportunity Type <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -474,14 +524,21 @@ const CreateLead = () => {
 
               {/* Service */}
               <div className="">
-                <label className="text-xs font-medium text-slate-200">
-                  Service Type
+                <label className="text-xs font-medium text-slate-200 mb-6">
+                  Service Type <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
-                <SelectOption
+                {/* <SelectOption
                   options={LEAD_SERVICE}
                   value={leadData.services}
                   onChange={(value) => handleValueChange("services", value)}
+                  placeholder="Select Services"
+                  isMulti
+                /> */}
+                <MultiSelectChips
+                  options={LEAD_SERVICE} // [{label, value}]
+                  value={leadData.services || []} // array
+                  onChange={(vals) => handleValueChange("services", vals)}
                   placeholder="Select Services"
                 />
               </div>
@@ -489,7 +546,7 @@ const CreateLead = () => {
               {/* Status */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Status
+                  Status <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -499,6 +556,25 @@ const CreateLead = () => {
                   placeholder="Select status"
                 />
               </div>
+
+              {leadData.status === "onboarded" && (
+                <div className="">
+                  <label className="text-xs font-medium text-slate-200">
+                    Amount <sup className="text-red-500 text-xs">*</sup>
+                  </label>
+
+                  <input
+                    placeholder="Amount Rs."
+                    className="form-input"
+                    value={`₹ ${addThousandsSeperator(leadData.amount || "")}`}
+                    onChange={({ target }) => {
+                      // Remove ₹ and commas before saving
+                      const cleanValue = target.value.replace(/[₹,\s]/g, "");
+                      handleValueChange("amount", cleanValue);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Pocs */}
@@ -506,7 +582,7 @@ const CreateLead = () => {
               {/* POC Name */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Name
+                  POC Name <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -522,7 +598,7 @@ const CreateLead = () => {
               {/* POC Email */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Email
+                  POC Email <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -538,23 +614,25 @@ const CreateLead = () => {
               {/* POC Contact */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  POC Contact
+                  POC Contact <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
+                  type="number"
                   placeholder="POC Contact  "
                   className="form-input"
                   value={leadData.contact}
                   onChange={({ target }) => {
                     handleValueChange("contact", target.value);
                   }}
+                  max={10}
                 />
               </div>
 
               {/* Job Profile */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Job Profile
+                  Job Profile <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <input
@@ -593,7 +671,7 @@ const CreateLead = () => {
             <div className="grid grid-cols-12 gap-2 mt-4">
               <div className="col-span-12 ">
                 <label className="text-xs font-medium text-slate-200">
-                  Brief
+                  Brief <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <textarea
                   className="form-input"
@@ -611,19 +689,19 @@ const CreateLead = () => {
               {/* Lead Came Date */}
               <div className="col-span-12 md:col-span-3">
                 <label className="text-xs font-medium text-slate-200">
-                  Lead Date
+                  Lead Date <sup className="text-red-500 text-xs">*</sup>
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.leadCameDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.leadCameDate < Date.now()
+                  // }
                   type="date"
                   className="form-input-date"
-                  value={leadData.leadCameDate?.split("T")[0] ?? ""}
-                  onChange={({ target }) =>
-                    handleValueChange("leadCameDate", target.value)
+                  value={leadData.leadCameDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("leadCameDate", e.target.value)
                   }
                 />
               </div>
@@ -634,25 +712,21 @@ const CreateLead = () => {
                   Credential Deck Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.credentialDeckDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.credentialDeckDate < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.credentialDeckDate
-                      ? leadData.credentialDeckDate.slice(0, 16)
-                      : ""
+                  value={leadData.credentialDeckDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("credentialDeckDate", e.target.value)
                   }
-                  onChange={({ target }) =>
-                    handleValueChange("credentialDeckDate", target.value)
-                  }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 2)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 3)}
                 />
-                {user.role !== "superAdmin" && (
+                {user.role !== "superAdmin" && leadId && (
                   <button
                     className="ml-2 text-red-500 cursor-pointer text-xs"
                     onClick={() =>
@@ -674,25 +748,21 @@ const CreateLead = () => {
                   Discovery Call Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    leadData.discoveryCallDate
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   leadData.discoveryCallDate < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.discoveryCallDate
-                      ? leadData.discoveryCallDate.slice(0, 16)
-                      : ""
+                  value={leadData.discoveryCallDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("discoveryCallDate", e.target.value)
                   }
-                  onChange={({ target }) =>
-                    handleValueChange("discoveryCallDate", target.value)
-                  }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 4)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 5)}
                 />
-                {user.role !== "superAdmin" && (
+                {user.role !== "superAdmin" && leadId && (
                   <button
                     className="ml-2 text-red-500 cursor-pointer text-xs"
                     onClick={() =>
@@ -714,23 +784,21 @@ const CreateLead = () => {
                   Pitch Presentation
                 </label>
                 <input
-                  disabled={
-                    leadId &&
-                    user.role !== "superAdmin" &&
-                    new Date(leadData.pitchDate).getTime() < Date.now()
-                  }
+                  // disabled={
+                  //   leadId &&
+                  //   user.role !== "superAdmin" &&
+                  //   new Date(leadData.pitchDate).getTime() < Date.now()
+                  // }
                   type="datetime-local"
                   className="form-input-date"
-                  value={
-                    leadData.pitchDate ? leadData.pitchDate.slice(0, 16) : ""
+                  value={leadData.pitchDate || ""}
+                  onChange={(e) =>
+                    handleValueChange("pitchDate", e.target.value)
                   }
-                  onChange={({ target }) =>
-                    handleValueChange("pitchDate", target.value)
-                  }
-                  min={new Date().toISOString().split("T")[0]}
-                  max={addBusinessDays(leadData.leadCameDate, 6)}
+                  // min={new Date().toISOString().split("T")[0]}
+                  // max={addBusinessDays(leadData.leadCameDate, 7)}
                 />
-                {user.role !== "superAdmin" && (
+                {user.role !== "superAdmin" && leadId && (
                   <button
                     className="ml-2 text-red-500 cursor-pointer text-xs"
                     onClick={() =>
@@ -748,7 +816,7 @@ const CreateLead = () => {
               {/* leadsource */}
               <div className="">
                 <label className="text-xs font-medium text-slate-200">
-                  Lead Source
+                  Lead Source <sup className="text-red-500 text-xs">*</sup>
                 </label>
 
                 <SelectOption
@@ -781,6 +849,22 @@ const CreateLead = () => {
                   />
                 </div>
               ))}
+              {leadData.leadSource === "referral" && (
+                <div className="">
+                  <label className="text-xs font-medium text-slate-200">
+                    Referral Name <sup className="text-red-500 text-xs">*</sup>
+                  </label>
+
+                  <input
+                    placeholder="Name"
+                    className="form-input"
+                    value={leadData.referral}
+                    onChange={({ target }) => {
+                      handleValueChange("referral", target.value);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-12 gap-2 mt-4">
@@ -829,7 +913,7 @@ const CreateLead = () => {
         title="Request Date Change"
       >
         <div>
-          <div className="mb-2 text-sm">
+          <div className="mb-2 text-sm text-white">
             Current Date:{" "}
             <b>
               {dateRequestModal.oldDate

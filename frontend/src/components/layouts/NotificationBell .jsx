@@ -6,6 +6,12 @@ import { IoMdNotifications } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
+});
+
 const NotificationBell = () => {
   const { user } = useContext(UserContext);
   const [notifications, setNotifications] = useState([]);
@@ -34,8 +40,7 @@ const NotificationBell = () => {
   // real-time socket hookup
   useEffect(() => {
     fetchNotifications();
-    const token = localStorage.getItem("taskManagerToken");
-    const socket = io(import.meta.env.VITE_SOCKET_URL, { auth: { token } });
+
     socketRef.current = socket;
 
     socket.on("connect_error", console.error);
@@ -72,7 +77,6 @@ const NotificationBell = () => {
     setOpen((o) => !o);
   };
 
-
   // close on outside click & delete immediately
   useEffect(() => {
     if (!open) return;
@@ -96,8 +100,6 @@ const NotificationBell = () => {
       markAllAsReadAndDelete();
     }
   };
-
-
 
   return (
     <div ref={containerRef} className="relative">

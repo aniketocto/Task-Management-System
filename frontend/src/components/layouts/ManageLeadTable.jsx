@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -8,10 +8,41 @@ import { beautify } from "../../utils/helper";
 import { FaInstagram, FaLinkedin, FaRegFileAlt } from "react-icons/fa";
 import ReactPaginate from "react-paginate";
 
+const CATEGORY_OPTIONS = [
+  { value: "All", label: "" },
+  { value: "realEstate", label: "Real Estate" },
+  { value: "hospitality", label: "Hospitality" },
+  { value: "bfsi", label: "BFSI" },
+  { value: "healthcare", label: "Healthcare" },
+  { value: "wellness", label: "Wellness" },
+  { value: "fnb", label: "F&B" },
+  { value: "agency", label: "Agency" },
+  { value: "fashion", label: "Fashion" },
+  { value: "energy", label: "Energy" },
+  { value: "other", label: "Others" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "New", value: "new" },
+  { label: "Follow Up", value: "followUp" },
+  { label: "Dead", value: "dead" },
+  { label: "Onboarded", value: "onboarded" },
+  { label: "Negotiation", value: "negotiation" },
+  { label: "Agreement", value: "agreement" },
+  { label: "Pitch", value: "pitch" },
+  { label: "Legal", value: "legal" },
+];
+
 const ManageLeadTable = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("");
+
+  const [page, setPage] = useState(() => {
+    return parseInt(sessionStorage.getItem("lastLeadPage")) || 1;
+  });
   const [pages, setPages] = useState(1);
   const navigate = useNavigate();
 
@@ -23,21 +54,29 @@ const ManageLeadTable = () => {
     (user.role !== "admin" && user.department === "BusinessDevelopment")
   );
 
-  const fetchLeads = async (pageNumber = 1) => {
-    setLoading(true);
-    try {
-      const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
-        params: { page: pageNumber, limit: 10 },
-      });
-      setLeads(data.leads || []);
-      setPage(data.page || 1);
-      setPages(data.pages || 1);
-    } catch (err) {
-      console.error("Error fetching leads:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchLeads = useCallback(
+    async (pageNumber = 1) => {
+      setLoading(true);
+      try {
+        const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
+          params: {
+            page: pageNumber,
+            limit: 10,
+            category: category || undefined,
+            status: status || undefined,
+          },
+        });
+        setLeads(data.leads || []);
+        setPage(data.page || 1);
+        setPages(data.pages || 1);
+      } catch (err) {
+        console.error("Error fetching leads:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [category, status]
+  );
 
   const getAttemptObj = (attempt) => {
     if (typeof attempt === "object" && attempt !== null) {
@@ -49,18 +88,26 @@ const ManageLeadTable = () => {
 
   const handleFollowUpChange = async (leadId, attemptKey, { done, remark }) => {
     try {
-      // Find the target lead
       const leadToUpdate = leads.find((l) => l._id === leadId);
-      // Build new followUp object, preserving other attempts
-      const newFollowUp = { ...(leadToUpdate.followUp || {}) };
-      newFollowUp[attemptKey] = { done, remark };
+      if (!leadToUpdate) return;
 
-      // Call API
+      const prevFollowUp = leadToUpdate.followUp || {};
+      const prevAttempt = prevFollowUp[attemptKey] || {
+        done: false,
+        remark: "",
+      };
+      const wasDone = !!prevAttempt.done;
+
+      if (wasDone && done === false) {
+        return;
+      }
+      const newFollowUp = { ...prevFollowUp, [attemptKey]: { done, remark } };
+
       const { data } = await axiosInstance.put(
         API_PATHS.LEADS.UPDATE_LEAD_BY_ID(leadId),
         { followUp: newFollowUp }
       );
-      // Update state
+
       setLeads((prev) => prev.map((l) => (l._id === leadId ? data.lead : l)));
     } catch (err) {
       console.error("Failed to update followUp:", err);
@@ -68,8 +115,9 @@ const ManageLeadTable = () => {
   };
 
   useEffect(() => {
-    fetchLeads();
-  }, [page]);
+    fetchLeads(page);
+    sessionStorage.setItem("lastLeadPage", page);
+  }, [page, category, status, fetchLeads]);
 
   const handleNavigate = (leadId) => {
     navigate("/leads-create", { state: { leadId: leadId } });
@@ -107,6 +155,8 @@ const ManageLeadTable = () => {
         return "bg-[#2b7fff] border border-blue-500";
       case "pitch":
         return "bg-[#8B5CF6] border border-purple-500";
+      case "legal":
+        return "bg-[#000] border border-black";
       default:
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
@@ -128,7 +178,7 @@ const ManageLeadTable = () => {
               <col style={{ width: "200px" }} />
               <col style={{ width: "100px" }} />
               <col style={{ width: "100px" }} />
-              <col style={{ width: "150px" }} />
+              <col style={{ width: "250px" }} />
               <col style={{ width: "200px" }} />
               <col style={{ width: "150px" }} />
               <col style={{ width: "150px" }} />
@@ -176,6 +226,17 @@ const ManageLeadTable = () => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Category
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="ml-2 bg-gray-800 text-white text-xs p-1 rounded"
+                  >
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </th>
                 <th
                   rowSpan="2"
@@ -326,11 +387,15 @@ const ManageLeadTable = () => {
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
                     {lead.type || "-"}
                   </td>
-                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
-                    {beautify(lead.category) || "-"}
+                  <td className="px-4 py-2 text-center text-sm  text-gray-300 border-b border-gray-700 capitalize">
+                    {lead.category
+                      ? ["bfsi", "fnb"].includes(lead.category.toLowerCase())
+                        ? lead.category.toUpperCase()
+                        : beautify(lead.category)
+                      : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700 capitalize">
-                    {beautify(lead.services) || "-"}
+                    {lead.services ? beautify(lead.services.join(", ")) : "-"}
                   </td>
                   <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
                     {lead.credentialDeckDate
@@ -379,10 +444,14 @@ const ManageLeadTable = () => {
                                   remark,
                                 })
                               }
-                              className={`w-4 h-4 text-red-500 bg-gray-700 border-gray-600 rounded focus:ring-red-500 ${
-                                allow ? "cursor-not-allowed" : "cursor-pointer"
-                              }`}
+                              className={`w-4 h-4 rounded border-gray-600 focus:ring-red-500
+    accent-gray-400 checked:accent-red-600 disabled:checked:accent-red-600
+
+    ${allow ? "cursor-not-allowed" : "cursor-pointer"}
+    disabled:opacity-100
+  `}
                             />
+
                             {/* Remark input */}
                             <textarea
                               type="text"

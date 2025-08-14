@@ -29,11 +29,12 @@ import SpinLoader from "../../components/layouts/SpinLoader";
 import { io } from "socket.io-client";
 import { userSOPs } from "../../utils/userSOPs";
 import DailySOP from "components/Inputs/DailySOP";
+import { RiResetLeftLine } from "react-icons/ri";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: {
-    token: localStorage.getItem("taskManagerToken"),
-  },
+  auth: { token: localStorage.getItem("taskManagerToken") },
+  transports: ["websocket"], // skip HTTP polling
+  withCredentials: true,
 });
 
 const getDailyQuote = () => {
@@ -56,17 +57,47 @@ const Dashboard = () => {
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
 
-  const [filterMonth, setFilterMonth] = useState("");
+  // Month init respects timeframe precedence in UI on refresh
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const ssTf = sessionStorage.getItem("dashlastTimeframe") || "";
+    if (ssTf) return ""; // if timeframe exists, start with month cleared for UI parity
+    return sessionStorage.getItem("dashlastmonth") || "";
+  });
   const [availableMonths, setAvailableMonths] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState(() => {
+    return sessionStorage.getItem("dashlastdept") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("dashlastdept", filterDepartment);
+  }, [filterDepartment]);
   const [departments, setDepartments] = useState([]);
 
   const [availableCompanies, setAvailableCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState(() => {
+    return sessionStorage.getItem("dashlastCompany") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("dashlastCompany", selectedCompany);
+  }, [selectedCompany]);
 
-  const [filterTimeframe, setFilterTimeframe] = useState("");
+  const [filterTimeframe, setFilterTimeframe] = useState(() => {
+    return sessionStorage.getItem("dashlastTimeframe") || "";
+  });
+  useEffect(() => {
+    sessionStorage.setItem("dashlastTimeframe", filterTimeframe);
+  }, [filterTimeframe]);
+
+  const [selectedUserId, setSelectedUserId] = useState(
+    () => sessionStorage.getItem("dashlastUser") || ""
+  );
+  useEffect(() => {
+    sessionStorage.setItem("dashlastUser", selectedUserId);
+  }, [selectedUserId]);
+
+  const [availableUsers, setAvailableUsers] = useState([]);
+
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
@@ -75,11 +106,28 @@ const Dashboard = () => {
   const userEmail = user.email;
   const sops = userSOPs[userEmail] || [];
 
+  // Stable list of departments across loads (persist to session)
+  const [departmentsMaster, setDepartmentsMaster] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("dashDeptMaster") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
   // debounce ref
   const debounceTimeout = useRef();
 
-  // MUTUALLY EXCLUSIVE filters: only one of month or timeframe should be active
+  // ✅ Hydration guard so mount-time effects don’t nuke session-restored values
+  const hydrated = useRef(false);
   useEffect(() => {
+    hydrated.current = true;
+  }, []);
+
+  // MUTUALLY EXCLUSIVE filters: only one of month or timeframe should be active
+  // (guarded so they don't run on the first mount)
+  useEffect(() => {
+    if (!hydrated.current) return;
     if (filterTimeframe) setFilterMonth("");
     if (filterTimeframe !== "custom") {
       setFilterStartDate("");
@@ -87,6 +135,7 @@ const Dashboard = () => {
     }
   }, [filterTimeframe]);
   useEffect(() => {
+    if (!hydrated.current) return;
     if (filterMonth) {
       setFilterTimeframe("");
       setFilterStartDate("");
@@ -148,6 +197,9 @@ const Dashboard = () => {
       }
       if (filterDepartment) params.department = filterDepartment;
       if (selectedCompany) params.companyName = selectedCompany;
+      if (user?.role === "superAdmin" && selectedUserId) {
+        params.userId = selectedUserId;
+      }
 
       const res = await axiosInstance.get(API_PATHS.TASKS.GET_DASHBOARD_DATA, {
         params,
@@ -156,17 +208,35 @@ const Dashboard = () => {
       if (res.data) {
         setDashboardData(res.data);
         setAvailableMonths(res.data?.monthlyData?.monthsData || []);
-        const allDepartments = new Set();
+
+        // Collect departments from the *current* payload (unfiltered by dept)
+        const allDepartmentsFromPayload = new Set();
         (res.data?.monthlyData?.monthsData || []).forEach((month) => {
           const deptBreakdown = month.departmentBreakdown || {};
-          Object.keys(deptBreakdown).forEach((dept) => {
-            allDepartments.add(dept);
-          });
+          Object.keys(deptBreakdown).forEach((d) =>
+            allDepartmentsFromPayload.add(d)
+          );
         });
 
-        setDepartments(
-          Array.from(allDepartments).map((d) => ({ label: d, value: d }))
-        );
+        // If we don't have a master yet, or if no Department filter applied,
+        // refresh master with the union of current payload depts.
+        if (departmentsMaster.length === 0 || !filterDepartment) {
+          const master = Array.from(
+            new Set([
+              ...(departmentsMaster || []),
+              ...Array.from(allDepartmentsFromPayload),
+            ])
+          );
+          setDepartmentsMaster(master);
+          sessionStorage.setItem("dashDeptMaster", JSON.stringify(master));
+        }
+
+        // Always render dropdown from the master to avoid vanishing options
+        const source = departmentsMaster.length
+          ? departmentsMaster
+          : Array.from(allDepartmentsFromPayload);
+        setDepartments(source.map((d) => ({ label: d, value: d })));
+
         prepareChartData(res.data?.charts);
       }
     } catch (error) {
@@ -186,6 +256,9 @@ const Dashboard = () => {
     filterTimeframe,
     filterStartDate,
     filterEndDate,
+    selectedUserId,
+    user?.role,
+    departmentsMaster,
   ]);
 
   // Debounced API trigger
@@ -195,22 +268,6 @@ const Dashboard = () => {
       getDashboardData();
     }, 300);
   }, [getDashboardData]);
-
-  // Main filter watcher
-  useEffect(() => {
-    if (filterTimeframe === "custom" && (!filterStartDate || !filterEndDate)) {
-      return;
-    }
-    safeGetDashboardData();
-    // eslint-disable-next-line
-  }, [
-    filterMonth,
-    filterDepartment,
-    selectedCompany,
-    filterTimeframe,
-    filterStartDate,
-    filterEndDate,
-  ]);
 
   // On mount, fetch companies and initial dashboard
   useEffect(() => {
@@ -222,30 +279,38 @@ const Dashboard = () => {
     // eslint-disable-next-line
   }, []);
 
-  // Set current month if available
-  // useEffect(() => {
-  //   if (availableMonths.length > 0 && !filterMonth && !filterTimeframe) {
-  //     const sorted = [...availableMonths].sort((a, b) =>
-  //       b.value.localeCompare(a.value)
-  //     );
-  //     const curr = new Date().toISOString().slice(0, 7);
-  //     const hasCurrent = sorted.some((m) => m.value === curr);
-  //     setFilterMonth(hasCurrent ? curr : sorted[0].value);
-  //   }
-  // }, [availableMonths, filterMonth, filterTimeframe]);
+  // Save filterMonth to sessionStorage when it changes
+  useEffect(() => {
+    if (filterMonth) {
+      sessionStorage.setItem("dashlastmonth", filterMonth);
+    }
+  }, [filterMonth]);
 
-  // Filter chart data (do not spam network)
-
+  // Choose which charts to render whenever data or filters change
   useEffect(() => {
     if (!dashboardData) return;
-    const chartsToUse = findChartsOrFallback({
-      month: filterMonth,
-      department: filterDepartment,
-      availableMonths,
-      dashboardData,
-      setFilterMonth,
-      setFilterDepartment,
-    });
+
+    let chartsToUse = dashboardData?.charts;
+
+    if (filterMonth) {
+      // Prefer month-scoped charts
+      const viaHelper = findChartsOrFallback({
+        month: filterMonth,
+        department: filterDepartment,
+        availableMonths,
+        dashboardData,
+        setFilterMonth,
+        setFilterDepartment,
+      });
+      chartsToUse = viaHelper || chartsToUse;
+    } else if (filterDepartment) {
+      // Only department selected → try department-scoped charts first
+      const depCharts =
+        dashboardData?.charts?.departmentDistribution?.[filterDepartment]
+          ?.charts;
+      chartsToUse = depCharts || chartsToUse;
+    }
+
     prepareChartData(chartsToUse);
   }, [
     filterMonth,
@@ -255,7 +320,7 @@ const Dashboard = () => {
     prepareChartData,
   ]);
 
-  // Department filter reset
+  // Department filter reset — only after totals exist
   let departmentBreakdown = {};
   if (filterMonth) {
     const monthData = availableMonths.find((m) => m.value === filterMonth);
@@ -269,12 +334,15 @@ const Dashboard = () => {
   Object.entries(departmentBreakdown).forEach(([dept, data]) => {
     departmentTotals[dept] = data.total || 0;
   });
+  const departmentTotalsReady = Object.keys(departmentTotals || {}).length > 0;
+
   useEffect(() => {
+    if (!departmentTotalsReady) return; // wait until we have real totals
     if (filterMonth) {
       const count = departmentTotals[filterDepartment] || 0;
       if (count === 0) setFilterDepartment("");
     }
-  }, [filterMonth, filterDepartment, departmentTotals]);
+  }, [departmentTotalsReady, filterMonth, filterDepartment, departmentTotals]);
 
   // Live socket update
   useEffect(() => {
@@ -297,13 +365,68 @@ const Dashboard = () => {
     filterDepartment,
   });
 
-  // UI
+  // Build & filter users from API payload
+  useEffect(() => {
+    // `userBreakdown` comes from the dashboard API; keys are user IDs
+    const raw = dashboardData?.userBreakdown || {};
+    let list = Object.entries(raw).map(([id, u]) => ({
+      _id: id,
+      name: u.name,
+      department: u.department,
+      total: u.total || 0,
+    }));
+
+    // If a Department is selected, limit users to that department (superAdmin UX)
+    if (filterDepartment) {
+      list = list.filter((u) => u.department === filterDepartment);
+    }
+
+    setAvailableUsers(list);
+  }, [dashboardData, filterDepartment]);
+
+  // ✅ Only clear selectedUserId after the user list is actually populated
+  useEffect(() => {
+    if (availableUsers.length === 0) return; // boot state → skip
+    if (
+      selectedUserId &&
+      !availableUsers.some((u) => u._id === selectedUserId)
+    ) {
+      setSelectedUserId("");
+    }
+  }, [availableUsers, selectedUserId]);
+
+  // Unified main watcher (includes selectedUserId so charts refresh when user changes)
+  useEffect(() => {
+    if (filterTimeframe === "custom" && (!filterStartDate || !filterEndDate))
+      return;
+    safeGetDashboardData();
+    // eslint-disable-next-line
+  }, [
+    filterMonth,
+    filterDepartment,
+    selectedCompany,
+    filterTimeframe,
+    filterStartDate,
+    filterEndDate,
+    selectedUserId,
+  ]);
+
+  const resetFilters = () => {
+    setFilterMonth("");
+    setFilterDepartment("");
+    setSelectedCompany("");
+    setFilterTimeframe("");
+    setFilterStartDate(null);
+    setFilterEndDate(null);
+    setSelectedUserId("");
+  };
+
   return (
     <DashboardLayout activeMenu="Dashboard">
       {loading && <SpinLoader />}
       <div className="card my-5">
         <div>
-          <div className="flex items-center justify-between">
+          <div className="flex lg:items-center justify-between flex-col lg:flex-row gap-5 lg:gap-0">
             <div>
               <h2 className="text-xl md:text-2xl">
                 {getGreeting()}! {user?.name}
@@ -315,7 +438,7 @@ const Dashboard = () => {
                 {dailyQuote}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Month filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">
@@ -378,6 +501,33 @@ const Dashboard = () => {
                   </select>
                 </div>
               )}
+              {/* User filter (superAdmin only) */}
+              {user?.role === "superAdmin" && (
+                <div className="flex gap-1 mb-4 items-start flex-col justify-start">
+                  <label className="text-sm font-medium text-gray-600">
+                    User:
+                  </label>
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="border rounded px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">All</option>
+                    {availableUsers
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((u) => (
+                        <option
+                          key={u._id}
+                          value={u._id}
+                          className="text-black"
+                        >
+                          {u.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
               {/* Company filter */}
               <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                 <label className="text-sm font-medium text-gray-600">
@@ -454,11 +604,16 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
+
+              <RiResetLeftLine
+                onClick={() => resetFilters()}
+                className="text-white text-2xl cursor-pointer"
+              />
             </div>
           </div>
         </div>
         {/* Info cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4 mt-5">
           {infoCard.map(({ label, key, color, description }) => (
             <InfoCard
               key={key}

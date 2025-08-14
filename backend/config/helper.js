@@ -204,9 +204,20 @@ const migrateApprovalToLogs = async () => {
   mongoose.disconnect();
 };
 
+const updateService = async () => {
+  await mongoose.connect(process.env.MONGO_URI);
+  const cursor = Leads.find({ services: { $type: "string" } }).cursor();
+  for await (const doc of cursor) {
+    doc.services = doc.services ? [doc.services] : [];
+    await doc.save({ validateBeforeSave: false });
+  }
+  console.log("Migration complete");
+};
+
 module.exports = {
   updateExistingTasksWithSerials,
   backfillTaskApprovals,
   backfillPitchAndPresentation,
   migrateApprovalToLogs,
+  updateService,
 };

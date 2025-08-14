@@ -28,6 +28,8 @@ import { Toaster } from "react-hot-toast";
 import LeadDashboard from "./pages/Lead/LeadDashboard";
 import CreateLead from "./pages/Lead/CreateLead";
 import ManageLead from "./pages/Lead/ManageLead";
+import Attendance from "pages/User/Attendance";
+import UsersAttendence from "pages/Admin/UsersAttendence";
 
 function App() {
   return (
@@ -48,12 +50,14 @@ function App() {
               <Route path="/admin/my-tasks" element={<MyTask />} />
               <Route path="/admin/users" element={<ManageUser />} />
               <Route path="/admin/create-task" element={<CreateTask />} />
+              <Route path="/admin/attendance" element={<UsersAttendence />} />
             </Route>
 
             {/* User Routes */}
             <Route element={<PrivateRoute allowedRoles={["user", "admin"]} />}>
               <Route path="/user/dashboard" element={<UserDashboard />} />
               <Route path="/user/tasks" element={<MyTasks />} />
+              <Route path="/user/attendance" element={<Attendance />} />
               <Route
                 path="/user/task-detail/:id"
                 element={<ViewTaskDetails />}

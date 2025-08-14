@@ -6,6 +6,7 @@ import {
 } from "react-icons/lu";
 
 import { RiTeamLine } from "react-icons/ri";
+import { CiCalendarDate } from "react-icons/ci";
 
 // export const SIDE_MENU_ADMIN_DATA = [
 //   {
@@ -201,7 +202,7 @@ export const MENU_DATA = [
         label: "View Tasks",
         icon: LuClipboardCheck,
         path: "/user/tasks",
-        access: ({ role }) => role === "user",
+        access: ({ role }) => role === "user" || role === "admin",
       },
     ],
   },
@@ -241,11 +242,25 @@ export const MENU_DATA = [
         path: "/admin/users",
         access: ({ role }) => role === "superAdmin",
       },
+      {
+        label: "Users Attendance",
+        icon: CiCalendarDate,
+        path: "/admin/attendance",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "HR"),
+      },
     ],
   },
   {
     label: "Account",
     children: [
+      {
+        label: "Attendance",
+        icon: CiCalendarDate,
+        path: "/user/attendance",
+        access: ({ role }) => role === "user" || role === "admin",
+      },
       {
         label: "Logout",
         icon: LuLogOut,
@@ -327,18 +342,19 @@ export const infoCard = [
 ];
 
 export const leadStats = [
-  { label: "Onboarded ", key: "onboardedLeads", color: "bg-green-500" },
-  { label: "Follow-Up ", key: "followUpLeads", color: "bg-yellow-500" },
-  { label: "New ", key: "newLeads", color: "bg-orange-500" },
-  { label: "Agreement ", key: "agreementLeads", color: "bg-blue-500" },
+  { label: "Total ", key: "totalLeads", color: "bg-white" },
   { label: "Pitch", key: "pitchLeads", color: "bg-purple-500" },
+  { label: "New ", key: "newLeads", color: "bg-orange-500" },
+  { label: "Follow-Up ", key: "followUpLeads", color: "bg-yellow-500" },
+  { label: "Onboarded ", key: "onboardedLeads", color: "bg-green-500" },
+  { label: "Agreement ", key: "agreementLeads", color: "bg-blue-500" },
   {
     label: "Negotiation ",
     key: "negotiationLeads",
     color: "bg-indigo-500",
   },
   { label: "Dead ", key: "deadLeads", color: "bg-red-500" },
-  { label: "Total ", key: "totalLeads", color: "bg-white" },
+  { label: "Legal ", key: "legalLeads", color: "bg-gray-500" },
 ];
 
 export const officeQuotes = {
@@ -452,31 +468,35 @@ export const OPPO_STATUS = [
   { value: "negotiation", label: "Negotiation" },
   { value: "agreement", label: "Agreement" },
   { value: "pitch", label: "Pitch" },
+  { value: "legal", label: "Legal" },
 ];
 
 export const OPPO_TYPE = [
-  { value: "realEstate", label: "Retainer" },
+  { value: "retainer", label: "Retainer" },
   { value: "project", label: "Project" },
 ];
 
 export const LEAD_TYPE = [
   { value: "realEstate", label: "Real Estate" },
   { value: "hospitality", label: "Hospitality" },
-  { value: "bsfi", label: "BSFI" },
+  { value: "bfsi", label: "BFSI" },
   { value: "healthcare", label: "Healthcare" },
   { value: "wellness", label: "Wellness" },
   { value: "fnb", label: "F&B" },
   { value: "agency", label: "Agency" },
   { value: "fashion", label: "Fashion" },
-  { value: "others", label: "Others" },
+  { value: "energy", label: "Energy" },
+  { value: "other", label: "Others" },
 ];
 
 export const LEAD_SERVICE = [
   { value: "logoDesign", label: "Logo Design" },
   { value: "socialMediaManagement", label: "Social Media Management" },
   { value: "leadGeneration", label: "Lead Generation" },
-  { value: "webDesignNDev", label: "Web Design & Development" },
-  { value: "appDesignNDev", label: "App Design & Development" },
+  { value: "webDesign", label: "Web Design" },
+  { value: "webDevelopment", label: "Web Development" },
+  { value: "appDesign", label: "App Design" },
+  { value: "appDevelopment", label: "App Development" },
   { value: "videoProduction", label: "Video Production" },
   { value: "branding", label: "Branding" },
   { value: "visualIdentity", label: "Visual Identity" },
@@ -487,14 +507,14 @@ export const LEAD_SERVICE = [
   { value: "influencerMarketing", label: "Influencer Marketing" },
   { value: "siteBranding", label: "Site Branding" },
   { value: "packaging", label: "Packaging" },
-  { value: "energy", label: "Energy" },
   { value: "others", label: "Others" },
 ];
 
 export const LEAD_SOURCE = [
+  { value: "self", label: "Self Generated" },
   { value: "website", label: "Website" },
   { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
-  { value: "outboundWhatsApp", label: "Outbound Whatsapp" },
+  { value: "whatsAppReTarget", label: "Whatsapp Retarget" },
   { value: "inboundCall", label: "Inbound Call" },
   { value: "outboundCall", label: "Outbound Call" },
   { value: "inboundEmail", label: "Inbound Email" },
