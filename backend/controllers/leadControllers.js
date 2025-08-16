@@ -114,7 +114,16 @@ const createLead = async (req, res) => {
 
 const getLeads = async (req, res) => {
   try {
-    const { status, type, category, month, page = 1, limit = 10 } = req.query;
+    const {
+      status,
+      type,
+      category,
+      timeframe,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
     const filter = {};
 
@@ -122,12 +131,64 @@ const getLeads = async (req, res) => {
     if (type) filter.type = type;
     if (category) filter.category = category;
 
-    if (month) {
-      const [year, monthNum] = month.split('-').map(Number);
-      filter.createdAt = {
-        $gte: new Date(year, monthNum - 1, 1),
-        $lt: new Date(year, monthNum, 1),
-      };
+    if (timeframe) {
+      const today = new Date();
+      const yesterday = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 1
+      );
+      const last7Days = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 7
+      );
+
+      switch (timeframe) {
+        case "today":
+          filter.createdAt = {
+            $gte: today,
+            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          };
+          break;
+        case "yesterday":
+          filter.createdAt = { $gte: yesterday, $lt: today };
+          break;
+        case "last7days":
+          filter.createdAt = { $gte: last7Days, $lt: today };
+          break;
+        case "custom": {
+          const startOfDay = (d) =>
+            new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+          const endOfDay = (d) =>
+            new Date(
+              d.getFullYear(),
+              d.getMonth(),
+              d.getDate(),
+              23,
+              59,
+              59,
+              999
+            );
+
+          if (startDate && endDate) {
+            const from = startOfDay(new Date(startDate));
+            const to = endOfDay(new Date(endDate));
+            filter.createdAt = { $gte: from, $lte: to };
+          } else if (startDate && !endDate) {
+            const from = startOfDay(new Date(startDate));
+            const to = endOfDay(new Date(startDate));
+            filter.createdAt = { $gte: from, $lte: to };
+          } else if (!startDate && endDate) {
+            const from = startOfDay(new Date(endDate));
+            const to = endOfDay(new Date(endDate));
+            filter.createdAt = { $gte: from, $lte: to };
+          }
+          break;
+        }
+        default:
+          break;
+      }
     }
 
     const pageNum = Math.max(1, Number(page));
