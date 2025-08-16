@@ -22,6 +22,7 @@ const companyRoutes = require("./routes/companyRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const targetRoutes = require("./routes/targetRoutes");
 const holidaysRoutes = require("./routes/holidayRoutes");
+const interviewRoutes = require("./routes/interviewRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,7 @@ app.use("/api/company", companyRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/targets", targetRoutes);
 app.use("/api/holidays", holidaysRoutes)
+app.use("/api/interview", interviewRoutes)
 
 
 // Static Server upload folder
