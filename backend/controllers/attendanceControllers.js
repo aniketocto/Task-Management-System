@@ -76,7 +76,7 @@ const isAbsent = (record) => {
 };
 
 const isWorkingDay = (record) => {
-  return !!record.checkIn;
+  return !!(record.checkIn || record.checkOut);
 };
 
 const calculateUnifiedSummary = (records) => {
@@ -84,7 +84,9 @@ const calculateUnifiedSummary = (records) => {
   const weeklyLateCount = {};
 
   records.forEach((record) => {
-    const userId = record.user._id ? record.user._id.toString() : "single";
+    const hasUser = !!record.user && !!record.user._id;
+    const userId = hasUser ? String(record.user._id) : "unassigned";
+
     const dateKey = new Date(record.date).toDateString();
     const weekNum = moment(record.date).isoWeek();
     const weekKey = `${userId} - ${weekNum}`;
@@ -136,12 +138,12 @@ const calculateUnifiedSummary = (records) => {
     }
   });
 
-  Object.keys(weeklyLateCount).forEach((weekKey) => {
-    if (weeklyLateCount[weekKey] > 4) {
-      const [userId] = keys.split("-");
-      const userSummary = summaryMap.get(userId);
-      if (userSummary) {
-        userSummary.halfDay++;
+  Object.keys(weeklyLateCount).forEach((wk) => {
+    if (weeklyLateCount[wk] >= 3) {
+      const [uid] = wk.split("-"); 
+      const us = summaryMap.get(uid);
+      if (us) {
+        us.ruleAppliedHalfDays += 1; 
       }
     }
   });
@@ -151,7 +153,7 @@ const calculateUnifiedSummary = (records) => {
     ...entry,
     totalWorkingDays: entry.totalWorkingDaysSet.size,
     totalWorkingDaysSet: undefined,
-     halfDayTotal: entry.halfDay + entry.ruleAppliedHalfDays,
+    halfDayTotal: entry.halfDay + entry.ruleAppliedHalfDays,
   }));
 
   return finalSummary;
