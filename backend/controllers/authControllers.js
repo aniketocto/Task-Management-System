@@ -126,6 +126,7 @@ const updateUserProfile = async (req, res) => {
     user.department = req.body.department || user.department;
     user.profileImageUrl = req.body.profileImageUrl || user.profileImageUrl;
     user.designation = req.body.designation || user.designation;
+    user.dob = req.body.dob || user.dob;
 
     // Handle password update (only if sent)
     if (req.body.password) {
@@ -143,6 +144,7 @@ const updateUserProfile = async (req, res) => {
       department: updatedUser.department,
       profileImageUrl: updatedUser.profileImageUrl,
       designation: updatedUser.designation,
+      dob: updatedUser.dob,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {
@@ -152,7 +154,7 @@ const updateUserProfile = async (req, res) => {
 
 const googleAuth = async (req, res) => {
   try {
-    const { idToken, adminInviteToken, department, profileImage, designation } =
+    const { idToken, adminInviteToken, department, profileImage, designation, dob } =
       req.body;
 
     const ticket = await googleClient.verifyIdToken({
@@ -160,7 +162,7 @@ const googleAuth = async (req, res) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const { email_verified, email, name, picture } = ticket.getPayload();
+    const { email_verified, email, name, picture, } = ticket.getPayload();
 
     if (!email_verified) {
       return res.status(401).json({ message: "Email not verified by Google" });
@@ -191,7 +193,8 @@ const googleAuth = async (req, res) => {
         profileImageUrl, // base64 or Google image URL
         role,
         department,
-        designation
+        designation,
+        dob
       });
     }
 
@@ -205,6 +208,7 @@ const googleAuth = async (req, res) => {
       department: user.department,
       designation: user.designation,
       token,
+      dob: user.dob
     });
   } catch (error) {
     console.error("❌ googleAuth error:", error);

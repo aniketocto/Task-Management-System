@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    dob: { type: Date },
     password: { type: String, required: true },
     profileImageUrl: { type: String, default: null },
     role: {
@@ -28,7 +29,7 @@ const userSchema = new mongoose.Schema(
       ],
       default: "Other",
     },
-    designation: { type: String},
+    designation: { type: String },
   },
   {
     timestamps: true,
