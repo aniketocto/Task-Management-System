@@ -451,6 +451,7 @@ const updateDoc = async (req, res) => {
   }
 };
 
+
 module.exports = {
   createOpening,
   getAllOpenings,
