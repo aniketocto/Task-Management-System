@@ -32,14 +32,14 @@ router.get(
 router.get(
   "/meetings-count",
   protect,
-  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"),
   getMeetingCount
 );
 
 router.get(
   "/upcoming-meetings",
   protect,
-  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"),
   getUpcomingMeetings
 );
 
