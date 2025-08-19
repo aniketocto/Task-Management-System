@@ -232,6 +232,14 @@ export const MENU_DATA = [
   {
     label: "Team",
     children: [
+       {
+        label: "Dashboard",
+        icon: LuLayoutDashboard,
+        path: "/hr-dashboard",
+        access: ({ role, department }) =>
+          role === "superAdmin" ||
+          (role === "admin" && department === "HR"),
+      },
       {
         label: "Team Members",
         icon: RiTeamLine,
@@ -529,3 +537,11 @@ export const statsColors = [
   "#10B981", // green for Onboarded
   "#8B5CF6", // purple for Pitch
 ];
+
+export const interviewStatus = [
+  { value: "scheduled", label: "Scheduled" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "rescheduled", label: "Rescheduled" },
+  { value: "no_show", label: "No Show" },
+]

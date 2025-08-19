@@ -15,11 +15,7 @@ const Opening = mongoose.model("Opening", openingSchema);
 
 const interviewSchema = new mongoose.Schema(
   {
-    opening: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Opening",
-      required: true,
-    },
+    opening:  { type: String, required: true, trim: true },
     done: { type: Boolean, default: false },
     candidateName: { type: String, required: true, trim: true },
     startTime: { type: Date, required: true },
@@ -33,7 +29,7 @@ const interviewSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["scheduled", "rescheduled", "completed", "no_show", "canceled"],
+      enum: ["scheduled", "rescheduled", "completed", "no_show", "cancelled"],
       default: "scheduled",
     },
   },

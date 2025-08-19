@@ -30,6 +30,7 @@ import CreateLead from "./pages/Lead/CreateLead";
 import ManageLead from "./pages/Lead/ManageLead";
 import Attendance from "pages/User/Attendance";
 import UsersAttendence from "pages/Admin/UsersAttendence";
+import HrDashboard from "pages/Admin/HrDashboard";
 
 function App() {
   return (
@@ -43,14 +44,15 @@ function App() {
 
             {/* Admin Routes */}
             <Route
-              element={<PrivateRoute allowedRoles={["admin", "superAdmin"]}  allowedDepts={["BusinessDevelopment"]}  />}
+              element={<PrivateRoute allowedRoles={["admin", "superAdmin"]} />}
             >
               <Route path="/admin/dashboard" element={<Dashboard />} />
               <Route path="/admin/tasks" element={<ManageTask />} />
               <Route path="/admin/my-tasks" element={<MyTask />} />
               <Route path="/admin/users" element={<ManageUser />} />
               <Route path="/admin/create-task" element={<CreateTask />} />
-              <Route path="/admin/attendance" element={<UsersAttendence />} />
+              <Route path="/leads" element={<LeadDashboard />} />
+              <Route path="/manage-lead" element={<ManageLead />} />
             </Route>
 
             {/* User Routes */}
@@ -68,14 +70,24 @@ function App() {
             <Route
               element={
                 <PrivateRoute
-                  allowedRoles={["admin", "superAdmin"]}
+                  allowedRoles={["superAdmin"]}
                   allowedDepts={["BusinessDevelopment"]}
                 />
               }
             >
-              <Route path="/leads" element={<LeadDashboard />} />
               <Route path="/leads-create" element={<CreateLead />} />
-              <Route path="/manage-lead" element={<ManageLead />} />
+            </Route>
+
+            <Route
+              element={
+                <PrivateRoute
+                  allowedRoles={["superAdmin"]}
+                  allowedDepts={["HR"]}
+                />
+              }
+            >
+              <Route path="/hr-dashboard" element={<HrDashboard />} />
+              <Route path="/admin/attendance" element={<UsersAttendence />} />
             </Route>
 
             {/* Deafult Routes */}

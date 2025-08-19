@@ -27,7 +27,7 @@ router.post(
 router.get(
   "/get-all-openings",
   protect,
-  allowRoleOrDept(["superAdmin", "admin"], ["HR"]),
+  allowRoleOrDept(["superAdmin"], ["HR"]),
   getAllOpenings
 );
 
@@ -67,7 +67,7 @@ router.get(
   getUpcomingInterviews
 );
 
-router.patch(
+router.put(
   "/update-interview/:id",
   protect,
   allowRoleOrDept(["superAdmin"], ["HR"]),
