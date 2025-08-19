@@ -210,7 +210,8 @@ export const MENU_DATA = [
         path: "/leads",
         access: ({ role, department }) =>
           role === "superAdmin" ||
-          (role === "admin" && department === "BusinessDevelopment"),
+          (role === "admin" && department === "BusinessDevelopment") ||
+          (role === "admin" && department === "HR"),
       },
       {
         label: "Manage Lead",
