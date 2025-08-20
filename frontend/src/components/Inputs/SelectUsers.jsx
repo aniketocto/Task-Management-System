@@ -12,6 +12,7 @@ const SelectUsers = ({
   role,
   allUsers = [],
   loading = false,
+  from = "task",
 }) => {
   // const [allUsers, setAllUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,8 +39,15 @@ const SelectUsers = ({
     setTempSelectedUsers((prev) => {
       const ids = prev.map((u) => (typeof u === "string" ? u : u._id));
 
-      // Allow only one selection
-      return ids.includes(userId) ? [] : [userId];
+      if (from === "interview") {
+        // Allow multiple selection
+        return ids.includes(userId)
+          ? prev.filter((u) => (typeof u === "string" ? u : u._id) !== userId)
+          : [...prev, userId];
+      } else {
+        // Allow only one selection
+        return ids.includes(userId) ? [] : [userId];
+      }
     });
   };
 

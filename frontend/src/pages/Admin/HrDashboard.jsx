@@ -555,6 +555,7 @@ const HrDashboard = () => {
             allUsers={allUsers}
             loading={loadingUsers}
             role="admin"
+            from="interview"
           />
         </div>
         <button
