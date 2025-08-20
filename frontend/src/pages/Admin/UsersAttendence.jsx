@@ -189,19 +189,30 @@ const UsersAttendence = () => {
 
   const fmt = (ts) => ts && moment(ts).format("hh:mm A");
 
+  const nameByUserId = useMemo(() => {
+    const map = {};
+    attendances.forEach((a) => {
+      const id = a.user?._id;
+      const n = a.user?.name;
+      if (id && n) map[id] = n;
+    });
+    return map;
+  }, [attendances]);
+
   const summaryByName = useMemo(() => {
     const map = {};
-    summary.forEach((s) => {
-      map[s.name] = {
-        present: s.present || 0,
-        absent: s.absent || 0,
-        halfDay: s.halfDay || 0,
-        late: s.late || 0,
-        total: s.totalWorkingDays || 0,
+    (summary || []).forEach((s) => {
+      const name = nameByUserId[s.userId] || s.name || s.userId || "—";
+      map[name] = {
+        present: Number(s.present) || 0,
+        absent: Number(s.absent) || 0,
+        halfDay: Number(s.halfDayTotal ?? s.halfDay) || 0,
+        late: Number(s.late) || 0,
+        total: Number(s.totalWorkingDays ?? s.total) || 0,
       };
     });
     return map;
-  }, [summary]);
+  }, [summary, nameByUserId]);
 
   const holidayDates = useMemo(() => {
     const map = {};
@@ -248,10 +259,7 @@ const UsersAttendence = () => {
             </div>
           </div>
 
-          <button
-            onClick={openSetHoliday}
-            className="px-3 py-1.5 text-sm rounded border border-gray-100 bg-gray-700 text-white hover:bg-gray-600 cursor-pointer"
-          >
+          <button onClick={openSetHoliday} className="w-fit! add-btn">
             Set Holiday
           </button>
         </div>
@@ -271,7 +279,7 @@ const UsersAttendence = () => {
                   {allDates.map((d) => (
                     <th
                       key={`${d}-day`}
-                      colSpan={2}
+                      colSpan={3}
                       className="px-2 py-2 text-sm font-semibold text-gray-300 text-center border-r border-gray-700"
                     >
                       {moment(d).format("ddd")}
@@ -312,7 +320,7 @@ const UsersAttendence = () => {
                   {allDates.map((d) => (
                     <th
                       key={`${d}-date`}
-                      colSpan={2}
+                      colSpan={3}
                       className="px-2 py-2 text-xs font-medium text-gray-400 text-center border-r border-gray-700"
                     >
                       {moment(d).format("D / MM / YYYY")}
@@ -328,6 +336,9 @@ const UsersAttendence = () => {
                       <th className="px-2 py-1 text-xs font-medium text-gray-400 text-center border-r border-gray-700">
                         Out
                       </th>
+                      <th className="px-2 py-1 text-xs font-medium text-gray-400 text-center border-r border-gray-700">
+                        Time
+                      </th>
                     </React.Fragment>
                   ))}
                 </tr>
@@ -338,7 +349,7 @@ const UsersAttendence = () => {
                   <tr>
                     <td
                       className="px-4 py-8 text-center text-gray-400"
-                      colSpan={1 + allDates.length * 2}
+                      colSpan={1 + allDates.length * 3}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -397,6 +408,21 @@ const UsersAttendence = () => {
                                 ? holidayDates[d]
                                 : fmt(cell.out)}
                             </td>
+                            <td
+                              onClick={() => openEdit(name, d, cell)}
+                              key={`${name}-${d}-out`}
+                              className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer
+  ${
+    holidayDates[d]
+      ? "bg-blue-200 text-blue-800"
+      : getStatusBgColor(cell?.checkInStatus)
+  }`}
+                              title={holidayDates[d] || ""}
+                            >
+                              {holidayDates[d]
+                                ? holidayDates[d]
+                                : cell.work}
+                            </td>
                           </React.Fragment>
                         );
                       })}
@@ -436,7 +462,7 @@ const UsersAttendence = () => {
             disabled
             value={edit?.date || ""}
             onChange={(e) => setEdit((s) => ({ ...s, date: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+            className="form-input-date"
           />
         </label>
 
@@ -447,7 +473,7 @@ const UsersAttendence = () => {
             type="time"
             value={edit?.inTime || ""}
             onChange={(e) => setEdit((s) => ({ ...s, inTime: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+            className="form-input-date"
           />
         </label>
         <label className="block text-white text-sm">
@@ -458,7 +484,7 @@ const UsersAttendence = () => {
             onChange={(e) =>
               setEdit((s) => ({ ...s, outTime: e.target.value }))
             }
-            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+            className="form-input-date"
           />
         </label>
         <div className="flex justify-end gap-2 pt-4">
@@ -485,7 +511,8 @@ const UsersAttendence = () => {
             type="text"
             value={label || ""}
             onChange={(e) => setLabel(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+            className="form-input"
+            placeholder="Label"
           />
         </label>
         <label className="block text-white text-sm">
@@ -494,7 +521,7 @@ const UsersAttendence = () => {
             type="date"
             value={createHoliday || ""}
             onChange={(e) => setCreateHoliday(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 px-2 py-1 rounded"
+            className="form-input-date"
           />
         </label>
 
