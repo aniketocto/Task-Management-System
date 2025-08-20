@@ -395,6 +395,13 @@ const updateLead = async (req, res) => {
     const wasOnBoarded = lead.status === "onboarded";
     const willBeOnBoarded = incomingStatus === "onboarded";
 
+    const amountProvided = Object.prototype.hasOwnProperty.call(
+      req.body,
+      "amount"
+    );
+    const amountChanged =
+      amountProvided && Number(req.body.amount) !== Number(lead.amount ?? 0);
+
     if (!wasOnBoarded && willBeOnBoarded) {
       const incomingAmount = Number(req.body.amount);
       if (!(incomingAmount > 0)) {
@@ -419,9 +426,9 @@ const updateLead = async (req, res) => {
     //   });
     // }
 
-    if (!willBeOnBoarded && req.body.amount !== undefined) {
+    if (!willBeOnBoarded && amountChanged) {
       return res.status(400).json({
-        message: "Amount can only be set when status is 'onboarded'.",
+        message: "Amount can only be changed when status is 'onboarded'.",
       });
     }
 
@@ -454,6 +461,8 @@ const updateLead = async (req, res) => {
       "amount",
     ];
     for (let field of allowedFields) {
+      if (field === "amount" && !willBeOnBoarded && role !== "superAdmin")
+        continue; 
       if (req.body[field] !== undefined) {
         updateFields[field] = req.body[field];
       }
