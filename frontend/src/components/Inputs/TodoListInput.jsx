@@ -9,14 +9,6 @@ import moment from "moment";
 import { IoCheckmarkDoneCircle } from "react-icons/io5";
 import { CiMemoPad } from "react-icons/ci";
 
-/**
- * Renders a list of todo checklist items with assignment and a single admin approval toggle.
- * Shows Approve/Reject buttons for new items (no approval yet), and a single toggle for items already approved/rejected.
- * @param {Array} todoList
- * @param {Function} setTodoList
- * @param {string} taskId
- * @param {Function} onChecklistApprove(taskId, itemId, status)
- */
 const TodoListInput = ({
   todoList = [],
   setTodoList,
@@ -106,11 +98,17 @@ const TodoListInput = ({
         <div
           key={item._id || index}
           className={`flex flex-wrap justify-between items-center gap-2 border px-3 py-2 rounded-md mb-3 mt-2
-            ${
-              item.completed
-                ? "bg-green-100 border-green-100"
-                : "bg-red-100 border-red-100"
-            }`}
+    ${
+      item.approval?.status === "approved"
+        ? "bg-green-100 border-green-100"
+        : item.completed && item.approval?.status === "rejected"
+        ? "bg-yellow-100 border-yellow-100"
+        : item.approval?.status === "rejected"
+        ? "bg-red-100 border-red-100"
+        : item.completed
+        ? "bg-yellow-100 border-yellow-100"
+        : "bg-gray-100 border-gray-100"
+    }`}
         >
           {editIndex === index ? (
             <input
