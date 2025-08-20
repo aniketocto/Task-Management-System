@@ -38,15 +38,8 @@ const SelectUsers = ({
     setTempSelectedUsers((prev) => {
       const ids = prev.map((u) => (typeof u === "string" ? u : u._id));
 
-      if (role === "admin") {
-        // Allow multiple selection
-        return ids.includes(userId)
-          ? prev.filter((u) => (typeof u === "string" ? u : u._id) !== userId)
-          : [...prev, userId];
-      } else {
-        // Allow only one selection
-        return ids.includes(userId) ? [] : [userId];
-      }
+      // Allow only one selection
+      return ids.includes(userId) ? [] : [userId];
     });
   };
 
