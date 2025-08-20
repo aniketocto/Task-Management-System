@@ -266,7 +266,7 @@ const UsersAttendence = () => {
 
         {/* Table */}
         <div className="overflow-x-auto overflow-y-visible w-full border border-gray-700 rounded-lg  custom-scrollbar">
-          <div className="relative min-w-[4500px]">
+          <div className="relative min-w-[8000px]">
             <table className="min-w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-700">
@@ -337,7 +337,7 @@ const UsersAttendence = () => {
                         Out
                       </th>
                       <th className="px-2 py-1 text-xs font-medium text-gray-400 text-center border-r border-gray-700">
-                        Time
+                        Hour
                       </th>
                     </React.Fragment>
                   ))}
