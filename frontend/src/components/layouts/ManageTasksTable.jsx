@@ -29,7 +29,7 @@ const STATUS_OPTIONS = [
   { label: "New", value: "new" },
   { label: "Delayed", value: "delayed" },
   { label: "Pending", value: "pending" },
-  { label: "In Progress", value: "in-progress" },
+  { label: "In Progress", value: "inProgress" },
   { label: "Completed", value: "completed" },
 ];
 
