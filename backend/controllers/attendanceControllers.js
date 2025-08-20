@@ -314,7 +314,8 @@ const getAllAttendance = async (req, res) => {
         match: { role: { $ne: "superAdmin" } },
       })
       .lean();
-    const summary = calculateUnifiedSummary(attendances);
+    const filtered = attendances.filter((a) => a.user !== null);
+    const summary = calculateUnifiedSummary(filtered);
 
     if (month) {
       const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
