@@ -317,9 +317,9 @@ const UsersAttendence = () => {
                   </th>
                 </tr>
                 <tr className="border-b border-gray-700">
-                  {allDates.map((d) => (
+                  {allDates.map((d, i) => (
                     <th
-                      key={`${d}-date`}
+                      key={i}
                       colSpan={3}
                       className="px-2 py-2 text-xs font-medium text-gray-400 text-center border-r border-gray-700"
                     >
@@ -328,8 +328,8 @@ const UsersAttendence = () => {
                   ))}
                 </tr>
                 <tr className="border-b border-gray-800">
-                  {allDates.map((d) => (
-                    <React.Fragment key={`${d}-sub`}>
+                  {allDates.map((d,i) => (
+                    <React.Fragment key={i}>
                       <th className="px-2 py-1 text-xs font-medium text-gray-400 text-center border-r border-gray-800">
                         In
                       </th>
@@ -376,10 +376,10 @@ const UsersAttendence = () => {
                       <td className="px-4 py-3 text-white text-sm bg-gray-700 font-medium whitespace-nowrap sticky left-0  z-10 border-r border-gray-700">
                         {name}
                       </td>
-                      {allDates.map((d) => {
+                      {allDates.map((d, i) => {
                         const cell = byUser[name]?.[d] || {};
                         return (
-                          <React.Fragment key={d}>
+                          <React.Fragment key={i}>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-in`}
@@ -410,7 +410,7 @@ const UsersAttendence = () => {
                             </td>
                             <td
                               onClick={() => openEdit(name, d, cell)}
-                              key={`${name}-${d}-out`}
+                              key={`${name}-${d}-work`}
                               className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer
   ${
     holidayDates[d]
