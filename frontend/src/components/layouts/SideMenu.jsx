@@ -274,6 +274,12 @@ const SideMenu = ({ activeMenu }) => {
   };
 
   const formattedTime = formatTime(time);
+  const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+  const isClockedIn = !!(
+    todayAttendance?.attendance?.checkIn &&
+    !todayAttendance?.attendance?.checkOut
+  );
+  const clockOutDisabled = isClockedIn && time < FOUR_HOURS_MS;
 
   return (
     <>
@@ -319,17 +325,19 @@ const SideMenu = ({ activeMenu }) => {
           <div className="flex flex-col items-center justify-center mb-2">
             <button
               className="button-30"
-              onClick={
-                todayAttendance?.attendance?.checkIn &&
-                !todayAttendance?.attendance?.checkOut
-                  ? handleClockOut
-                  : handleClockIn
+              disabled={loading || (isClockedIn && clockOutDisabled)}
+              onClick={isClockedIn ? handleClockOut : handleClockIn}
+              title={
+                isClockedIn && clockOutDisabled
+                  ? `Clock out available after ${moment(
+                      todayAttendance.attendance.checkIn
+                    )
+                      .add(4, "hours")
+                      .format("LT")}`
+                  : ""
               }
             >
-              {todayAttendance?.attendance?.checkIn &&
-              !todayAttendance?.attendance?.checkOut
-                ? "🕒 Clock Out"
-                : "🕒 Clock In"}
+              {isClockedIn ? "🕒 Clock Out" : "🕒 Clock In"}
             </button>
           </div>
         )}
