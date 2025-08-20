@@ -664,7 +664,7 @@ const CreateTask = () => {
                       Reject
                     </button>
                   </div>
-                  <p>{taskData.rea}</p>
+                  <p className="text-yellow-400 text-sm">{taskData.reason}</p>
                 </>
               )}
 
