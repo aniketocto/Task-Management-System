@@ -306,32 +306,36 @@ const getAllAttendance = async (req, res) => {
   try {
     const { month } = req.query;
     const dateFilter = buildMonthlyDateFilter(month);
+
     const attendances = await Attendance.find(dateFilter)
       .sort({ date: 1 })
       .populate({
         path: "user",
         select: "name role",
-        match: { role: { $ne: "superAdmin" } }, 
+        match: { role: { $ne: "superAdmin" } },
       })
       .lean();
-    const summary = calculateUnifiedSummary(attendances);
 
+    // remove attendances with user=null (superAdmin filtered out)
+    const filtered = attendances.filter((a) => a.user !== null);
+
+    const summary = calculateUnifiedSummary(filtered);
+
+    let holidays = [];
     if (month) {
       const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
       const mEnd = moment.tz(month, "YYYY-MM", TZ).endOf("month").toDate();
 
-      var holidays = await Holiday.find({
+      holidays = await Holiday.find({
         date: { $gte: mStart, $lte: mEnd },
       })
         .sort({ date: 1 })
         .lean();
-    } else {
-      var holidays = [];
     }
 
     res.status(200).json({
       summary,
-      attendances,
+      attendances: filtered, // ✅ return only filtered
       holidays,
     });
   } catch (error) {
@@ -390,14 +394,27 @@ const getTodayAttendance = async (req, res) => {
 const saveAttendanceAdmin = async (req, res) => {
   try {
     const { id, userId, date, checkIn, checkOut } = req.body;
+
+    // validate required inputs
     if (!id && (!userId || !date)) {
       return res
         .status(400)
         .json({ message: "Provide either id OR (userId and date)" });
     }
 
+    // Prevent attendance save if userId missing
+    if (!id && !userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Prevent superAdmin attendance
+    if (req.user?.role === "superAdmin" || req.body.role === "superAdmin") {
+      return res
+        .status(403)
+        .json({ message: "SuperAdmin cannot mark attendance" });
+    }
+
     // normalize date to start-of-day
-    const d = new Date(date || Date.now());
     const dayStart = startOfDayIST(date ? new Date(date) : new Date());
 
     let doc;
@@ -405,15 +422,16 @@ const saveAttendanceAdmin = async (req, res) => {
     if (id) {
       // Update existing by id
       doc = await Attendance.findById(id);
-      if (!doc)
+      if (!doc) {
         return res.status(404).json({ message: "Attendance not found" });
+      }
 
-      // if date provided, move record to that day (watch unique constraint)
       if (date) doc.date = dayStart;
       if (typeof checkIn !== "undefined")
         doc.checkIn = checkIn ? new Date(checkIn) : null;
       if (typeof checkOut !== "undefined")
         doc.checkOut = checkOut ? new Date(checkOut) : null;
+
       doc.updatedBy = req.user._id;
     } else {
       // Upsert by (userId + date)
