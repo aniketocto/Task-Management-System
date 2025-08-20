@@ -306,6 +306,7 @@ const getAllAttendance = async (req, res) => {
   try {
     const { month } = req.query;
     const dateFilter = buildMonthlyDateFilter(month);
+
     const attendances = await Attendance.find(dateFilter)
       .sort({ date: 1 })
       .populate({
@@ -314,25 +315,27 @@ const getAllAttendance = async (req, res) => {
         match: { role: { $ne: "superAdmin" } },
       })
       .lean();
+
+    // remove attendances with user=null (superAdmin filtered out)
     const filtered = attendances.filter((a) => a.user !== null);
+
     const summary = calculateUnifiedSummary(filtered);
 
+    let holidays = [];
     if (month) {
       const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
       const mEnd = moment.tz(month, "YYYY-MM", TZ).endOf("month").toDate();
 
-      var holidays = await Holiday.find({
+      holidays = await Holiday.find({
         date: { $gte: mStart, $lte: mEnd },
       })
         .sort({ date: 1 })
         .lean();
-    } else {
-      var holidays = [];
     }
 
     res.status(200).json({
       summary,
-      attendances,
+      attendances: filtered, // ✅ return only filtered
       holidays,
     });
   } catch (error) {
