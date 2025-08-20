@@ -15,6 +15,7 @@ import { HiTrash } from "react-icons/hi";
 import HrDocs from "components/layouts/HrDocs";
 import { IoTrashOutline } from "react-icons/io5";
 import moment from "moment";
+import { FiX } from "react-icons/fi";
 
 const HrDashboard = () => {
   const { user } = useContext(UserContext);
@@ -26,6 +27,9 @@ const HrDashboard = () => {
 
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  const [cname, setCname] = useState("");
+  const [debouncedCname, setDebouncedCname] = useState("");
 
   const fetchUsers = async () => {
     try {
@@ -89,7 +93,7 @@ const HrDashboard = () => {
       const response = await axiosInstance.get(
         API_PATHS.INTERVIEW.GET_ALL_INTERVIEWS,
         {
-          params: { limit: 10, page },
+          params: { limit: 10, page, cname: debouncedCname || undefined },
         }
       );
       setInterviews(response.data?.data || []);
@@ -99,7 +103,7 @@ const HrDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, debouncedCname]);
 
   const [upcomingInterviews, setUpcomingInterviews] = useState([]);
   const getUpcomingInterviews = useCallback(async () => {
@@ -234,8 +238,15 @@ const HrDashboard = () => {
   }, []);
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedCname(cname); // Apply after 1s
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [cname]);
+
+  useEffect(() => {
     getInterviews();
-  }, [page, getInterviews]);
+  }, [page, getInterviews, debouncedCname]);
 
   useEffect(() => {
     getOpenings();
@@ -284,7 +295,25 @@ const HrDashboard = () => {
       <div className="card my-5">
         {loading && <SpinLoader />}
         <div className="overflow-x-auto">
-          <h2 className="text-lg font-regular mb-1">Interviews</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-regular mb-1">Interviews</h2>
+            <div className="mt-4 flex gap-2 items-center">
+              <label className="text-white text-sm">Search Candidate:</label>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={cname}
+                  onChange={(e) => setCname(e.target.value)}
+                  placeholder="Name"
+                  className="pl-0.5 py-1 rounded bg-gray-800 text-white border border-gray-600 text-sm focus:outline-none focus:ring-0"
+                />
+                <FiX
+                  onClick={() => setCname("")}
+                  className="ml-1 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
           <table className="min-w-full text-sm text-gray-200">
             <thead>
               <tr className="text-left border-b border-white/20">
@@ -425,6 +454,7 @@ const HrDashboard = () => {
       <div className="card my-5">
         {loading && <SpinLoader />}
         <div className="overflow-x-auto">
+          <h2 className="text-lg font-regular mb-1">Birthdays</h2>
           <table className="min-w-full text-sm text-gray-200">
             <thead>
               <tr className="text-left border-b border-white/20">

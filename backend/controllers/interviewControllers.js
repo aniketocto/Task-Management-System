@@ -155,6 +155,7 @@ const getAllInterviews = async (req, res) => {
       timeframe,
       start,
       end,
+      cname,
     } = req.query;
 
     const filter = {};
@@ -237,6 +238,11 @@ const getAllInterviews = async (req, res) => {
       filter.startTime = {};
       if (from) filter.startTime.$gte = from;
       if (to) filter.startTime.$lte = to;
+    }
+
+    if (cname && cname.trim()) {
+      const safe = cname.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); 
+      filter.candidateName = { $regex: safe, $options: "i" };
     }
 
     const sortDir = String(sort).toLowerCase() === "asc" ? 1 : -1;
@@ -374,14 +380,14 @@ const addOrUpdateDocs = async (req, res) => {
     });
 
     const doc = await HrDoc.findOneAndUpdate(
-      { singleton: "HRDOC_SINGLETON" }, 
+      { singleton: "HRDOC_SINGLETON" },
       {
-        $set: input, 
-        $setOnInsert: { singleton: "HRDOC_SINGLETON" }, 
+        $set: input,
+        $setOnInsert: { singleton: "HRDOC_SINGLETON" },
       },
       {
-        new: true, 
-        upsert: true, 
+        new: true,
+        upsert: true,
       }
     ).lean();
 
@@ -402,7 +408,7 @@ const getDocs = async (_req, res) => {
     const doc = await HrDoc.findOne({ singleton: "HRDOC_SINGLETON" }).lean();
 
     if (!doc) {
-      const created = await HrDoc.create({}); 
+      const created = await HrDoc.create({});
       return res.status(200).json({
         message: "HR Docs fetched successfully",
         data: created.toObject(),
@@ -432,5 +438,5 @@ module.exports = {
   deleteInterview,
   getUpcomingInterviews,
   addOrUpdateDocs,
-  getDocs
+  getDocs,
 };
