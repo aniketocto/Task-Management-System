@@ -140,10 +140,10 @@ const calculateUnifiedSummary = (records) => {
 
   Object.keys(weeklyLateCount).forEach((wk) => {
     if (weeklyLateCount[wk] >= 3) {
-      const [uid] = wk.split("-"); 
+      const [uid] = wk.split("-");
       const us = summaryMap.get(uid);
       if (us) {
-        us.ruleAppliedHalfDays += 1; 
+        us.ruleAppliedHalfDays += 1;
       }
     }
   });
@@ -308,7 +308,11 @@ const getAllAttendance = async (req, res) => {
     const dateFilter = buildMonthlyDateFilter(month);
     const attendances = await Attendance.find(dateFilter)
       .sort({ date: 1 })
-      .populate("user", "name")
+      .populate({
+        path: "user",
+        select: "name role",
+        match: { role: { $ne: "superAdmin" } }, 
+      })
       .lean();
     const summary = calculateUnifiedSummary(attendances);
 
