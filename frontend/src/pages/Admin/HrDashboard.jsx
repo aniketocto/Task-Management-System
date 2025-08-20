@@ -10,10 +10,11 @@ import SelectOption from "components/Inputs/SelectOption";
 import { interviewStatus } from "../../utils/data";
 import SelectUsers from "components/Inputs/SelectUsers";
 import toast from "react-hot-toast";
-import AvatarGroup from "components/layouts/AvatarGroup";
 import ReactPaginate from "react-paginate";
 import { HiTrash } from "react-icons/hi";
 import HrDocs from "components/layouts/HrDocs";
+import { IoTrashOutline } from "react-icons/io5";
+import moment from "moment";
 
 const HrDashboard = () => {
   const { user } = useContext(UserContext);
@@ -26,14 +27,17 @@ const HrDashboard = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  useEffect(() => {
-    setLoadingUsers(true);
-    axiosInstance
-      .get(API_PATHS.USERS.GET_ALL_USERS)
-      .then((res) => setAllUsers(res.data || []))
-      .catch((err) => console.error("Failed to load users", err))
-      .finally(() => setLoadingUsers(false));
-  }, []);
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const res = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
+      setAllUsers(res.data || []);
+    } catch (err) {
+      console.error("Failed to load users", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const [openInterviewModal, setOpenInterviewModal] = useState(false);
   const [interviewForm, setInterviewForm] = useState({
@@ -96,6 +100,21 @@ const HrDashboard = () => {
       setLoading(false);
     }
   }, [page]);
+
+  const [upcomingInterviews, setUpcomingInterviews] = useState([]);
+  const getUpcomingInterviews = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(
+        API_PATHS.INTERVIEW.GET_UPCOMING_INTERVIEWS
+      );
+      setUpcomingInterviews(response.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching interviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const createInterview = async () => {
     try {
@@ -201,19 +220,71 @@ const HrDashboard = () => {
     }
   };
 
+  const [dobs, setDobs] = useState([]);
+  const getDobs = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(API_PATHS.AUTH.DOB);
+      setDobs(response.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching DOBs:", error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     getInterviews();
   }, [page, getInterviews]);
 
   useEffect(() => {
     getOpenings();
-  }, [getOpenings]);
+    getUpcomingInterviews();
+  }, [getOpenings, getUpcomingInterviews]);
+
+  useEffect(() => {
+    getDobs();
+  }, [getDobs]);
 
   return (
-    <DashboardLayout activeMenu="Dashboard">
+    <DashboardLayout activeMenu="Hr Dashboard">
+      {/* Upcoming Interviews */}
       <div className="card my-5">
         {loading && <SpinLoader />}
         <div className="overflow-x-auto">
+          <h2 className="text-lg font-regular mb-1">Upcoming Interviews</h2>
+          <table className="min-w-full text-sm text-gray-200">
+            <thead>
+              <tr className="text-left border-b border-white/20">
+                <th className="py-2 pr-4">Candidate</th>
+                <th className="py-2 pr-4">Opening</th>
+                <th className="py-2 pr-4">Start</th>
+                <th className="py-2 pr-4">Rounds</th>
+                <th className="py-2 pr-4">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upcomingInterviews.map((interview) => (
+                <tr key={interview._id} className="border-b border-white/20">
+                  <td className="py-2 pr-4">{interview.candidateName}</td>
+                  <td className="py-2 pr-4">{interview.opening}</td>
+                  <td className="py-2 pr-4">
+                    {new Date(interview.startTime).toLocaleString()}
+                  </td>
+                  <td className="py-2 pr-4">{interview.rounds}</td>
+                  <td className="py-2 pr-4">{interview.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Interviews */}
+      <div className="card my-5">
+        {loading && <SpinLoader />}
+        <div className="overflow-x-auto">
+          <h2 className="text-lg font-regular mb-1">Interviews</h2>
           <table className="min-w-full text-sm text-gray-200">
             <thead>
               <tr className="text-left border-b border-white/20">
@@ -273,7 +344,10 @@ const HrDashboard = () => {
             {user?.role === "admin" && (
               <div className="flex justify-end mt-4">
                 <button
-                  onClick={() => setOpenInterviewModal(true)}
+                  onClick={() => {
+                    setOpenInterviewModal(true);
+                    fetchUsers();
+                  }}
                   className=" add-btn w-fit!"
                 >
                   Set an Interview
@@ -303,9 +377,11 @@ const HrDashboard = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap w-full items-center justify-between gap-2">
+      {/* Openings && Files */}
+      <div className="flex flex-wrap w-full items-start justify-between gap-2">
         <div className="flex-1 card">
           <div className="overflow-x-auto">
+            <h2 className="text-lg font-regular mb-1">Openings</h2>
             <table className="min-w-full text-sm text-gray-200">
               <thead>
                 <tr className="text-left border-b border-white/20">
@@ -321,7 +397,7 @@ const HrDashboard = () => {
                     <td className="py-2 pr-4">{o.headcount}</td>
                     <td className="py-2 pr-4">
                       <button onClick={() => deleteOpening(o._id)}>
-                        <HiTrash className="text-red-500 text-lg cursor-pointer" />
+                        <IoTrashOutline className="text-red-500 text-xl cursor-pointer" />
                       </button>
                     </td>
                   </tr>
@@ -343,6 +419,34 @@ const HrDashboard = () => {
         </div>
         <div className="flex-1 card">
           <HrDocs />
+        </div>
+      </div>
+
+      <div className="card my-5">
+        {loading && <SpinLoader />}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-gray-200">
+            <thead>
+              <tr className="text-left border-b border-white/20">
+                <th className="py-2 pr-4">Name</th>
+                <th className="py-2 pr-4">DOB</th>
+                <th className="py-2 pr-4">Department</th>
+                <th className="py-2 pr-4">Designation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dobs.map((d) => (
+                <tr key={d._id} className="border-b border-white/20">
+                  <td className="py-2 pr-4">{d.name}</td>
+                  <td className="py-2 pr-4">
+                    {moment(d.dob).format("DD-MM-YYYY")}
+                  </td>
+                  <td className="py-2 pr-4">{d.department}</td>
+                  <td className="py-2 pr-4">{d.designation}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -378,13 +482,18 @@ const HrDashboard = () => {
             placeholder="Select Opening"
           />
         </div>
-        <Input
-          placeholder="Select Start Time"
-          value={interviewForm.startTime}
-          onChange={(e) => handleValueChange("startTime", e.target.value)}
-          label="Start Time"
-          type="datetime-local"
-        />
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-xs font-medium text-slate-200">
+            Date & Time
+          </label>
+          <input
+            placeholder="Select Start Time"
+            value={interviewForm.startTime}
+            onChange={(e) => handleValueChange("startTime", e.target.value)}
+            type="datetime-local"
+            className="form-input-date"
+          />
+        </div>
         <Input
           placeholder="Enter number of rounds"
           value={interviewForm.rounds}

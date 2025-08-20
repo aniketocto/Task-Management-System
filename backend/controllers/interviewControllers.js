@@ -355,92 +355,38 @@ const getUpcomingInterviews = async (req, res) => {
   }
 };
 
-// HR DOCS
+const pickDefined = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => typeof v !== "undefined")
+  );
 
-const addDocs = async (req, res) => {
+const addOrUpdateDocs = async (req, res) => {
   try {
-    const {
-      recruitmentReport,
-      onBoarding,
-      offBoarding,
-      evalution,
-      appraisal,
-      hrPolicies,
-      hrProcess,
-      hrTraining,
-    } = req.body;
-
-    const docs = await HrDoc.create({
-      recruitmentReport,
-      onBoarding,
-      offBoarding,
-      evalution,
-      appraisal,
-      hrPolicies,
-      hrProcess,
-      hrTraining,
+    const input = pickDefined({
+      recruitmentReport: req.body.recruitmentReport,
+      onBoarding: req.body.onBoarding,
+      offBoarding: req.body.offBoarding,
+      evalution: req.body.evalution,
+      appraisal: req.body.appraisal,
+      hrPolicies: req.body.hrPolicies,
+      hrProcess: req.body.hrProcess,
+      hrTraining: req.body.hrTraining,
     });
 
-    res.status(200).json({
-      message: "HR Docs added successfully",
-      data: docs,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
+    const doc = await HrDoc.findOneAndUpdate(
+      { singleton: "HRDOC_SINGLETON" }, 
+      {
+        $set: input, 
+        $setOnInsert: { singleton: "HRDOC_SINGLETON" }, 
+      },
+      {
+        new: true, 
+        upsert: true, 
+      }
+    ).lean();
 
-const getDocs = async (req, res) => {
-  try {
-    const docs = await HrDoc.find();
-    res.status(200).json({
-      message: "HR Docs fetched successfully",
-      data: docs,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
-
-const updateDoc = async (req, res) => {
-  try {
-    const {
-      recruitmentReport,
-      onBoarding,
-      offBoarding,
-      evalution,
-      appraisal,
-      hrPolicies,
-      hrProcess,
-      hrTraining,
-    } = req.body;
-
-    let doc = await HrDoc.findOne(); // find the first doc
-
-    if (!doc) {
-      doc = new HrDoc(); // create one if not exists
-    }
-
-    if (typeof recruitmentReport !== "undefined")
-      doc.recruitmentReport = recruitmentReport;
-    if (typeof onBoarding !== "undefined") doc.onBoarding = onBoarding;
-    if (typeof offBoarding !== "undefined") doc.offBoarding = offBoarding;
-    if (typeof evalution !== "undefined") doc.evalution = evalution;
-    if (typeof appraisal !== "undefined") doc.appraisal = appraisal;
-    if (typeof hrPolicies !== "undefined") doc.hrPolicies = hrPolicies;
-    if (typeof hrProcess !== "undefined") doc.hrProcess = hrProcess;
-    if (typeof hrTraining !== "undefined") doc.hrTraining = hrTraining;
-
-    await doc.save();
-
-    res.status(200).json({
-      message: "HR Docs saved/updated successfully",
+    return res.status(200).json({
+      message: "HR Docs added/updated successfully",
       data: doc,
     });
   } catch (error) {
@@ -451,6 +397,29 @@ const updateDoc = async (req, res) => {
   }
 };
 
+const getDocs = async (_req, res) => {
+  try {
+    const doc = await HrDoc.findOne({ singleton: "HRDOC_SINGLETON" }).lean();
+
+    if (!doc) {
+      const created = await HrDoc.create({}); 
+      return res.status(200).json({
+        message: "HR Docs fetched successfully",
+        data: created.toObject(),
+      });
+    }
+
+    return res.status(200).json({
+      message: "HR Docs fetched successfully",
+      data: doc,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   createOpening,
@@ -462,7 +431,6 @@ module.exports = {
   updateInterview,
   deleteInterview,
   getUpcomingInterviews,
-  addDocs,
-  getDocs,
-  updateDoc,
+  addOrUpdateDocs,
+  getDocs
 };

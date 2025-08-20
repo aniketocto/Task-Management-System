@@ -15,7 +15,7 @@ const Opening = mongoose.model("Opening", openingSchema);
 
 const interviewSchema = new mongoose.Schema(
   {
-    opening:  { type: String, required: true, trim: true },
+    opening: { type: String, required: true, trim: true },
     done: { type: Boolean, default: false },
     candidateName: { type: String, required: true, trim: true },
     startTime: { type: Date, required: true },
@@ -43,16 +43,26 @@ interviewSchema.path("interviewers").validate(function (arr) {
 
 const Interview = mongoose.model("Interview", interviewSchema);
 
-const hrdocsSchema = new mongoose.Schema({
-  recruitmentReport: { type: String },
-  onBoarding: { type: String },
-  offBoarding: { type: String },
-  evalution: { type: String },
-  appraisal: { type: String },
-  hrPolicies: { type: String },
-  hrProcess: { type: String },
-  hrTraining: { type: String },
-});
+const hrdocsSchema = new mongoose.Schema(
+  {
+    singleton: {
+      type: String,
+      default: "HRDOC_SINGLETON",
+      unique: true, 
+      immutable: true,
+    },
+
+    recruitmentReport: mongoose.Schema.Types.Mixed,
+    onBoarding: mongoose.Schema.Types.Mixed,
+    offBoarding: mongoose.Schema.Types.Mixed,
+    evalution: mongoose.Schema.Types.Mixed, 
+    appraisal: mongoose.Schema.Types.Mixed,
+    hrPolicies: mongoose.Schema.Types.Mixed,
+    hrProcess: mongoose.Schema.Types.Mixed,
+    hrTraining: mongoose.Schema.Types.Mixed,
+  },
+  { timestamps: true }
+);
 
 const HrDoc = mongoose.model("HrDoc", hrdocsSchema);
 

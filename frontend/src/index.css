@@ -126,10 +126,7 @@
 
 /* Timer */
 
-::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-}
+
 
 .input-box {
   @apply w-full flex justify-between gap-3 text-black bg-slate-50 rounded px-4 py-3 mb-4 mt-1.5 border border-slate-200 outline-none;

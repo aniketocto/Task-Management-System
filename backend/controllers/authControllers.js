@@ -230,10 +230,40 @@ const googleAuth = async (req, res) => {
   }
 };
 
+const getDOB = async (req, res) => {
+  try {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+
+    const users = await User.aggregate([
+      { $match: { dob: { $type: "date" } } },
+      { $addFields: { dobMonth: { $month: "$dob" } } },
+      { $match: { dobMonth: currentMonth } },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          department: 1,
+          designation: 1,
+          dob: 1,
+        },
+      },
+    ]);
+    res.status(200).json({
+      message: "Users with birthdays this month",
+      data: users,
+    });
+  } catch (error) {
+    console.error("❌ googleAuth error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
   googleAuth,
+  getDOB,
 };

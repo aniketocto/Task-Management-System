@@ -233,7 +233,7 @@ export const MENU_DATA = [
     label: "Team",
     children: [
        {
-        label: "Dashboard",
+        label: "Hr Dashboard",
         icon: LuLayoutDashboard,
         path: "/hr-dashboard",
         access: ({ role, department }) =>

@@ -8,6 +8,7 @@ export const API_PATHS = {
     UPDATE_PROFILE: "/api/auth/profile",
     UPLOAD_IMAGE: "/api/auth/upload-image",
     GOOGLE_AUTH: "/api/auth/google",
+    DOB: "/api/auth/dob",
   },
   USERS: {
     GET_ALL_USERS: "/api/users", //get all user
@@ -101,7 +102,7 @@ export const API_PATHS = {
     GET_UPCOMING_INTERVIEWS: "/api/interview/get-upcoming-interviews",
     UPDATE_INTERVIEW: (id) => `/api/interview/update-interview/${id}`,
     DELETE_INTERVIEW: (id) => `/api/interview/delete-interview/${id}`,
-    ADD_DOCS : "/api/interview/add-docs",
+    ADD_DOCS: "/api/interview/add-docs",
     GET_DOCS: "/api/interview/get-docs",
-  }
+  },
 };

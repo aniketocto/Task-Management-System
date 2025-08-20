@@ -10,9 +10,8 @@ const {
   updateInterview,
   deleteInterview,
   getUpcomingInterviews,
-  addDocs,
   getDocs,
-  updateDoc,
+  addOrUpdateDocs,
 } = require("../controllers/interviewControllers");
 const router = express.Router();
 
@@ -86,7 +85,7 @@ router.post(
   "/add-docs",
   protect,
   allowRoleOrDept(["superAdmin"], ["HR"]),
-  addDocs
+  addOrUpdateDocs
 );
 
 router.get(
@@ -95,6 +94,5 @@ router.get(
   allowRoleOrDept(["superAdmin"], ["HR"]),
   getDocs
 );
-
 
 module.exports = router;
