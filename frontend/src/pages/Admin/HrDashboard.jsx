@@ -1,6 +1,6 @@
 import DashboardLayout from "components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import SpinLoader from "../../components/layouts/SpinLoader";
@@ -11,6 +11,9 @@ import { interviewStatus } from "../../utils/data";
 import SelectUsers from "components/Inputs/SelectUsers";
 import toast from "react-hot-toast";
 import AvatarGroup from "components/layouts/AvatarGroup";
+import ReactPaginate from "react-paginate";
+import { HiTrash } from "react-icons/hi";
+import HrDocs from "components/layouts/HrDocs";
 
 const HrDashboard = () => {
   const { user } = useContext(UserContext);
@@ -42,6 +45,12 @@ const HrDashboard = () => {
     status: "scheduled",
   });
 
+  const [openFormModal, setOpenFormModal] = useState(false);
+  const [openingForm, setOpeningForm] = useState({
+    title: "",
+    headcount: "",
+  });
+
   const clearInterviewData = () => {
     setInterviewForm({
       opening: "",
@@ -53,23 +62,40 @@ const HrDashboard = () => {
     });
   };
 
+  const clearOpeningData = () => {
+    setOpeningForm({
+      title: "",
+      headcount: "",
+    });
+  };
+
   const handleValueChange = (key, value) => {
     setInterviewForm((prevData) => ({ ...prevData, [key]: value }));
   };
+  const handleOpeningValueChange = (key, value) => {
+    setOpeningForm((prevData) => ({ ...prevData, [key]: value }));
+  };
 
-  const getInterviews = async () => {
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+
+  const getInterviews = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        API_PATHS.INTERVIEW.GET_ALL_INTERVIEWS
+        API_PATHS.INTERVIEW.GET_ALL_INTERVIEWS,
+        {
+          params: { limit: 10, page },
+        }
       );
       setInterviews(response.data?.data || []);
+      setPages(response.data?.meta?.totalPages || 1);
     } catch (error) {
       console.error("Error fetching interviews:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   const createInterview = async () => {
     try {
@@ -114,7 +140,7 @@ const HrDashboard = () => {
     }
   };
 
-  const getOpenings = async () => {
+  const getOpenings = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         API_PATHS.INTERVIEW.GET_OPENINGS
@@ -126,10 +152,50 @@ const HrDashboard = () => {
           label: opening.title,
         })) || []
       );
-      console.log(openingOptions);
+      // console.log(openingOptions);
     } catch (error) {
       console.error("Error fetching openings:", error);
       return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createOpening = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.post(
+        API_PATHS.INTERVIEW.CREATE_OPENING,
+        openingForm
+      );
+      if (response) {
+        clearOpeningData();
+        setOpenFormModal(false);
+        getOpenings();
+      }
+      toast.success("Opening created successfully:");
+    } catch (error) {
+      console.error("Error creating opening:", error);
+      toast.error("Failed to create opening. Please fill all fields.");
+      console.error("Error details:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteOpening = async (openingId) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.delete(
+        API_PATHS.INTERVIEW.DELETE_OPENING(openingId)
+      );
+      if (response) {
+        toast.success("Opening deleted successfully");
+        getOpenings(); // Refresh the openings list
+      }
+    } catch (error) {
+      console.error("Error deleting opening:", error);
+      toast.error("Failed to delete opening.");
     } finally {
       setLoading(false);
     }
@@ -137,8 +203,11 @@ const HrDashboard = () => {
 
   useEffect(() => {
     getInterviews();
+  }, [page, getInterviews]);
+
+  useEffect(() => {
     getOpenings();
-  }, []);
+  }, [getOpenings]);
 
   return (
     <DashboardLayout activeMenu="Dashboard">
@@ -200,16 +269,80 @@ const HrDashboard = () => {
             </tbody>
           </table>
 
-          {user?.role === "admin" && (
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => setOpenInterviewModal(true)}
-                className=" add-btn w-fit!"
-              >
-                Set an Interview
-              </button>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            {user?.role === "admin" && (
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => setOpenInterviewModal(true)}
+                  className=" add-btn w-fit!"
+                >
+                  Set an Interview
+                </button>
+              </div>
+            )}
+
+            <ReactPaginate
+              previousLabel={"Previous"}
+              nextLabel={"Next"}
+              breakLabel={"..."}
+              pageCount={pages} // total pages from backend
+              forcePage={page - 1} // ReactPaginate is zero-based
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={3}
+              onPageChange={(selectedItem) =>
+                setPage(selectedItem.selected + 1)
+              } // update page
+              containerClassName="flex gap-2 mt-4 justify-center"
+              pageLinkClassName="px-3 py-1 border rounded text-white cursor-pointer transition-colors duration-200 block"
+              activeLinkClassName="bg-[#E43941] border-[#E43941] text-white"
+              previousLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+              nextLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+              disabledLinkClassName="opacity-50 cursor-not-allowed"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap w-full items-center justify-between gap-2">
+        <div className="flex-1 card">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-gray-200">
+              <thead>
+                <tr className="text-left border-b border-white/20">
+                  <th className="py-2 pr-4">Opening</th>
+                  <th className="py-2 pr-4">Counts</th>
+                  <th className="py-2 pr-4"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {openings.map((o) => (
+                  <tr key={o._id} className="border-b border-white/20">
+                    <td className="py-2 pr-4">{o.title}</td>
+                    <td className="py-2 pr-4">{o.headcount}</td>
+                    <td className="py-2 pr-4">
+                      <button onClick={() => deleteOpening(o._id)}>
+                        <HiTrash className="text-red-500 text-lg cursor-pointer" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {user?.role === "superAdmin" && (
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => setOpenFormModal(true)}
+                  className=" add-btn w-fit!"
+                >
+                  Add opening
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 card">
+          <HrDocs />
         </div>
       </div>
 
@@ -296,6 +429,35 @@ const HrDashboard = () => {
           className="px-3 py-1 bg-[#E43941] hover:bg-[#da9194] text-white rounded text-sm"
         >
           {editingInterviewId ? "Update Interview" : "Create Interview"}
+        </button>
+      </Modal>
+
+      <Modal
+        isOpen={openFormModal}
+        onClose={() => setOpenFormModal(false)}
+        title="Add Opening"
+      >
+        <Input
+          placeholder="Enter Opening"
+          value={openingForm.title}
+          onChange={(e) => handleOpeningValueChange("title", e.target.value)}
+          label="Opening Title"
+          type="text"
+        />
+        <Input
+          placeholder="Enter Headcount"
+          value={openingForm.headcount}
+          onChange={(e) =>
+            handleOpeningValueChange("headcount", e.target.value)
+          }
+          label="Headcount"
+          type="number"
+        />
+        <button
+          onClick={createOpening}
+          className="px-3 py-1 bg-[#E43941] hover:bg-[#da9194] text-white rounded text-sm"
+        >
+          Create Opening
         </button>
       </Modal>
     </DashboardLayout>
