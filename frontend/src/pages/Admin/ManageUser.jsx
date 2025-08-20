@@ -10,7 +10,7 @@ const ManageUser = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [refreshFlag, setRefreshFlag] = useState(false);
 
-  const getAllUsers =  useCallback( async() => {
+  const getAllUsers = useCallback(async () => {
     try {
       const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS, {
         params: {
@@ -59,7 +59,7 @@ const ManageUser = () => {
       <div className="mt-5 mb-10">
         <div className="flex md:flex-row items-center justify-start gap-4">
           <h2 className="text-lg md:text-xl font-medium text-gray-50">
-            Team Members
+            Team Members: {allUsers.length}
           </h2>
 
           {/* Month filter */}
@@ -101,13 +101,20 @@ const ManageUser = () => {
               key={department}
               className="border border-gray-200 rounded-md p-4"
             >
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">
-                {department}
-              </h3>
+              <div className="flex justify-start gap-4 items-center">
+                <h3 className="text-lg font-semibold text-gray-200 mb-3">
+                  {department} ({users.length})
+                </h3>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((user) => (
-                  <UserCard allUsers={allUsers} key={user._id} userInfo={user} onUserDeleted={handleUserDeleted} />
+                  <UserCard
+                    allUsers={allUsers}
+                    key={user._id}
+                    userInfo={user}
+                    onUserDeleted={handleUserDeleted}
+                  />
                 ))}
               </div>
             </div>

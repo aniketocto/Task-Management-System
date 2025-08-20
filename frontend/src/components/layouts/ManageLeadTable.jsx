@@ -35,7 +35,7 @@ const STATUS_OPTIONS = [
   { label: "Legal", value: "legal" },
 ];
 
-const ManageLeadTable = ({ selectMonth }) => {
+const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState(() => {
@@ -64,14 +64,21 @@ const ManageLeadTable = ({ selectMonth }) => {
     async (pageNumber = 1) => {
       setLoading(true);
       try {
+        const params = {
+          page: pageNumber,
+          limit: 10,
+          month: selectMonth, // 🔧 (optional) backend doesn't read 'month' in getLeads
+          category: category || undefined,
+          status: status || undefined,
+          timeframe: timeframe || undefined,
+        };
+        if (timeframe === "custom") {
+          if (startDate) params.startDate = startDate;
+          if (endDate) params.endDate = endDate;
+        }
+
         const { data } = await axiosInstance.get(API_PATHS.LEADS.GET_LEADS, {
-          params: {
-            page: pageNumber,
-            limit: 10,
-            month: selectMonth,
-            category: category || undefined,
-            status: status || undefined,
-          },
+          params,
         });
         setLeads(data.leads || []);
         setPage(data.page || 1);
@@ -82,7 +89,7 @@ const ManageLeadTable = ({ selectMonth }) => {
         setLoading(false);
       }
     },
-    [category, status, selectMonth]
+    [category, status, selectMonth, timeframe, startDate, endDate]
   );
 
   const getAttemptObj = (attempt) => {
@@ -126,7 +133,8 @@ const ManageLeadTable = ({ selectMonth }) => {
     sessionStorage.setItem("lastLeadPage", page);
     sessionStorage.setItem("lastLeadCategory", category);
     sessionStorage.setItem("lastLeadStatus", status);
-  }, [page, category, status, fetchLeads]);
+    sessionStorage.setItem("leadlastTimeframe", timeframe);
+  }, [page, category, status, fetchLeads, selectMonth, timeframe]);
 
   const handleNavigate = (leadId) => {
     navigate("/leads-create", { state: { leadId: leadId } });

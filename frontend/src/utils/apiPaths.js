@@ -8,6 +8,7 @@ export const API_PATHS = {
     UPDATE_PROFILE: "/api/auth/profile",
     UPLOAD_IMAGE: "/api/auth/upload-image",
     GOOGLE_AUTH: "/api/auth/google",
+    DOB: "/api/auth/dob",
   },
   USERS: {
     GET_ALL_USERS: "/api/users", //get all user
@@ -90,5 +91,18 @@ export const API_PATHS = {
   HOLIDAYS: {
     SET_HOLIDAYS: "/api/holidays",
     DELETE_HOLIDAY_BY_ID: (holidayId) => `/api/holidays/${holidayId}`,
+  },
+  INTERVIEW: {
+    CREATE_OPENING: "/api/interview/create-opening",
+    GET_OPENINGS: "/api/interview/get-all-openings",
+    UPDATE_OPENING: (id) => `/api/interview/update-opening/${id}`,
+    DELETE_OPENING: (id) => `/api/interview/delete-opening/${id}`,
+    CREATE_INTERVIEW: "/api/interview/create",
+    GET_ALL_INTERVIEWS: "/api/interview/get-all-interviews",
+    GET_UPCOMING_INTERVIEWS: "/api/interview/get-upcoming-interviews",
+    UPDATE_INTERVIEW: (id) => `/api/interview/update-interview/${id}`,
+    DELETE_INTERVIEW: (id) => `/api/interview/delete-interview/${id}`,
+    ADD_DOCS: "/api/interview/add-docs",
+    GET_DOCS: "/api/interview/get-docs",
   },
 };

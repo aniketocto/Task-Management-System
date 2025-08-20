@@ -537,7 +537,7 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Competetors <sup className="text-red-500 text-xs">*</sup>
+                      Competitors <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="Who are our competetors?"
@@ -565,7 +565,7 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      SMPs <sup className="text-red-500 text-xs">*</sup>
+                      Single Minded Prepositions <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="SMPs"
@@ -664,7 +664,7 @@ const CreateTask = () => {
                       Reject
                     </button>
                   </div>
-                  <p>{taskData.rea}</p>
+                  <p className="text-yellow-400 text-sm">{taskData.reason}</p>
                 </>
               )}
 

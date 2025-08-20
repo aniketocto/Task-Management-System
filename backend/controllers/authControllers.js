@@ -126,6 +126,15 @@ const updateUserProfile = async (req, res) => {
     user.department = req.body.department || user.department;
     user.profileImageUrl = req.body.profileImageUrl || user.profileImageUrl;
     user.designation = req.body.designation || user.designation;
+    if (req.body.dob) {
+      const parsedDate = new Date(req.body.dob);
+
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format for DOB" });
+      }
+
+      user.dob = parsedDate;
+    }
 
     // Handle password update (only if sent)
     if (req.body.password) {
@@ -143,6 +152,7 @@ const updateUserProfile = async (req, res) => {
       department: updatedUser.department,
       profileImageUrl: updatedUser.profileImageUrl,
       designation: updatedUser.designation,
+      dob: updatedUser.dob,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {
@@ -152,8 +162,14 @@ const updateUserProfile = async (req, res) => {
 
 const googleAuth = async (req, res) => {
   try {
-    const { idToken, adminInviteToken, department, profileImage, designation } =
-      req.body;
+    const {
+      idToken,
+      adminInviteToken,
+      department,
+      profileImage,
+      designation,
+      dob,
+    } = req.body;
 
     const ticket = await googleClient.verifyIdToken({
       idToken,
@@ -191,7 +207,8 @@ const googleAuth = async (req, res) => {
         profileImageUrl, // base64 or Google image URL
         role,
         department,
-        designation
+        designation,
+        dob,
       });
     }
 
@@ -205,6 +222,36 @@ const googleAuth = async (req, res) => {
       department: user.department,
       designation: user.designation,
       token,
+      dob: user.dob,
+    });
+  } catch (error) {
+    console.error("❌ googleAuth error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getDOB = async (req, res) => {
+  try {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+
+    const users = await User.aggregate([
+      { $match: { dob: { $type: "date" } } },
+      { $addFields: { dobMonth: { $month: "$dob" } } },
+      { $match: { dobMonth: currentMonth } },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          department: 1,
+          designation: 1,
+          dob: 1,
+        },
+      },
+    ]);
+    res.status(200).json({
+      message: "Users with birthdays this month",
+      data: users,
     });
   } catch (error) {
     console.error("❌ googleAuth error:", error);
@@ -218,4 +265,5 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   googleAuth,
+  getDOB,
 };
