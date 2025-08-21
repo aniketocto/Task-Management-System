@@ -361,7 +361,7 @@ const ManageTasksTable = ({
               <td className="px-4 py-2 md:table-cell text-2xl">
                 <HiBellAlert style={{ color: getDueDateColor(task.dueDate) }} />
               </td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2 text-center avatar_center">
                 <AvatarGroup
                   avatars={
                     task.assignedTo?.map((u) => ({
