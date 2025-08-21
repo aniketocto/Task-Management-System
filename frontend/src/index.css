@@ -124,7 +124,9 @@
     color: #e42a2a;
 }
 
-/* Timer */
+.avatar_center {
+  justify-items: center
+}
 
 
 

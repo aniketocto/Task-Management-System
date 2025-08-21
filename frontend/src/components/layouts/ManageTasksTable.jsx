@@ -78,28 +78,38 @@ const ManageTasksTable = ({
       prev.map((t) => (t._id === taskId ? { ...t, [type]: { status } } : t))
     );
     try {
-      await axiosInstance.patch(API_PATHS.APPROVAL.TASK_APPROVAL(taskId), {
-        type,
-        status,
-      });
+      const response = await axiosInstance.patch(
+        API_PATHS.APPROVAL.TASK_APPROVAL(taskId),
+        {
+          type,
+          status,
+        }
+      );
+      // setTasks((prev) =>
+      //   prev.map((t) => {
+      //     if (t._id !== taskId) return t;
+      //     const sup =
+      //       type === "superAdminApproval"
+      //         ? status
+      //         : t.superAdminApproval?.status;
+      //     const cli =
+      //       type === "clientApproval" ? status : t.clientApproval?.status;
+      //     if (
+      //       sup === "approved" &&
+      //       cli === "approved" &&
+      //       allSubTasksApproved(t)
+      //     ) {
+      //       return { ...t, status: "completed" };
+      //     }
+      //     return t;
+      //   })
+      // );
       setTasks((prev) =>
-        prev.map((t) => {
-          if (t._id !== taskId) return t;
-          const sup =
-            type === "superAdminApproval"
-              ? status
-              : t.superAdminApproval?.status;
-          const cli =
-            type === "clientApproval" ? status : t.clientApproval?.status;
-          if (
-            sup === "approved" &&
-            cli === "approved" &&
-            allSubTasksApproved(t)
-          ) {
-            return { ...t, status: "completed" };
-          }
-          return t;
-        })
+        prev.map((t) =>
+          t._id === taskId
+            ? response.data.task // Use complete task object from backend
+            : t
+        )
       );
     } catch (err) {
       toast.error(err.response?.data?.message || "Error");
@@ -351,7 +361,7 @@ const ManageTasksTable = ({
               <td className="px-4 py-2 md:table-cell text-2xl">
                 <HiBellAlert style={{ color: getDueDateColor(task.dueDate) }} />
               </td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2 text-center avatar_center">
                 <AvatarGroup
                   avatars={
                     task.assignedTo?.map((u) => ({

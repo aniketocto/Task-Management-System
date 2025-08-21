@@ -39,6 +39,10 @@ const HrDocsEditor = () => {
       { key: "hrPolicies", label: "HR Policies" },
       { key: "hrProcess", label: "HR Process" },
       { key: "hrTraining", label: "HR Training" },
+      { key: "reimbursement", label: "Reimbursement" },
+      { key: "pettyCash", label: "Petty Cash" },
+      { key: "employeeExitForm", label: "Employee Exit Form" },
+      { key: "employeeEng", label: "Employee Engagement" },
     ],
     []
   );
@@ -52,6 +56,10 @@ const HrDocsEditor = () => {
     hrPolicies: [],
     hrProcess: [],
     hrTraining: [],
+    reimbursement: [],
+    pettyCash: [],
+    employeeExitForm: [],
+    employeeEng: [],
   });
 
   const fetchDoc = async () => {
@@ -143,7 +151,7 @@ const HrDocsEditor = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between  pb-1 mb-2 border-b border-gray-50/20 ">
         <h2 className="text-lg font-regular">Documents</h2>
         {user.department === "HR" && (
           <button

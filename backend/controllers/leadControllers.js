@@ -1,7 +1,6 @@
 const Notification = require("../models/Notification");
 const Leads = require("../models/Leads");
 const moment = require("moment");
-const User = require("../models/User");
 const QuarterTarget = require("../models/QuarterTarget");
 
 const BYPASS_DATE_APPROVAL = process.env.BYPASS_DATE_APPROVAL === "true";
@@ -50,6 +49,7 @@ const createLead = async (req, res) => {
       attachments,
       remark,
       followUp,
+      assignedTo,
       amount,
     } = req.body;
 
@@ -103,9 +103,16 @@ const createLead = async (req, res) => {
       followUp: safeFollowUp,
       createdBy: req.user._id,
       amount,
+      assignedTo,
     });
 
-    res.status(201).json({ message: "Lead created successfully", lead });
+    const populatedLead = await Leads.findById(lead._id).populate(
+      "assignedTo",
+      "name email profileImageUrl department"
+    );
+    res
+      .status(201)
+      .json({ message: "Lead created successfully", lead: populatedLead });
   } catch (error) {
     console.error("Error creating lead:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -196,6 +203,7 @@ const getLeads = async (req, res) => {
     const skipVal = (pageNum - 1) * pageSize;
 
     const leads = await Leads.find(filter)
+      .populate("assignedTo", "name email profileImageUrl department")
       .sort({ createdAt: -1 })
       .skip(skipVal)
       .limit(pageSize)
@@ -219,8 +227,9 @@ const getLeads = async (req, res) => {
 
 const getLead = async (req, res) => {
   try {
-    const lead = await Leads.findById(req.params.id).lean();
-
+    const lead = await Leads.findById(req.params.id)
+      .populate("assignedTo", "name email profileImageUrl department")
+      .lean();
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
@@ -459,10 +468,11 @@ const updateLead = async (req, res) => {
       "attachments",
       "remark",
       "amount",
+      "assignedTo",
     ];
     for (let field of allowedFields) {
       if (field === "amount" && !willBeOnBoarded && role !== "superAdmin")
-        continue; 
+        continue;
       if (req.body[field] !== undefined) {
         updateFields[field] = req.body[field];
       }
@@ -515,14 +525,25 @@ const updateLead = async (req, res) => {
       });
 
     if (requestsMade.length) {
+      const populatedLead = await Leads.findById(lead._id).populate(
+        "assignedTo",
+        "name email profileImageUrl department"
+      );
       return res.json({
         message: `Update requested for ${requestsMade.join(
           ", "
         )}. Awaiting superadmin approval.`,
-        lead,
+        lead: populatedLead,
       });
     } else {
-      return res.json({ message: "Lead updated successfully", lead });
+      const populatedLead = await Leads.findById(lead._id).populate(
+        "assignedTo",
+        "name email profileImageUrl department"
+      );
+      return res.json({
+        message: "Lead updated successfully",
+        lead: populatedLead,
+      });
     }
   } catch (error) {
     console.error("Error updating lead:", error);
@@ -909,6 +930,8 @@ const getQuarterProgress = async (req, res) => {
       .json({ message: "Server error", error: err.message });
   }
 };
+
+
 
 module.exports = {
   createLead,

@@ -5,6 +5,64 @@ const { buildTaskFilter } = require("../utils/buildTaskFilter.js");
 
 const mongoose = require("mongoose");
 
+const calculateTaskStatusWithTimestamp = (taskDoc) => {
+  const now = new Date();
+  const dueDateEnd = new Date(taskDoc.dueDate);
+  dueDateEnd.setHours(23, 59, 59, 999);
+
+  const totalItems = taskDoc.todoChecklist.length;
+  const approvedCount = taskDoc.todoChecklist.filter(
+    (i) => i.completed && i.approval?.status === "approved"
+  ).length;
+
+  const newProgress =
+    totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
+
+  const allChecklistApproved =
+    totalItems > 0 &&
+    taskDoc.todoChecklist.every(
+      (i) => i.completed && i.approval?.status === "approved"
+    );
+
+  const approvalsCleared =
+    taskDoc.clientApproval?.status === "approved" &&
+    taskDoc.superAdminApproval?.status === "approved";
+
+  let newStatus;
+
+  // KEY IMPROVEMENT: Preserve final states - don't recalculate them
+  if (
+    taskDoc.status === "completed" ||
+    taskDoc.status === "pending" ||
+    taskDoc.status === "delayed"
+  ) {
+    newStatus = taskDoc.status; // Keep existing final states unchanged
+  }
+  // Only auto-transition TO completed when all requirements are met
+  else if (newProgress === 100 && allChecklistApproved && approvalsCleared) {
+    newStatus = "completed";
+  }
+  // Only auto-transition TO pending when work is done but approvals missing
+  else if (
+    newProgress === 100 &&
+    (!allChecklistApproved || !approvalsCleared)
+  ) {
+    newStatus = "pending";
+  }
+  // Only auto-transition TO delayed when past due and work incomplete
+  else if (now > dueDateEnd && newProgress < 100) {
+    newStatus = "delayed";
+  }
+  // Active work states that can still change
+  else if (newProgress > 0) {
+    newStatus = "inProgress";
+  } else {
+    newStatus = "new";
+  }
+
+  return { newStatus, newProgress };
+};
+
 const getTasks = async (req, res) => {
   try {
     const {
@@ -65,35 +123,32 @@ const getTasks = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
-    //
-    // ─── A ─── RECALCULATE & PERSIST EACH TASK’S PROGRESS + STATUS ───
-    //
-    await Promise.all(
-      tasks.map(async (taskDoc) => {
-        // 1) completed vs total checklist items → progress%
-        const approvedCount = taskDoc.todoChecklist.filter(
-          (i) => i.completed && i.approval?.status === "approved"
-        ).length;
+    // await Promise.all(
+    //   tasks.map(async (taskDoc) => {
+    //     // 1) completed vs total checklist items → progress%
+    //     const approvedCount = taskDoc.todoChecklist.filter(
+    //       (i) => i.completed && i.approval?.status === "approved"
+    //     ).length;
 
-        const totalItems = taskDoc.todoChecklist.length;
-        const newProgress =
-          totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
+    //     const totalItems = taskDoc.todoChecklist.length;
+    //     const newProgress =
+    //       totalItems > 0 ? Math.round((approvedCount / totalItems) * 100) : 0;
 
-        // 2) determine newStatus by comparing now vs dueDate end-of-day
-        const now = new Date();
-        const dueDateEnd = new Date(taskDoc.dueDate);
-        dueDateEnd.setHours(23, 59, 59, 999);
+    //     // 2) determine newStatus by comparing now vs dueDate end-of-day
+    //     const now = new Date();
+    //     const dueDateEnd = new Date(taskDoc.dueDate);
+    //     dueDateEnd.setHours(23, 59, 59, 999);
 
-        //  Compute approval
-        const allChecklistApproved =
-          totalItems > 0 &&
-          taskDoc.todoChecklist.every(
-            (i) => i.completed && i.approval?.status === "approved"
-          );
+    //     //  Compute approval
+    //     const allChecklistApproved =
+    //       totalItems > 0 &&
+    //       taskDoc.todoChecklist.every(
+    //         (i) => i.completed && i.approval?.status === "approved"
+    //       );
 
-        const approvalsCleared =
-          taskDoc.clientApproval.status === "approved" &&
-          taskDoc.superAdminApproval.status === "approved";
+    //     const approvalsCleared =
+    //       taskDoc.clientApproval.status === "approved" &&
+    //       taskDoc.superAdminApproval.status === "approved";
 
         let newStatus;
         if (taskDoc.status === "completed") {
@@ -116,18 +171,41 @@ const getTasks = async (req, res) => {
           newStatus = "new";
         }
 
-        // 3) if anything changed, write it back
-        if (taskDoc.progress !== newProgress || taskDoc.status !== newStatus) {
+    //     // 3) if anything changed, write it back
+    //     if (taskDoc.progress !== newProgress || taskDoc.status !== newStatus) {
+    //       taskDoc.progress = newProgress;
+    //       taskDoc.status = newStatus;
+    //       await taskDoc.save();
+    //     }
+    //   })
+    // );
+
+    await Promise.all(
+      tasks.map(async (taskDoc) => {
+        const { newStatus, newProgress, completedAt } =
+          calculateTaskStatusWithTimestamp(taskDoc);
+
+        // Only update if something changed
+        let hasChanges = false;
+        if (taskDoc.progress !== newProgress) {
           taskDoc.progress = newProgress;
+          hasChanges = true;
+        }
+        if (taskDoc.status !== newStatus) {
           taskDoc.status = newStatus;
+          hasChanges = true;
+        }
+        if (taskDoc.completedAt !== completedAt) {
+          taskDoc.completedAt = completedAt;
+          hasChanges = true;
+        }
+
+        if (hasChanges) {
           await taskDoc.save();
         }
       })
     );
 
-    //
-    // ─── B ─── TRANSFORM FOR RESPONSE ───
-    //
     // now that DB is in sync, we re-map to plain objects including completed count
     const transformed = tasks.map((t) => ({
       ...t._doc,
@@ -1699,7 +1777,11 @@ const approveTask = async (req, res) => {
       task.superAdminApproval?.status === "approved";
 
     if (allChecklistApproved && approvalsCleared) {
-      task.status = "completed";
+      const now = new Date();
+      const dueDateEnd = new Date(task.dueDate);
+      dueDateEnd.setHours(23, 59, 59, 999);
+
+      task.status = now > dueDateEnd ? "delayed" : "completed";
       task.progress = 100;
     }
 

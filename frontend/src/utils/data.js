@@ -515,19 +515,19 @@ export const LEAD_SERVICE = [
 ];
 
 export const LEAD_SOURCE = [
-  { value: "self", label: "Self Generated" },
-  { value: "website", label: "Website" },
-  { value: "inboundWhatsApp", label: "Inbound Whatsapp" },
-  { value: "whatsAppReTarget", label: "Whatsapp Retarget" },
-  { value: "inboundCall", label: "Inbound Call" },
-  { value: "outboundCall", label: "Outbound Call" },
-  { value: "inboundEmail", label: "Inbound Email" },
-  { value: "outboundEmail", label: "Outbound Email" },
+  { value: "coldCalling", label: "Cold Calling" },
+  { value: "linkedInOutreach", label: "Linkedin Outreach" },
+  { value: "events", label: "Events / Expos" },
+  { value: "referral", label: "Referral" },
+  { value: "whatsAppMarketing", label: "WhatsApp Marketing" },
+  { value: "emailMarketing", label: "Email Marketing" },
   { value: "metaAds", label: "Meta Ads" },
   { value: "googleAds", label: "Google Ads" },
-  { value: "events", label: "Events" },
-  { value: "referral", label: "Referral" },
-  { value: "others", label: "Others" },
+  { value: "socialMedia", label: "Social Media" },
+  { value: "website", label: "Website" },
+  { value: "justDial", label: "Just Dial" },
+  { value: "indiaMart", label: "India Mart" },
+  { value: "fiverr", label: "Fiverr" },
 ];
 
 export const statsColors = [

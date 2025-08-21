@@ -24,6 +24,7 @@ import {
   toLocalInputValue,
 } from "../../utils/helper";
 import moment from "moment";
+import SelectUsers from "components/Inputs/SelectUsers";
 
 const CreateLead = () => {
   const [loading, setLoading] = useState(false);
@@ -68,6 +69,7 @@ const CreateLead = () => {
       attempt5: false,
     },
     amount: "",
+    assignedTo: null,
   });
 
   const [currentLead, setCurrentLead] = useState(null);
@@ -133,6 +135,7 @@ const CreateLead = () => {
         attempt5: false,
       },
       amount: "",
+      assignedTo: null,
     });
   };
 
@@ -155,6 +158,17 @@ const CreateLead = () => {
       },
     }));
   };
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    setLoadingUsers(true);
+    axiosInstance
+      .get(API_PATHS.USERS.GET_ALL_USERS)
+      .then((res) => setAllUsers(res.data || []))
+      .catch((err) => console.error("Failed to load users", err))
+      .finally(() => setLoadingUsers(false));
+  }, []);
 
   const createLead = async () => {
     try {
@@ -218,6 +232,7 @@ const CreateLead = () => {
           leadSource: leadInfo.leadSource,
           referral: leadInfo.referral,
           amount: leadInfo.amount,
+          assignedTo: leadInfo.assignedTo,
         }));
 
         leadInfo?.dateChangeRequests?.map((request) =>
@@ -669,7 +684,7 @@ const CreateLead = () => {
 
             {/* Brief */}
             <div className="grid grid-cols-12 gap-2 mt-4">
-              <div className="col-span-12 ">
+              <div className="col-span-10 ">
                 <label className="text-xs font-medium text-slate-200">
                   Brief <sup className="text-red-500 text-xs">*</sup>
                 </label>
@@ -680,6 +695,26 @@ const CreateLead = () => {
                     handleValueChange("brief", target.value)
                   }
                   placeholder="Enter brief"
+                />
+              </div>
+              <div className=" col-span-2">
+                <label className="text-xs font-medium text-slate-200">
+                  Assign Owner <sup className="text-red-500 text-xs">*</sup>
+                </label>
+
+                <SelectUsers
+                  selectedUsers={
+                    leadData.assignedTo ? [leadData.assignedTo] : []
+                  }
+                  setSelectedUsers={(ids) =>
+                    handleValueChange(
+                      "assignedTo",
+                      ids.length > 0 ? ids[0] : null
+                    )
+                  }
+                  allUsers={allUsers}
+                  loading={loadingUsers}
+                  role="admin"
                 />
               </div>
             </div>

@@ -1,4 +1,3 @@
-const { min } = require("moment");
 const mongoose = require("mongoose");
 
 const dateChangeRequestSchema = new mongoose.Schema({
@@ -60,19 +59,19 @@ const leadSchema = new mongoose.Schema(
     leadSource: {
       type: String,
       enum: [
-        "self",
-        "website",
-        "inboundWhatsApp",
-        "whatsAppReTarget",
-        "inboundEmail",
-        "inboundCall",
-        "outboundCall",
-        "outboundEmail",
-        "metaAds",
-        "googleAds",
+        "coldCalling",
+        "linkedInOutreach",
         "events",
         "referral",
-        "others",
+        "whatsAppMarketing",
+        "emailMarketing",
+        "metaAds",
+        "googleAds",
+        "socialMedia",
+        "website",
+        "justDial",
+        "indiaMart",
+        "fiverr",
       ],
       default: "others",
       required: true,
@@ -81,6 +80,10 @@ const leadSchema = new mongoose.Schema(
     referral: {
       type: String,
       trim: true,
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     // ——— Basic COP lead info ———
 
@@ -240,6 +243,7 @@ const leadSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 
 leadSchema.index({ onboardedAt: 1 });
 leadSchema.index({ credentialDeckDate: 1 });

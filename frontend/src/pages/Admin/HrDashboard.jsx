@@ -11,7 +11,6 @@ import { interviewStatus } from "../../utils/data";
 import SelectUsers from "components/Inputs/SelectUsers";
 import toast from "react-hot-toast";
 import ReactPaginate from "react-paginate";
-import { HiTrash } from "react-icons/hi";
 import HrDocs from "components/layouts/HrDocs";
 import { IoTrashOutline } from "react-icons/io5";
 import moment from "moment";
@@ -132,11 +131,9 @@ const HrDashboard = () => {
         setOpenInterviewModal(false);
         getInterviews(); // Refresh the interview list
       }
-      console.log("Interview created successfully:", interviewForm);
     } catch (error) {
       console.error("Error creating interview:", error);
       toast.error("Failed to create interview. Please fill all fields.");
-      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -410,12 +407,12 @@ const HrDashboard = () => {
       <div className="flex flex-wrap w-full items-start justify-between gap-2">
         <div className="flex-1 card">
           <div className="overflow-x-auto">
-            <h2 className="text-lg font-regular mb-1">Openings</h2>
+            <h2 className="text-lg font-regular mb-1">JobOpenings</h2>
             <table className="min-w-full text-sm text-gray-200">
               <thead>
                 <tr className="text-left border-b border-white/20">
-                  <th className="py-2 pr-4">Opening</th>
-                  <th className="py-2 pr-4">Counts</th>
+                  <th className="py-2 pr-4">Positions</th>
+                  <th className="py-2 pr-4">opens</th>
                   <th className="py-2 pr-4"> </th>
                 </tr>
               </thead>

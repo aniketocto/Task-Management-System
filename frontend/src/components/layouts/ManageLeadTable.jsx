@@ -8,6 +8,7 @@ import { beautify } from "../../utils/helper";
 import { FaInstagram, FaLinkedin, FaRegFileAlt } from "react-icons/fa";
 import ReactPaginate from "react-paginate";
 import { FiCalendar } from "react-icons/fi";
+import AvatarGroup from "./AvatarGroup";
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "All" },
@@ -201,6 +202,8 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
               <col style={{ width: "150px" }} />
               <col style={{ width: "170px" }} />
               <col style={{ width: "300px" }} />
+              <col style={{ width: "300px" }} />
+              <col style={{ width: "300px" }} />
               {canSeeDetails && <col style={{ width: "200px" }} />}
               {canSeeDetails && <col style={{ width: "200px" }} />}
               {canSeeDetails && <col style={{ width: "200px" }} />}
@@ -295,6 +298,18 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Lead Date
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Lead Soruce
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Assigned To
                 </th>
                 {canSeeDetails && (
                   <th
@@ -448,6 +463,30 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
                     {lead.leadCameDate
                       ? moment(lead.leadCameDate).format("DD-MM-YYYY")
                       : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
+                    {beautify(lead.leadSource) || "-"}
+                  </td>
+                  <td className="px-4 py-2 text-center text-sm avatar_center text-gray-300 border-b border-gray-700">
+                    <AvatarGroup
+                      avatars={
+                        Array.isArray(lead.assignedTo)
+                          ? lead.assignedTo.map((u) => ({
+                              name: u.name,
+                              profileImageUrl: u.profileImageUrl,
+                            }))
+                          : lead.assignedTo
+                          ? [
+                              {
+                                name: lead.assignedTo.name,
+                                profileImageUrl:
+                                  lead.assignedTo.profileImageUrl,
+                              },
+                            ]
+                          : []
+                      }
+                      maxVisible={3}
+                    />
                   </td>
                   {canSeeDetails &&
                     [1, 2, 3, 4, 5].map((attempt) => {

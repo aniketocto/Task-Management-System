@@ -99,10 +99,12 @@ const taskSchema = new mongoose.Schema(
 
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    attachments: [{ 
-      name: { type: String, trim: true },  // human label
-      url: { type: String, trim: true },   // url
-     }],
+    attachments: [
+      {
+        name: { type: String, trim: true }, // human label
+        url: { type: String, trim: true }, // url
+      },
+    ],
     todoChecklist: [todoSchema],
     progress: { type: Number, default: 0 },
     serialNumber: {
@@ -146,6 +148,7 @@ const taskSchema = new mongoose.Schema(
     smp: { type: String },
     referance: [{ type: String }],
     remarks: [remarksSchema],
+    completedAt: { type: Date, default: null },
 
     // ---------------------------
   },
