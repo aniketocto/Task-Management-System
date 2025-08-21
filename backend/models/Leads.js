@@ -1,4 +1,3 @@
-const { min } = require("moment");
 const mongoose = require("mongoose");
 
 const dateChangeRequestSchema = new mongoose.Schema({
@@ -244,6 +243,7 @@ const leadSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 
 leadSchema.index({ onboardedAt: 1 });
 leadSchema.index({ credentialDeckDate: 1 });
