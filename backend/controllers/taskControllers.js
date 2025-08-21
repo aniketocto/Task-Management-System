@@ -96,7 +96,9 @@ const getTasks = async (req, res) => {
           taskDoc.superAdminApproval.status === "approved";
 
         let newStatus;
-        if (taskDoc.status === "inProgress" && newProgress === 0) {
+        if (taskDoc.status === "completed") {
+          newStatus = "completed";
+        } else if (taskDoc.status === "inProgress" && newProgress === 0) {
           newStatus = "inProgress";
         } else if (newProgress === 100) {
           if (allChecklistApproved && approvalsCleared) {
