@@ -78,28 +78,38 @@ const ManageTasksTable = ({
       prev.map((t) => (t._id === taskId ? { ...t, [type]: { status } } : t))
     );
     try {
-      await axiosInstance.patch(API_PATHS.APPROVAL.TASK_APPROVAL(taskId), {
-        type,
-        status,
-      });
+      const response = await axiosInstance.patch(
+        API_PATHS.APPROVAL.TASK_APPROVAL(taskId),
+        {
+          type,
+          status,
+        }
+      );
+      // setTasks((prev) =>
+      //   prev.map((t) => {
+      //     if (t._id !== taskId) return t;
+      //     const sup =
+      //       type === "superAdminApproval"
+      //         ? status
+      //         : t.superAdminApproval?.status;
+      //     const cli =
+      //       type === "clientApproval" ? status : t.clientApproval?.status;
+      //     if (
+      //       sup === "approved" &&
+      //       cli === "approved" &&
+      //       allSubTasksApproved(t)
+      //     ) {
+      //       return { ...t, status: "completed" };
+      //     }
+      //     return t;
+      //   })
+      // );
       setTasks((prev) =>
-        prev.map((t) => {
-          if (t._id !== taskId) return t;
-          const sup =
-            type === "superAdminApproval"
-              ? status
-              : t.superAdminApproval?.status;
-          const cli =
-            type === "clientApproval" ? status : t.clientApproval?.status;
-          if (
-            sup === "approved" &&
-            cli === "approved" &&
-            allSubTasksApproved(t)
-          ) {
-            return { ...t, status: "completed" };
-          }
-          return t;
-        })
+        prev.map((t) =>
+          t._id === taskId
+            ? response.data.task // Use complete task object from backend
+            : t
+        )
       );
     } catch (err) {
       toast.error(err.response?.data?.message || "Error");
