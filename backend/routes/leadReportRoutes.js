@@ -16,14 +16,14 @@ const router = express.Router();
 router.get(
   "/",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getChannelRows
 );
 
 router.put(
   "/",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   updateChannelRow
 );
 
@@ -31,39 +31,39 @@ router.put(
 router.post(
   "/docs",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   addOrUpdateDocs
 );
 
 router.get(
   "/docs",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getDocs
 );
 
 router.post(
   "/events",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   addEvent
 );
 router.get(
   "/events",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   getEvents
 );
 router.delete(
   "/events/:id",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   deleteEvent
 );
 router.put(
   "/events/:id",
   protect,
-  allowRoleOrDept(["superAdmin"], ["BusinessDevelopment"]),
+   allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
   updateEvent
 );
 
