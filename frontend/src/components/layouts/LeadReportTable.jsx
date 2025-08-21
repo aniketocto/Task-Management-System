@@ -5,6 +5,8 @@ import moment from "moment";
 import { FiCalendar } from "react-icons/fi";
 import SpinLoader from "./SpinLoader";
 import toast from "react-hot-toast";
+import AvatarGroup from "./AvatarGroup";
+import SelectUsers from "components/Inputs/SelectUsers";
 
 const LeadReportTable = () => {
   const [rows, setRows] = useState([]);
@@ -57,13 +59,20 @@ const LeadReportTable = () => {
   const handleSaveAll = async () => {
     setLoading(true);
     try {
-      for (const row of draftRows) {
-        await axiosInstance.put(
-          `${API_PATHS.LEADREPORT.UPDATE_CHANNEL_ROWS}?month=${selectMonth}`,
-          row
-        );
-      }
-      setRows(draftRows); // update UI with saved data
+      await Promise.all(
+        draftRows.map((row) =>
+          axiosInstance.put(
+            `${API_PATHS.LEADREPORT.UPDATE_CHANNEL_ROWS}?month=${selectMonth}`,
+            row
+          )
+        )
+      );
+      // ✅ Fetch fresh data with populated owner immediately
+      const { data } = await axiosInstance.get(
+        API_PATHS.LEADREPORT.GET_CHANNEL_ROWS,
+        { params: { month: selectMonth } }
+      );
+      setRows(data.rows || []);
       setEditMode(false);
     } catch (err) {
       console.error("Save failed", err);
@@ -78,6 +87,18 @@ const LeadReportTable = () => {
       rows.find((r) => r.leadSource === src.key) || { leadSource: src.key }
     );
   });
+
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    setLoadingUsers(true);
+    axiosInstance
+      .get(API_PATHS.USERS.GET_ALL_USERS)
+      .then((res) => setAllUsers(res.data || []))
+      .catch((err) => console.error("Failed to load users", err))
+      .finally(() => setLoadingUsers(false));
+  }, []);
 
   useEffect(() => {
     if (editMode) {
@@ -201,16 +222,42 @@ const LeadReportTable = () => {
                 </td>
                 <td className="py-3 px-4 text-white text-[13px] border-b border-gray-500">
                   {editMode ? (
-                    <input
-                      type="text"
-                      className="bg-transparent border-b border-gray-600 w-full text-white text-sm"
-                      value={draftRows[idx]?.owner || ""}
-                      onChange={(e) =>
-                        handleDraftChange(source.key, "owner", e.target.value)
+                    <SelectUsers
+                      selectedUsers={
+                        merged[idx].owner
+                          ? [
+                              typeof merged[idx].owner === "object"
+                                ? merged[idx].owner
+                                : { _id: merged[idx].owner },
+                            ]
+                          : []
                       }
+                      setSelectedUsers={(ids) =>
+                        handleDraftChange(
+                          source.key,
+                          "owner",
+                          ids.length > 0 ? ids[0] : null
+                        )
+                      }
+                      allUsers={allUsers}
+                      loading={loadingUsers}
+                      role="admin"
                     />
                   ) : (
-                    merged[idx].owner || "-"
+                    <AvatarGroup
+                      avatars={
+                        merged[idx].owner
+                          ? [
+                              {
+                                name: merged[idx].owner.name,
+                                profileImageUrl:
+                                  merged[idx].owner.profileImageUrl,
+                              },
+                            ]
+                          : []
+                      }
+                      maxVisible={1}
+                    />
                   )}
                 </td>
                 <td className="py-3 px-4 text-white text-[13px] border-b border-gray-500">
