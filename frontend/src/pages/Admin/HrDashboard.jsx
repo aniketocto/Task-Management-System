@@ -11,7 +11,6 @@ import { interviewStatus } from "../../utils/data";
 import SelectUsers from "components/Inputs/SelectUsers";
 import toast from "react-hot-toast";
 import ReactPaginate from "react-paginate";
-import { HiTrash } from "react-icons/hi";
 import HrDocs from "components/layouts/HrDocs";
 import { IoTrashOutline } from "react-icons/io5";
 import moment from "moment";
@@ -132,11 +131,9 @@ const HrDashboard = () => {
         setOpenInterviewModal(false);
         getInterviews(); // Refresh the interview list
       }
-      console.log("Interview created successfully:", interviewForm);
     } catch (error) {
       console.error("Error creating interview:", error);
       toast.error("Failed to create interview. Please fill all fields.");
-      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }

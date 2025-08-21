@@ -81,13 +81,11 @@ export const API_PATHS = {
     UPDATE_ATTENDANCE: "/api/attendance/save",
     EXPORT_ATTENDANCE: "/api/attendance/export",
   },
-
   TARGETS: {
     GET_TARGETS: "/api/targets/quarter",
     SET_TARGETS: "/api/targets/quarter",
     TARGET_PROGRESS: "/api/leads/target-progress",
   },
-
   HOLIDAYS: {
     SET_HOLIDAYS: "/api/holidays",
     DELETE_HOLIDAY_BY_ID: (holidayId) => `/api/holidays/${holidayId}`,
@@ -105,4 +103,14 @@ export const API_PATHS = {
     ADD_DOCS: "/api/interview/add-docs",
     GET_DOCS: "/api/interview/get-docs",
   },
+  LEADREPORT: {
+    GET_CHANNEL_ROWS: "/api/channels",
+    UPDATE_CHANNEL_ROWS: "/api/channels",
+    GET_DOCS: "/api/channels/docs",
+    ADD_DOCS: "/api/channels/docs",
+    GET_EVENTS: "/api/channels/events",
+    ADD_EVENT: "/api/channels/event",
+    DELETE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
+    UPDATE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
+  }
 };

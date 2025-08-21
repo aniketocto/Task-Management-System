@@ -17,6 +17,8 @@ import Modal from "components/layouts/Modal";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 import { GrNext, GrPrevious } from "react-icons/gr";
+import LeadReportTable from "components/layouts/LeadREportTable";
+import LeadEventReport from "components/layouts/LeadEventReport";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -567,6 +569,9 @@ const LeadDashboard = () => {
           ))}
         </div>
       </div>
+
+      <LeadReportTable />
+      <LeadEventReport />
 
       <div className="card h-[350px] flex flex-col">
         <div className="flex items-center justify-between">

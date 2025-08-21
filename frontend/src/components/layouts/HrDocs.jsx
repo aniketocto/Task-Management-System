@@ -151,7 +151,7 @@ const HrDocsEditor = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between  pb-1 mb-2 border-b border-gray-50/20 ">
         <h2 className="text-lg font-regular">Documents</h2>
         {user.department === "HR" && (
           <button
