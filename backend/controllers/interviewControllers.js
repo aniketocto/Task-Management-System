@@ -380,6 +380,7 @@ const addOrUpdateDocs = async (req, res) => {
       reimbursement: req.body.reimbursement,
       pettyCash: req.body.pettyCash,
       employeeExitForm: req.body.employeeExitForm,
+      employeeEng: req.body.employeeEng,
     });
 
     const doc = await HrDoc.findOneAndUpdate(

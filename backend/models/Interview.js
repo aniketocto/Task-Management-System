@@ -63,6 +63,7 @@ const hrdocsSchema = new mongoose.Schema(
     reimbursement: mongoose.Schema.Types.Mixed,
     pettyCash: mongoose.Schema.Types.Mixed,
     employeeExitForm: mongoose.Schema.Types.Mixed,
+    employeeEng: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );

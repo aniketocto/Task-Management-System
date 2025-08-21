@@ -42,6 +42,7 @@ const HrDocsEditor = () => {
       { key: "reimbursement", label: "Reimbursement" },
       { key: "pettyCash", label: "Petty Cash" },
       { key: "employeeExitForm", label: "Employee Exit Form" },
+      { key: "employeeEng", label: "Employee Engagement" },
     ],
     []
   );
@@ -58,6 +59,7 @@ const HrDocsEditor = () => {
     reimbursement: [],
     pettyCash: [],
     employeeExitForm: [],
+    employeeEng: [],
   });
 
   const fetchDoc = async () => {

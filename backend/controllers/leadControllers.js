@@ -1,7 +1,6 @@
 const Notification = require("../models/Notification");
 const Leads = require("../models/Leads");
 const moment = require("moment");
-const User = require("../models/User");
 const QuarterTarget = require("../models/QuarterTarget");
 
 const BYPASS_DATE_APPROVAL = process.env.BYPASS_DATE_APPROVAL === "true";
@@ -931,6 +930,8 @@ const getQuarterProgress = async (req, res) => {
       .json({ message: "Server error", error: err.message });
   }
 };
+
+
 
 module.exports = {
   createLead,
