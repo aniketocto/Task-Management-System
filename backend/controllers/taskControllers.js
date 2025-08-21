@@ -150,26 +150,26 @@ const getTasks = async (req, res) => {
     //       taskDoc.clientApproval.status === "approved" &&
     //       taskDoc.superAdminApproval.status === "approved";
 
-        let newStatus;
-        if (taskDoc.status === "completed") {
-          newStatus = "completed";
-        } else if (taskDoc.status === "inProgress" && newProgress === 0) {
-          newStatus = "inProgress";
-        } else if (newProgress === 100) {
-          if (allChecklistApproved && approvalsCleared) {
-            newStatus = now > dueDateEnd ? "delayed" : "completed";
-          } else if (now > dueDateEnd) {
-            newStatus = "pending";
-          } else {
-            newStatus = "inProgress";
-          }
-        } else if (now > dueDateEnd) {
-          newStatus = "pending";
-        } else if (newProgress > 0) {
-          newStatus = "inProgress";
-        } else {
-          newStatus = "new";
-        }
+    //     let newStatus;
+    //     if (taskDoc.status === "completed") {
+    //       newStatus = "completed";
+    //     } else if (taskDoc.status === "inProgress" && newProgress === 0) {
+    //       newStatus = "inProgress";
+    //     } else if (newProgress === 100) {
+    //       if (allChecklistApproved && approvalsCleared) {
+    //         newStatus = now > dueDateEnd ? "delayed" : "completed";
+    //       } else if (now > dueDateEnd) {
+    //         newStatus = "pending";
+    //       } else {
+    //         newStatus = "inProgress";
+    //       }
+    //     } else if (now > dueDateEnd) {
+    //       newStatus = "pending";
+    //     } else if (newProgress > 0) {
+    //       newStatus = "inProgress";
+    //     } else {
+    //       newStatus = "new";
+    //     }
 
     //     // 3) if anything changed, write it back
     //     if (taskDoc.progress !== newProgress || taskDoc.status !== newStatus) {
