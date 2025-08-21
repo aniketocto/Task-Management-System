@@ -60,6 +60,8 @@ const hrdocsSchema = new mongoose.Schema(
     hrPolicies: mongoose.Schema.Types.Mixed,
     hrProcess: mongoose.Schema.Types.Mixed,
     hrTraining: mongoose.Schema.Types.Mixed,
+    reimbursement: mongoose.Schema.Types.Mixed,
+    pettyCash: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );

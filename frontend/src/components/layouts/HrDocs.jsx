@@ -39,6 +39,8 @@ const HrDocsEditor = () => {
       { key: "hrPolicies", label: "HR Policies" },
       { key: "hrProcess", label: "HR Process" },
       { key: "hrTraining", label: "HR Training" },
+      { key: "reimbursement", label: "Reimbursement" },
+      { key: "pettyCash", label: "Petty Cash" },
     ],
     []
   );

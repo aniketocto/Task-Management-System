@@ -219,7 +219,9 @@ const TodoListInput = ({
                         .reverse()
                         .map((log, idx) => {
                           const admin = allUsers.find(
-                            (u) => u._id === log.admin
+                            (u) =>
+                              u._id === log.admin &&
+                              ["admin", "superAdmin"].includes(u.role)
                           );
                           return (
                             <div
@@ -231,7 +233,7 @@ const TodoListInput = ({
                               </span>
                               {" by "}
                               <span className="font-semibold">
-                                {admin ? admin.name : "Unknown"}
+                                {admin ? admin.name : "Super Admin"}
                               </span>
                               <br />
                               <span className="text-xs opacity-70">

@@ -241,7 +241,7 @@ const getAllInterviews = async (req, res) => {
     }
 
     if (cname && cname.trim()) {
-      const safe = cname.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); 
+      const safe = cname.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.candidateName = { $regex: safe, $options: "i" };
     }
 
@@ -377,6 +377,8 @@ const addOrUpdateDocs = async (req, res) => {
       hrPolicies: req.body.hrPolicies,
       hrProcess: req.body.hrProcess,
       hrTraining: req.body.hrTraining,
+      reimbursement: req.body.reimbursement,
+      pettyCash: req.body.pettyCash,
     });
 
     const doc = await HrDoc.findOneAndUpdate(
