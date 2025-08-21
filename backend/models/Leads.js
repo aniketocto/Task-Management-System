@@ -60,19 +60,19 @@ const leadSchema = new mongoose.Schema(
     leadSource: {
       type: String,
       enum: [
-        "self",
-        "website",
-        "inboundWhatsApp",
-        "whatsAppReTarget",
-        "inboundEmail",
-        "inboundCall",
-        "outboundCall",
-        "outboundEmail",
-        "metaAds",
-        "googleAds",
+        "coldCalling",
+        "linkedInOutreach",
         "events",
         "referral",
-        "others",
+        "whatsAppMarketing",
+        "emailMarketing",
+        "metaAds",
+        "googleAds",
+        "socialMedia",
+        "website",
+        "justDial",
+        "indiaMart",
+        "fiverr",
       ],
       default: "others",
       required: true,
@@ -81,6 +81,10 @@ const leadSchema = new mongoose.Schema(
     referral: {
       type: String,
       trim: true,
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     // ——— Basic COP lead info ———
 

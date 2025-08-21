@@ -91,7 +91,7 @@ const SelectUsers = ({
   }, [isModalOpen, selectedUsers]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-2">
       {loading && (
         <div className="fixed top-0 left-0 w-screen h-screen z-50 bg-black/5 flex flex-col items-center justify-center">
           <SyncLoader color="#e43941" loading={true} size={20} />

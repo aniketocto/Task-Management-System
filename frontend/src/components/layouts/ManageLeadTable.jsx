@@ -201,6 +201,7 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
               <col style={{ width: "150px" }} />
               <col style={{ width: "170px" }} />
               <col style={{ width: "300px" }} />
+              <col style={{ width: "300px" }} />
               {canSeeDetails && <col style={{ width: "200px" }} />}
               {canSeeDetails && <col style={{ width: "200px" }} />}
               {canSeeDetails && <col style={{ width: "200px" }} />}
@@ -295,6 +296,12 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
                   className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
                 >
                   Lead Date
+                </th>
+                <th
+                  rowSpan="2"
+                  className="px-4 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700"
+                >
+                  Lead Soruce
                 </th>
                 {canSeeDetails && (
                   <th
@@ -448,6 +455,9 @@ const ManageLeadTable = ({ selectMonth, timeframe, startDate, endDate }) => {
                     {lead.leadCameDate
                       ? moment(lead.leadCameDate).format("DD-MM-YYYY")
                       : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-center text-sm text-gray-300 border-b border-gray-700">
+                    {beautify(lead.leadSource) || "-"}
                   </td>
                   {canSeeDetails &&
                     [1, 2, 3, 4, 5].map((attempt) => {
