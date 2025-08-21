@@ -153,8 +153,10 @@ const getChannelRows = async (req, res) => {
         .json({ message: "month is required in YYYY-MM format" });
     }
 
-    // ✅ now just query by month field
-    const rows = await ActivityChannel.find({ month }).sort({ leadSource: 1 });
+    const rows = await ActivityChannel.find({ month })
+      .sort({ leadSource: 1 })
+      .populate("owner", "name email profileImageUrl department") // 👈 same as leads.assignedTo
+      .lean();
 
     res.json({ rows });
   } catch (error) {
@@ -178,10 +180,12 @@ const updateChannelRow = async (req, res) => {
     }
 
     const row = await ActivityChannel.findOneAndUpdate(
-      { leadSource, month }, // 👈 direct filter by month + leadSource
+      { leadSource, month },
       { $set: fields },
-      { new: true, upsert: true } // 👈 create if not exists (optional)
-    );
+      { new: true, upsert: true }
+    )
+      .populate("owner", "name email profileImageUrl department") // 👈 auto expand owner
+      .lean();
 
     res.status(200).json(row);
   } catch (error) {

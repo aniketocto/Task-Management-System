@@ -56,7 +56,10 @@ const activityChannelSchema = new mongoose.Schema(
     month: { type: String, required: true }, // "2025-08" (YYYY-MM)
     activitiesPlanned: { type: String, default: "" },
     frequency: { type: String, default: "" },
-    owner: { type: String, default: "" },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     targetLeads: { type: Number, default: 0 },
     actualLeads: { type: Number, default: 0 },
     budgetAllocation: { type: Number, default: 0 },
