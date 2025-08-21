@@ -348,6 +348,7 @@ const LeadDashboard = () => {
 
   return (
     <DashboardLayout activeMenu="Lead Dashboard">
+      {loading && <SpinLoader />}
       <div className="card my-5">
         <div>
           <h2 className="text-xl md:text-2xl">
@@ -374,7 +375,24 @@ const LeadDashboard = () => {
           ))}
         </div>
       </div>
-      {loading && <SpinLoader />}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
+        <div>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h5 className="font-medium mb-6">Category</h5>
+            </div>
+            <CustomTreeMap data={categoryTreeMapData} />
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <h5 className="font-medium">Status</h5>
+          </div>
+
+          <CustomBarChart data={barChartData} dataKey="status" />
+        </div>
+      </div>
 
       <div className="card my-5">
         <div className="flex items-end justify-between mb-4">
@@ -569,10 +587,7 @@ const LeadDashboard = () => {
           ))}
         </div>
       </div>
-
-      <LeadReportTable />
-      <LeadEventReport />
-
+      
       <div className="card h-[350px] flex flex-col">
         <div className="flex items-center justify-between">
           <h5 className="font-medium">Upcoming meetings</h5>
@@ -601,24 +616,8 @@ const LeadDashboard = () => {
         <MeetingTable data={meetings} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
-        <div>
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <h5 className="font-medium mb-6">Category</h5>
-            </div>
-            <CustomTreeMap data={categoryTreeMapData} />
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <h5 className="font-medium">Status</h5>
-          </div>
-
-          <CustomBarChart data={barChartData} dataKey="status" />
-        </div>
-      </div>
+      <LeadReportTable />
+      <LeadEventReport />
 
       <Modal
         isOpen={isLimitOpen}
