@@ -109,7 +109,7 @@ export const API_PATHS = {
     GET_DOCS: "/api/channels/docs",
     ADD_DOCS: "/api/channels/docs",
     GET_EVENTS: "/api/channels/events",
-    ADD_EVENT: "/api/channels/event",
+    ADD_EVENT: "/api/channels/events",
     DELETE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
     UPDATE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
   }
