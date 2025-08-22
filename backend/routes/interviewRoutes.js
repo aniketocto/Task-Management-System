@@ -19,7 +19,7 @@ const router = express.Router();
 router.post(
   "/create-opening",
   protect,
-  allowRoleOrDept(["superAdmin"], []),
+  allowRoleOrDept(["superAdmin"], ["HR"]),
   createOpening
 );
 

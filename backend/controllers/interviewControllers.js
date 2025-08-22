@@ -3,24 +3,37 @@ const { Opening, Interview, HrDoc } = require("../models/Interview");
 // Openings
 const createOpening = async (req, res) => {
   try {
-    const { title, department, headcount, status } = req.body;
+    const { title, headcount, status, dueDate, expense, jobDesc } = req.body;
+    const userId = req.user?._id;
 
-    if (!title || typeof headcount === "undefined") {
-      return res.status(400).json({
-        message: "title and headcount are required",
-      });
-    }
     if (Number(headcount) < 1) {
       return res.status(400).json({
         message: "headcount must be at least 1",
       });
     }
 
+    if (Number(expense) < 0) {
+      return res.status(400).json({
+        message: "expense must be a non-negative number",
+      });
+    }
+
+    const currentStatus = status || "open";
+
     const opening = await Opening.create({
       title: title.trim(),
-      department: department?.trim(),
       headcount: Number(headcount),
-      status: status || "open",
+      status: currentStatus,
+      dueDate: new Date(dueDate),
+      expense: Number(expense) || 0,
+      jobDesc: jobDesc.trim(),
+      statusLogs: [
+        {
+          status: currentStatus,
+          updatedAt: new Date(),
+          updatedBy: userId,
+        },
+      ],
     });
 
     res.status(201).json({
@@ -37,11 +50,36 @@ const createOpening = async (req, res) => {
 
 const getAllOpenings = async (req, res) => {
   try {
-    const openings = await Opening.find().sort({ createdAt: -1 });
+    const { status, page = 1, limit = 10, tname } = req.query;
+
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (tname) filter.title = { $regex: tname, $options: "i" };
+
+    const [data, total] = await Promise.all([
+      Opening.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Opening.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum);
 
     res.status(200).json({
-      message: "All openings fetched successfully",
-      data: openings,
+      message: "Openings fetched successfully",
+      data,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     return res.status(500).json({
@@ -54,17 +92,15 @@ const getAllOpenings = async (req, res) => {
 const updateOpening = async (req, res) => {
   try {
     const { id } = req.params;
-    const role = req.user.role;
-    const { title, department, headcount, status } = req.body;
+    const { title, headcount, status, dueDate, expense, jobDesc } = req.body;
 
-    if (!title || typeof headcount === "undefined") {
-      return res.status(400).json({
-        message: "title and headcount are required",
-      });
-    }
-    if (Number(headcount) < 1) {
-      return res.status(400).json({
-        message: "headcount must be at least 1",
+    const user = req.user;
+    const role = user?.role;
+
+    // 🔐 Permission check
+    if (role !== "admin" && role !== "superAdmin") {
+      return res.status(403).json({
+        message: "You do not have permission to update openings",
       });
     }
 
@@ -73,35 +109,70 @@ const updateOpening = async (req, res) => {
       return res.status(404).json({ message: "Opening not found" });
     }
 
-    // Permission Check
-    if (role !== "admin" && role !== "superAdmin") {
-      return res.status(403).json({
-        message: "You do not have permission to update openings",
+    const previousStatus = opening.status;
+    const newStatus = status || previousStatus;
+
+    // 🔒 Admin permission restriction check
+    if (role === "admin") {
+      const restrictedFields = [];
+
+      if (title !== undefined) restrictedFields.push("title");
+      if (dueDate !== undefined) restrictedFields.push("dueDate");
+      if (expense !== undefined) restrictedFields.push("expense");
+      if (jobDesc !== undefined) restrictedFields.push("jobDesc");
+
+      if (restrictedFields.length > 0) {
+        return res.status(403).json({
+          message: `Admin is not allowed to update: ${restrictedFields.join(
+            ", "
+          )}`,
+        });
+      }
+
+      // ✅ Admin can update headcount & status
+      if (headcount !== undefined && !isNaN(headcount)) {
+        opening.headcount = Number(headcount);
+      }
+
+      opening.status = newStatus;
+    }
+
+    // ✏️ Super Admin – partial updates for all fields
+    if (role === "superAdmin") {
+      if (title !== undefined) opening.title = title.trim();
+
+      if (headcount !== undefined && !isNaN(headcount)) {
+        opening.headcount = Number(headcount);
+      }
+
+      if (status !== undefined) opening.status = status;
+
+      if (dueDate !== undefined) opening.dueDate = new Date(dueDate);
+
+      if (expense !== undefined && !isNaN(expense)) {
+        opening.expense = Number(expense);
+      }
+
+      if (jobDesc !== undefined) opening.jobDesc = jobDesc.trim();
+    }
+
+    // 🧾 Log status change if changed
+    if (previousStatus !== newStatus) {
+      opening.statusLogs.push({
+        status: newStatus,
+        updatedBy: user._id,
+        updatedAt: new Date(),
       });
     }
 
-    // Admin - limited fields
-    if (role === "admin") {
-      opening.headcount = Number(headcount);
-      opening.status = status || "open";
-    }
-
-    // Super Admin - full update
-    if (role === "superAdmin") {
-      opening.title = title.trim();
-      opening.department = department?.trim();
-      opening.headcount = Number(headcount);
-      opening.status = status || "open";
-    }
-
-    await opening.save();
+    await opening.save({ validateBeforeSave: false }); // ✅ disables validation on unchanged fields
 
     res.status(200).json({
       message: "Opening updated successfully",
       data: opening,
-      user: req.user.department,
     });
   } catch (error) {
+    console.error("Update Opening Error:", error);
     return res.status(500).json({
       message: "Server error",
       error: error.message,
@@ -381,6 +452,8 @@ const addOrUpdateDocs = async (req, res) => {
       pettyCash: req.body.pettyCash,
       employeeExitForm: req.body.employeeExitForm,
       employeeEng: req.body.employeeEng,
+      evaluationForm: req.body.evaluationForm,
+      compensation: req.body.compensation,
     });
 
     const doc = await HrDoc.findOneAndUpdate(

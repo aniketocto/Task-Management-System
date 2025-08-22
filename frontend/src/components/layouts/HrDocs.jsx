@@ -43,6 +43,8 @@ const HrDocsEditor = () => {
       { key: "pettyCash", label: "Petty Cash" },
       { key: "employeeExitForm", label: "Employee Exit Form" },
       { key: "employeeEng", label: "Employee Engagement" },
+      { key: "evaluationForm", label: "Evaluation Form" },
+      { key: "compensation", label: "Compensation" },
     ],
     []
   );
@@ -60,6 +62,8 @@ const HrDocsEditor = () => {
     pettyCash: [],
     employeeExitForm: [],
     employeeEng: [],
+    evaluationForm: [],
+    compensation: [],
   });
 
   const fetchDoc = async () => {
@@ -170,40 +174,63 @@ const HrDocsEditor = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {fields.map(({ key, label }) => {
           const items = toArray(doc?.[key]);
+
           return (
-            <div key={key} className="flex justify-between items-center">
-              <div className="text-sm font-medium text-gray-200 mb-2">
+            <div
+              key={key}
+              className="grid grid-cols-1 sm:grid-cols-[1fr_auto] items-center gap-y-1 gap-x-4 py-2 border-b border-white/10 min-w-0"
+            >
+              {/* Label */}
+              <div className="text-sm font-medium text-gray-200 truncate min-w-0">
                 {label}
               </div>
-              {items.length > 0 ? (
-                <ul className="flex flex-wrap gap-2">
+
+              {/* Value */}
+              {Array.isArray(items) && items.length > 0 ? (
+                <ul
+                  className="flex flex-wrap gap-2 justify-start sm:justify-end"
+                  role="list"
+                  aria-label={`${label} links`}
+                >
                   {items.map((it, i) => {
                     const name =
-                      typeof it === "string" ? "Link" : it.name || "Link";
+                      typeof it === "string"
+                        ? "Link"
+                        : it.name || it.title || "Link";
                     const url =
                       typeof it === "string"
                         ? it
-                        : it.url || it.link || it.href;
+                        : it.url || it.link || it.href || "#";
+
                     return (
-                      <li key={`${key}-${i}`}>
+                      <li key={`${key}-${i}-${url}`}>
                         <a
                           href={normalizeUrl(url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 px-2 py-1 rounded-md bg-white/5 border border-white/10"
+                          title={name}
+                          className="inline-flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md
+                               bg-white/5 border border-white/10
+                               text-red-300 hover:text-red-200 hover:bg-white/10
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60
+                               transition-colors"
                         >
-                          <FaFileAlt className="text-base" />
-                          <span className="truncate max-w-[18rem]">{name}</span>
+                          <FaFileAlt className="text-sm shrink-0" />
+                          <span className="truncate max-w-[9rem] sm:max-w-[14rem]">
+                            {name}
+                          </span>
                         </a>
                       </li>
                     );
                   })}
                 </ul>
               ) : (
-                <div className="text-xs text-gray-500">Not added</div>
+                <div className="text-xs text-gray-500 italic text-left sm:text-right">
+                  Not added
+                </div>
               )}
             </div>
           );

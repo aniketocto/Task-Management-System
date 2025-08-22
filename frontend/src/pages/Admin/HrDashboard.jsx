@@ -1,13 +1,13 @@
 import DashboardLayout from "components/layouts/DashboardLayout";
 import { UserContext } from "../../context/userContext";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import Modal from "components/layouts/Modal";
 import Input from "components/Inputs/Input";
 import SelectOption from "components/Inputs/SelectOption";
-import { interviewStatus } from "../../utils/data";
+import { interviewStatus, openingStatus } from "../../utils/data";
 import SelectUsers from "components/Inputs/SelectUsers";
 import toast from "react-hot-toast";
 import ReactPaginate from "react-paginate";
@@ -15,20 +15,26 @@ import HrDocs from "components/layouts/HrDocs";
 import { IoTrashOutline } from "react-icons/io5";
 import moment from "moment";
 import { FiX } from "react-icons/fi";
+import { FaRegFileAlt } from "react-icons/fa";
+import { HiBellAlert } from "react-icons/hi2";
+import { HiOutlineTrash } from "react-icons/hi";
 
 const HrDashboard = () => {
-  const { user } = useContext(UserContext);
   const [interviews, setInterviews] = useState([]);
   const [openings, setOpenings] = useState([]);
   const [openingOptions, setOpeningOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingInterviewId, setEditingInterviewId] = useState(null);
+  const [editingOpeningId, setEditingOpeningId] = useState(null);
 
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const [cname, setCname] = useState("");
   const [debouncedCname, setDebouncedCname] = useState("");
+
+  const [tname, setTname] = useState("");
+  const [debouncedTname, setDebouncedTname] = useState("");
 
   const fetchUsers = async () => {
     try {
@@ -56,6 +62,10 @@ const HrDashboard = () => {
   const [openingForm, setOpeningForm] = useState({
     title: "",
     headcount: "",
+    status: "open",
+    dueDate: "",
+    expense: 0,
+    jobDesc: "",
   });
 
   const clearInterviewData = () => {
@@ -73,6 +83,10 @@ const HrDashboard = () => {
     setOpeningForm({
       title: "",
       headcount: "",
+      status: "open",
+      dueDate: "",
+      expense: 0,
+      jobDesc: "",
     });
   };
 
@@ -92,7 +106,7 @@ const HrDashboard = () => {
       const response = await axiosInstance.get(
         API_PATHS.INTERVIEW.GET_ALL_INTERVIEWS,
         {
-          params: { limit: 10, page, cname: debouncedCname || undefined },
+          params: { limit: 5, page, cname: debouncedCname || undefined },
         }
       );
       setInterviews(response.data?.data || []);
@@ -159,11 +173,19 @@ const HrDashboard = () => {
       setLoading(false);
     }
   };
-
+  const [openingPage, setOpeningPage] = useState(1);
+  const [openingPages, setOpeningPages] = useState(1);
   const getOpenings = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        API_PATHS.INTERVIEW.GET_OPENINGS
+        API_PATHS.INTERVIEW.GET_OPENINGS,
+        {
+          params: {
+            limit: 5,
+            page: openingPage,
+            tname: debouncedTname || undefined,
+          },
+        }
       );
       setOpenings(response.data?.data || []);
       setOpeningOptions(
@@ -172,14 +194,15 @@ const HrDashboard = () => {
           label: opening.title,
         })) || []
       );
-      // console.log(openingOptions);
+      const totalPages = response.data?.pagination?.totalPages || 1;
+      setOpeningPages(totalPages);
     } catch (error) {
       console.error("Error fetching openings:", error);
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [openingPage, debouncedTname]);
 
   const createOpening = async () => {
     try {
@@ -198,6 +221,27 @@ const HrDashboard = () => {
       console.error("Error creating opening:", error);
       toast.error("Failed to create opening. Please fill all fields.");
       console.error("Error details:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOpening = async (openingId) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.patch(
+        API_PATHS.INTERVIEW.UPDATE_OPENING(openingId),
+        openingForm
+      );
+      if (response) {
+        clearOpeningData();
+        setOpenFormModal(false);
+        getOpenings(); // Refresh the openings list
+      }
+      toast.success("Opening updated successfully");
+    } catch (error) {
+      console.error("Error updating opening:", error);
+      toast.error("Failed to update opening.");
     } finally {
       setLoading(false);
     }
@@ -242,59 +286,89 @@ const HrDashboard = () => {
   }, [cname]);
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedTname(tname); // Apply after 1s
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [tname]);
+
+  useEffect(() => {
     getInterviews();
   }, [page, getInterviews, debouncedCname]);
 
   useEffect(() => {
     getOpenings();
+  }, [openingPage, getOpenings, debouncedTname]);
+
+  useEffect(() => {
     getUpcomingInterviews();
-  }, [getOpenings, getUpcomingInterviews]);
+  }, [getUpcomingInterviews]);
 
   useEffect(() => {
     getDobs();
   }, [getDobs]);
+
+  const getDueDateColor = (dueDate) => {
+    if (!dueDate) return "#D3D3D3";
+    const daysLeft = moment(dueDate)
+      .startOf("day")
+      .diff(moment().startOf("day"), "days");
+    if (daysLeft < 0) return "#A9A9A9";
+    if (daysLeft <= 2) return "#E43941";
+    if (daysLeft <= 4) return "#E48E39";
+    return "#6FE439";
+  };
 
   return (
     <DashboardLayout activeMenu="Hr Dashboard">
       {/* Upcoming Interviews */}
       <div className="card my-5">
         {loading && <SpinLoader />}
-        <div className="overflow-x-auto">
+        <div className="">
           <h2 className="text-lg font-regular mb-1">Upcoming Interviews</h2>
-          <table className="min-w-full text-sm text-gray-200">
-            <thead>
-              <tr className="text-left border-b border-white/20">
-                <th className="py-2 pr-4">Candidate</th>
-                <th className="py-2 pr-4">Opening</th>
-                <th className="py-2 pr-4">Start</th>
-                <th className="py-2 pr-4">Rounds</th>
-                <th className="py-2 pr-4">Status</th>
+          <div
+            className="relative -mx-4 sm:mx-0" // full‑bleed on mobile
+            role="region"
+            aria-label="Interviews table"
+          >
+            <div className="overflow-x-auto overscroll-x-contain px-4 sm:px-0">
+
+          <table className="min-w-[920px] sm:min-w-full text-sm text-gray-200 table-fixed whitespace-nowrap">
+            <thead className="sticky top-0 z-10 border-b border-white/20">
+              <tr className="text-left">
+                <th className="py-2 pr-4 w-[220px]">Candidate</th>
+                <th className="py-2 pr-4 w-[220px]">Opening</th>
+                <th className="py-2 pr-4 w-[240px]">Start</th>
+                <th className="py-2 pr-4 w-[120px]">Rounds</th>
+                <th className="py-2 pr-4 w-[140px]">Status</th>
               </tr>
             </thead>
             <tbody>
               {upcomingInterviews.map((interview) => (
                 <tr key={interview._id} className="border-b border-white/20">
-                  <td className="py-2 pr-4">{interview.candidateName}</td>
-                  <td className="py-2 pr-4">{interview.opening}</td>
-                  <td className="py-2 pr-4">
+                  <td className="py-2">{interview.candidateName}</td>
+                  <td className="py-2">{interview.opening}</td>
+                  <td className="py-2">
                     {new Date(interview.startTime).toLocaleString()}
                   </td>
-                  <td className="py-2 pr-4">{interview.rounds}</td>
-                  <td className="py-2 pr-4">{interview.status}</td>
+                  <td className="py-2">{interview.rounds}</td>
+                  <td className="py-2">{interview.status}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Interviews */}
       <div className="card my-5">
         {loading && <SpinLoader />}
-        <div className="overflow-x-auto">
-          <div className="flex justify-between items-center mb-4">
+        <div className="">
+          <div className="flex justify-between flex-wrap items-center mb-4">
             <h2 className="text-lg font-regular mb-1">Interviews</h2>
-            <div className="mt-4 flex gap-2 items-center">
+            <div className="mt-4 flex flex-wrap gap-2 items-center">
               <label className="text-white text-sm">Search Candidate:</label>
               <div className="flex items-center">
                 <input
@@ -311,29 +385,37 @@ const HrDashboard = () => {
               </div>
             </div>
           </div>
-          <table className="min-w-full text-sm text-gray-200">
-            <thead>
-              <tr className="text-left border-b border-white/20">
-                <th className="py-2 pr-4">Candidate</th>
-                <th className="py-2 pr-4">Opening</th>
-                <th className="py-2 pr-4">Start</th>
-                <th className="py-2 pr-4">Rounds</th>
-                <th className="py-2 pr-4">Status</th>
-                {/* <th className="py-2 pr-4"> Assigned to</th> */}
-                <th className="py-2 pr-4"> Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {interviews.map((interview) => (
-                <tr key={interview._id} className="border-b border-white/20">
-                  <td className="py-2 pr-4">{interview.candidateName}</td>
-                  <td className="py-2 pr-4">{interview.opening}</td>
-                  <td className="py-2 pr-4">
-                    {new Date(interview.startTime).toLocaleString()}
-                  </td>
-                  <td className="py-2 pr-4">{interview.rounds}</td>
-                  <td className="py-2 pr-4">{interview.status}</td>
-                  {/* <td className="py-2 pr-4">
+          <div
+            className="relative -mx-4 sm:mx-0" // full‑bleed on mobile
+            role="region"
+            aria-label="Interviews table"
+          >
+            <div className="overflow-x-auto overscroll-x-contain px-4 sm:px-0">
+              <table className="min-w-[920px] sm:min-w-full text-sm text-gray-200 table-fixed whitespace-nowrap">
+                <thead className="sticky top-0 z-10 border-b border-white/20">
+                  <tr className="text-left">
+                    <th className="py-2 pr-4 w-[220px]">Candidate</th>
+                    <th className="py-2 pr-4 w-[220px]">Opening</th>
+                    <th className="py-2 pr-4 w-[240px]">Start</th>
+                    <th className="py-2 pr-4 w-[120px]">Rounds</th>
+                    <th className="py-2 pr-4 w-[140px]">Status</th>
+                    <th className="py-2 pr-2 w-[120px]">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {interviews.map((interview) => (
+                    <tr
+                      key={interview._id}
+                      className="border-b border-white/20"
+                    >
+                      <td className="py-2">{interview.candidateName}</td>
+                      <td className="py-2">{interview.opening}</td>
+                      <td className="py-2">
+                        {new Date(interview.startTime).toLocaleString()}
+                      </td>
+                      <td className="py-2">{interview.rounds}</td>
+                      <td className="py-2">{interview.status}</td>
+                      {/* <td className="py-2">
                     <AvatarGroup
                       avatars={
                         interview.interviewers?.map((u) => ({
@@ -344,42 +426,42 @@ const HrDashboard = () => {
                       maxVisible={3}
                     />
                   </td> */}
-                  <td className="py-2 pr-4">
-                    <button
-                      onClick={() => {
-                        setInterviewForm({
-                          ...interview,
-                          startTime: new Date(interview.startTime)
-                            .toISOString()
-                            .slice(0, 16),
-                        });
-                        setEditingInterviewId(interview._id); // ✅ track which interview we are editing
-                        setOpenInterviewModal(true);
-                      }}
-                      className="px-3 py-1 bg-[#E43941] hover:bg-[#da9194] text-white rounded text-sm"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="py-2">
+                        <button
+                          onClick={() => {
+                            setInterviewForm({
+                              ...interview,
+                              startTime: new Date(interview.startTime)
+                                .toISOString()
+                                .slice(0, 16),
+                            });
+                            setEditingInterviewId(interview._id); // ✅ track which interview we are editing
+                            setOpenInterviewModal(true);
+                          }}
+                          className="px-3 py-1 bg-[#E43941] cursor-pointer hover:bg-[#da9194] text-white rounded text-sm"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-          <div className="flex items-center justify-between">
-            {user?.role === "admin" && (
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => {
-                    setOpenInterviewModal(true);
-                    fetchUsers();
-                  }}
-                  className=" add-btn w-fit!"
-                >
-                  Set an Interview
-                </button>
-              </div>
-            )}
+          <div className="flex items-center flex-wrap justify-between">
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => {
+                  setOpenInterviewModal(true);
+                  fetchUsers();
+                }}
+                className=" add-btn w-fit!"
+              >
+                Set an Interview
+              </button>
+            </div>
 
             <ReactPaginate
               previousLabel={"Previous"}
@@ -407,23 +489,79 @@ const HrDashboard = () => {
       <div className="flex flex-wrap w-full items-start justify-between gap-2">
         <div className="flex-1 card">
           <div className="overflow-x-auto">
-            <h2 className="text-lg font-regular mb-1">JobOpenings</h2>
+            <div className="flex justify-between  flex-wrap items-center mb-4">
+              <h2 className="text-lg font-regular mb-1">Job Opening</h2>
+              <div className="mt-4 flex gap-2 items-center">
+                <label className="text-white text-sm">Search Opening</label>
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    value={tname}
+                    onChange={(e) => setTname(e.target.value)}
+                    placeholder="Opening"
+                    className="pl-0.5 py-1 rounded bg-gray-800 text-white border border-gray-600 text-sm focus:outline-none focus:ring-0"
+                  />
+                  <FiX
+                    onClick={() => setTname("")}
+                    className="ml-1 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
             <table className="min-w-full text-sm text-gray-200">
               <thead>
                 <tr className="text-left border-b border-white/20">
-                  <th className="py-2 pr-4">Positions</th>
-                  <th className="py-2 pr-4">opens</th>
-                  <th className="py-2 pr-4"> </th>
+                  <th className="py-2">Positions</th>
+                  <th className="py-2">Opens</th>
+                  <th className="py-2">Status</th>
+                  <th className="py-2">Expense</th>
+                  <th className="py-2">Job Decs</th>
+                  <th className="py-2">Due Date</th>
+                  <th className="py-2">Due Alert</th>
+                  <th className="py-2"> </th>
                 </tr>
               </thead>
               <tbody>
                 {openings.map((o) => (
                   <tr key={o._id} className="border-b border-white/20">
-                    <td className="py-2 pr-4">{o.title}</td>
-                    <td className="py-2 pr-4">{o.headcount}</td>
-                    <td className="py-2 pr-4">
-                      <button onClick={() => deleteOpening(o._id)}>
-                        <IoTrashOutline className="text-red-500 text-xl cursor-pointer" />
+                    <td className="py-2 ">{o.title}</td>
+                    <td className="py-2">{o.headcount}</td>
+                    <td className="py-2">{o.status}</td>
+                    <td className="py-2">{o.expense}</td>
+                    <td className="py-2">
+                      <a
+                        href={o.jobDesc}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-[#E43941] text-xl "
+                      >
+                        <FaRegFileAlt />
+                      </a>
+                    </td>
+                    <td className="py-2">
+                      {moment(o.dueDate).format("Do MMM YYYY")}
+                    </td>
+                    <td className="py-2">
+                      <HiBellAlert
+                        className=" text-2xl"
+                        style={{ color: getDueDateColor(o.dueDate) }}
+                      />
+                    </td>
+                    <td className="py-2">
+                      <button
+                        onClick={() => {
+                          setOpeningForm({
+                            ...o,
+                            dueDate: o.dueDate
+                              ? new Date(o.dueDate).toISOString().slice(0, 16)
+                              : "",
+                          });
+                          setEditingOpeningId(o._id);
+                          setOpenFormModal(true);
+                        }}
+                        className="px-3 py-1 bg-[#E43941] cursor-pointer hover:bg-[#da9194] text-white rounded text-sm"
+                      >
+                        Edit
                       </button>
                     </td>
                   </tr>
@@ -431,7 +569,7 @@ const HrDashboard = () => {
               </tbody>
             </table>
 
-            {user?.role === "superAdmin" && (
+            <div className="flex items-center  flex-wrap justify-between">
               <div className="flex justify-end mt-4">
                 <button
                   onClick={() => setOpenFormModal(true)}
@@ -440,12 +578,31 @@ const HrDashboard = () => {
                   Add opening
                 </button>
               </div>
-            )}
+
+              <ReactPaginate
+                previousLabel={"Previous"}
+                nextLabel={"Next"}
+                breakLabel={"..."}
+                pageCount={openingPages} // total pages from backend
+                forcePage={openingPage - 1} // ReactPaginate is zero-based
+                marginPagesDisplayed={2}
+                pageRangeDisplayed={3}
+                onPageChange={(selectedItem) =>
+                  setOpeningPage(selectedItem.selected + 1)
+                }
+                containerClassName="flex gap-2 mt-4 justify-center"
+                pageLinkClassName="px-3 py-1 border rounded text-white cursor-pointer transition-colors duration-200 block"
+                activeLinkClassName="bg-[#E43941] border-[#E43941] text-white"
+                previousLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+                nextLinkClassName="px-3 py-1 border text-white rounded cursor-pointer block"
+                disabledLinkClassName="opacity-50 cursor-not-allowed"
+              />
+            </div>
           </div>
         </div>
-        <div className="flex-1 card">
-          <HrDocs />
-        </div>
+      </div>
+      <div className="my-5 card">
+        <HrDocs />
       </div>
 
       <div className="card my-5">
@@ -455,21 +612,19 @@ const HrDashboard = () => {
           <table className="min-w-full text-sm text-gray-200">
             <thead>
               <tr className="text-left border-b border-white/20">
-                <th className="py-2 pr-4">Name</th>
-                <th className="py-2 pr-4">DOB</th>
-                <th className="py-2 pr-4">Department</th>
-                <th className="py-2 pr-4">Designation</th>
+                <th className="py-2">Name</th>
+                <th className="py-2">DOB</th>
+                <th className="py-2">Department</th>
+                <th className="py-2">Designation</th>
               </tr>
             </thead>
             <tbody>
               {dobs.map((d) => (
                 <tr key={d._id} className="border-b border-white/20">
-                  <td className="py-2 pr-4">{d.name}</td>
-                  <td className="py-2 pr-4">
-                    {moment(d.dob).format("DD-MM-YYYY")}
-                  </td>
-                  <td className="py-2 pr-4">{d.department}</td>
-                  <td className="py-2 pr-4">{d.designation}</td>
+                  <td className="py-2">{d.name}</td>
+                  <td className="py-2">{moment(d.dob).format("DD-MM-YYYY")}</td>
+                  <td className="py-2">{d.department}</td>
+                  <td className="py-2">{d.designation}</td>
                 </tr>
               ))}
             </tbody>
@@ -571,8 +726,16 @@ const HrDashboard = () => {
 
       <Modal
         isOpen={openFormModal}
-        onClose={() => setOpenFormModal(false)}
-        title="Add Opening"
+        onClose={() => {
+          setOpenFormModal(false);
+          clearOpeningData();
+          setEditingOpeningId(null);
+        }}
+        title={
+          editingOpeningId
+            ? `Update Opening for ${openingForm.title}`
+            : "Create Opening"
+        }
       >
         <Input
           placeholder="Enter Opening"
@@ -590,12 +753,70 @@ const HrDashboard = () => {
           label="Headcount"
           type="number"
         />
-        <button
-          onClick={createOpening}
-          className="px-3 py-1 bg-[#E43941] hover:bg-[#da9194] text-white rounded text-sm"
-        >
-          Create Opening
-        </button>
+        <Input
+          placeholder="Set Expense"
+          value={openingForm.expense}
+          onChange={(e) => handleOpeningValueChange("expense", e.target.value)}
+          label="Set Expense"
+          type="number"
+        />
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-xs font-medium text-slate-200">Status</label>
+
+          <SelectOption
+            options={openingStatus}
+            value={openingForm.status}
+            onChange={(value) => handleOpeningValueChange("status", value)}
+            placeholder="Set Status"
+          />
+        </div>
+
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-xs font-medium text-slate-200">
+            Date & Time
+          </label>
+          <input
+            placeholder="Select Start Time"
+            value={openingForm.dueDate}
+            onChange={(e) =>
+              handleOpeningValueChange("dueDate", e.target.value)
+            }
+            type="date"
+            className="form-input-date"
+          />
+        </div>
+        <Input
+          placeholder="Job Description"
+          value={openingForm.jobDesc}
+          onChange={(e) => handleOpeningValueChange("jobDesc", e.target.value)}
+          label="Job Description"
+          type="text"
+        />
+        <div className="flex items-center gap-3 ">
+          <button
+            onClick={() => {
+              if (editingOpeningId) {
+                updateOpening(editingOpeningId);
+              } else {
+                createOpening();
+              }
+            }}
+            className="px-3 py-1 bg-[#E43941] cursor-pointer hover:bg-[#da9194] text-white rounded text-sm"
+          >
+            {editingOpeningId ? "Update Opening" : "Create Opening"}
+          </button>
+          <button
+            className=" px-3 flex  items-center cursor-pointer justify-center gap-2 py-1 bg-[#E43941] hover:bg-[#da9194] text-white rounded text-sm "
+            onClick={() => {
+              deleteOpening(editingOpeningId);
+              setOpenFormModal(false);
+              clearOpeningData();
+              setEditingOpeningId(null);
+            }}
+          >
+            <HiOutlineTrash /> Delete
+          </button>
+        </div>
       </Modal>
     </DashboardLayout>
   );

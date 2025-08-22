@@ -198,7 +198,6 @@ export const MENU_DATA = [
         path: "/user/tasks",
         access: ({ role }) => role === "user",
       },
-       
     ],
   },
   {
@@ -232,13 +231,12 @@ export const MENU_DATA = [
   {
     label: "Team",
     children: [
-       {
+      {
         label: "Hr Dashboard",
         icon: LuLayoutDashboard,
         path: "/hr-dashboard",
         access: ({ role, department }) =>
-          role === "superAdmin" ||
-          (role === "admin" && department === "HR"),
+          role === "superAdmin" || (role === "admin" && department === "HR"),
       },
       {
         label: "Team Members",
@@ -251,8 +249,7 @@ export const MENU_DATA = [
         icon: CiCalendarDate,
         path: "/admin/attendance",
         access: ({ role, department }) =>
-          role === "superAdmin" ||
-          (role === "admin" && department === "HR"),
+          role === "superAdmin" || (role === "admin" && department === "HR"),
       },
     ],
   },
@@ -544,4 +541,11 @@ export const interviewStatus = [
   { value: "cancelled", label: "Cancelled" },
   { value: "rescheduled", label: "Rescheduled" },
   { value: "no_show", label: "No Show" },
-]
+];
+
+export const openingStatus = [
+  { value: "open", label: "Open" },
+  { value: "hired", label: "Hired" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "onHold", label: "On Hold" },
+];
