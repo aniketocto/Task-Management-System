@@ -19,6 +19,7 @@ const SideMenu = ({ activeMenu }) => {
   const [profileImg, setProfileImg] = useState("");
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
+  const [dob, setDob] = useState(null);
   const [openLogoutModal, setOpenLogoutModal] = useState(false);
   const [openImageModal, setOpenImageModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(user.profileImageUrl);
@@ -134,6 +135,10 @@ const SideMenu = ({ activeMenu }) => {
 
       if (designation && designation !== user.designation) {
         updates.designation = designation;
+      }
+
+      if (dob && dob !== user.dob) {
+        updates.dob = dob;
       }
 
       if (Object.keys(updates).length === 0) {
@@ -283,7 +288,8 @@ const SideMenu = ({ activeMenu }) => {
 
   return (
     <>
-      <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
+      {/* <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20"> */}
+      <div className="w-64 h-full bg-[#06090E] overflow-y-auto border-r border-gray-500/40 sticky top-[100px] z-40">
         <div className="flex flex-col items-center justify-center mb-4 pt-5">
           <div className="relative">
             <img
@@ -425,7 +431,16 @@ const SideMenu = ({ activeMenu }) => {
           placeholder="Enter your designation"
           type="text"
         />
-
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-xs font-medium text-slate-200">DOB</label>
+          <input
+            placeholder="DOB"
+            value={dob || user.dob}
+            onChange={(e) => setDob(e.target.value)}
+            type="date"
+            className="form-input-date"
+          />
+        </div>
         <button
           className="bg-[#E43941] text-white w-full py-2 rounded"
           onClick={handleImageUpload}

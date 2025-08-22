@@ -12,6 +12,8 @@ const {
   getUpcomingInterviews,
   getDocs,
   addOrUpdateDocs,
+  upsertBirthdayExpense,
+  getDOB,
 } = require("../controllers/interviewControllers");
 const router = express.Router();
 
@@ -19,7 +21,7 @@ const router = express.Router();
 router.post(
   "/create-opening",
   protect,
-  allowRoleOrDept(["superAdmin"], []),
+  allowRoleOrDept(["superAdmin"], ["HR"]),
   createOpening
 );
 
@@ -93,6 +95,21 @@ router.get(
   protect,
   allowRoleOrDept(["superAdmin"], ["HR"]),
   getDocs
+);
+
+// DOB
+router.post(
+  "/upsert-dob",
+  protect,
+  allowRoleOrDept(["superAdmin"], ["HR"]),
+  upsertBirthdayExpense
+);
+
+router.get(
+  "/get-dob",
+  protect,
+  allowRoleOrDept(["superAdmin"], ["HR"]),
+  getDOB
 );
 
 module.exports = router;

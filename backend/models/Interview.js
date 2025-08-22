@@ -4,9 +4,33 @@ const mongoose = require("mongoose");
 const openingSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    department: { type: String, trim: true },
     headcount: { type: Number, required: true, min: 1 },
-    status: { type: String, enum: ["open", "closed"], default: "open" },
+    status: {
+      type: String,
+      enum: ["open", "hired", "cancelled", "onHold"],
+      default: "open",
+    },
+
+    statusLogs: [
+      {
+        status: {
+          type: String,
+          enum: ["open", "hired", "cancelled", "onHold"],
+        },
+        updatedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    dueDate: { type: Date, required: true },
+    expense: { type: Number, required: true, min: 0 },
+    jobDesc: { type: String, required: true },
   },
   { timestamps: true }
 );
@@ -48,14 +72,14 @@ const hrdocsSchema = new mongoose.Schema(
     singleton: {
       type: String,
       default: "HRDOC_SINGLETON",
-      unique: true, 
+      unique: true,
       immutable: true,
     },
 
     recruitmentReport: mongoose.Schema.Types.Mixed,
     onBoarding: mongoose.Schema.Types.Mixed,
     offBoarding: mongoose.Schema.Types.Mixed,
-    evalution: mongoose.Schema.Types.Mixed, 
+    evalution: mongoose.Schema.Types.Mixed,
     appraisal: mongoose.Schema.Types.Mixed,
     hrPolicies: mongoose.Schema.Types.Mixed,
     hrProcess: mongoose.Schema.Types.Mixed,
@@ -64,6 +88,8 @@ const hrdocsSchema = new mongoose.Schema(
     pettyCash: mongoose.Schema.Types.Mixed,
     employeeExitForm: mongoose.Schema.Types.Mixed,
     employeeEng: mongoose.Schema.Types.Mixed,
+    evaluationForm: mongoose.Schema.Types.Mixed,
+    compensation : mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );

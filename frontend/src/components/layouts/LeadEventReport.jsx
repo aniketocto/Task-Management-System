@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaFileAlt, FaPlus, FaRegFileAlt } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -23,8 +23,7 @@ const toArray = (val) => {
   return [];
 };
 
-const LeadEventReport = () => {
-  const { user } = useContext(UserContext);
+const LeadEventReport = ({ user }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -116,7 +115,7 @@ const LeadEventReport = () => {
       { key: "coldCalling", label: "Cold Calling" },
       { key: "emailMarketing", label: "Email Marketing" },
       { key: "whatsappMarketing", label: "WhatsApp Marketing" },
-      { key: "entireDb", label: "Entire Database" },
+      { key: "entireDb", label: "Database" },
     ],
     []
   );
@@ -150,6 +149,10 @@ const LeadEventReport = () => {
       setLoading(false);
     }
   };
+
+  const disabled =
+    user.role === "superAdmin" ||
+    (user.role === "admin" && user.department === "BusinessDevelopment");
 
   useEffect(() => {
     fetchDoc();
@@ -224,7 +227,7 @@ const LeadEventReport = () => {
         <div className="overflow-x-auto">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-regular mb-1">Events</h2>
-            {user?.role === "admin" && (
+            {disabled && (
               <button
                 onClick={() => {
                   setOpenEventModal(true);
@@ -282,6 +285,7 @@ const LeadEventReport = () => {
                   </td>
                   <td className="py-2 pr-4">
                     <button
+                      type="button"
                       onClick={() => {
                         setEventForm({ ...eve });
                         setEventId(eve._id);
@@ -303,7 +307,7 @@ const LeadEventReport = () => {
       <div className="card lg:w-[30%] w-full">
         <div className="flex items-center justify-between pb-1 mb-2 border-b border-gray-50/20 ">
           <h2 className="text-lg font-regular">Leads Reports</h2>
-          {user.role !== "superAdmin" && (
+          {disabled && (
             <button
               onClick={() => setOpen(true)}
               className="inline-flex cursor-pointer items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 text-sm"

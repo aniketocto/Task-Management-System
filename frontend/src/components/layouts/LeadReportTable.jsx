@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import AvatarGroup from "./AvatarGroup";
 import SelectUsers from "components/Inputs/SelectUsers";
 
-const LeadReportTable = () => {
+const LeadReportTable = ({ user }) => {
   const [rows, setRows] = useState([]);
   const [selectMonth, setSelectMonth] = useState(moment().format("YYYY-MM"));
   const [editMode, setEditMode] = useState(false);
@@ -115,21 +115,24 @@ const LeadReportTable = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 justify-center">
           <h5 className="font-medium">Activity & Channel Breakdown</h5>
-          {editMode ? (
-            <button
-              onClick={handleSaveAll}
-              className="w-fit flex items-center justify-center gap-1.5 text-sm font-medium text-[#39e464] whitespace-nowrap bg-green-50 border border-green-100 rounded-lg px-4 py-2 cursor-pointer"
-            >
-              Done
-            </button>
-          ) : (
-            <button
-              onClick={() => setEditMode(true)}
-              className="w-fit! add-btn"
-            >
-              Edit
-            </button>
-          )}
+          {(user.role === "superAdmin" ||
+            (user.role === "admin" &&
+              user.department === "BusinessDevelopment")) &&
+            (editMode ? (
+              <button
+                onClick={handleSaveAll}
+                className="w-fit flex items-center justify-center gap-1.5 text-sm font-medium text-[#39e464] whitespace-nowrap bg-green-50 border border-green-100 rounded-lg px-4 py-2 cursor-pointer"
+              >
+                Done
+              </button>
+            ) : (
+              <button
+                onClick={() => setEditMode(true)}
+                className="w-fit! add-btn"
+              >
+                Edit
+              </button>
+            ))}
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">Select Month:</label>

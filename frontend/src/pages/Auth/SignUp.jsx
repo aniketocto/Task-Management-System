@@ -16,6 +16,7 @@ const SignUp = () => {
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
+  const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
@@ -135,6 +136,9 @@ const SignUp = () => {
       if (!designation) {
         errors.push("Please type your designation");
       }
+      if (!dob) {
+        errors.push("Please select your date of birth");
+      }
       if (errors.length > 0) {
         setError(errors);
         return;
@@ -154,6 +158,7 @@ const SignUp = () => {
         adminInviteToken,
         department,
         designation,
+        dob,
         profileImage: uploadedImageUrl || "",
       };
 
@@ -246,6 +251,17 @@ const SignUp = () => {
                 // { value: "SEO", label: "SEO" },
               ]}
             />
+
+            <div className="mb-4">
+              <label className="text-xs font-medium text-slate-200">DOB</label>
+              <input
+                placeholder="DOB"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                type="date"
+                className="form-input-date"
+              />
+            </div>
 
             {/* <Input
               value={password}
