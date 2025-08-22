@@ -115,7 +115,7 @@ const LeadEventReport = ({ user }) => {
       { key: "coldCalling", label: "Cold Calling" },
       { key: "emailMarketing", label: "Email Marketing" },
       { key: "whatsappMarketing", label: "WhatsApp Marketing" },
-      { key: "entireDb", label: "Entire Database" },
+      { key: "entireDb", label: "Database" },
     ],
     []
   );

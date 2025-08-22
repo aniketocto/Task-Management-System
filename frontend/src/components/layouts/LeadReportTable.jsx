@@ -128,7 +128,7 @@ const LeadReportTable = ({ user }) => {
             ) : (
               <button
                 onClick={() => setEditMode(true)}
-                className="w-fit add-btn"
+                className="w-fit! add-btn"
               >
                 Edit
               </button>
