@@ -616,8 +616,8 @@ const LeadDashboard = () => {
         <MeetingTable data={meetings} />
       </div>
 
-      <LeadReportTable />
-      <LeadEventReport />
+      <LeadReportTable user={user} />
+      <LeadEventReport user={user} />
 
       <Modal
         isOpen={isLimitOpen}
