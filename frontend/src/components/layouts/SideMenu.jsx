@@ -283,7 +283,8 @@ const SideMenu = ({ activeMenu }) => {
 
   return (
     <>
-      <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20">
+      {/* <div className="w-64 h-screen bg-[#06090E] border-r border-gray-500/40 sticky top-[82px] z-20"> */}
+      <div className="w-64 h-full bg-[#06090E] overflow-y-auto border-r border-gray-500/40 sticky top-[100px] z-40">
         <div className="flex flex-col items-center justify-center mb-4 pt-5">
           <div className="relative">
             <img

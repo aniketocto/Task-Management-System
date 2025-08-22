@@ -27,7 +27,7 @@ const Navbar = ({ activeMenu }) => {
       <NotificationBell />
 
       {openSideMenu && (
-        <div className="fixed top-[100px] left-0 bg-white">
+        <div className="fixed top-[100px] z-40 left-0 bg-white">
           <SideMenu activeMenu={activeMenu} />
         </div>
       )}
