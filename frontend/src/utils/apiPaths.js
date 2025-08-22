@@ -8,7 +8,6 @@ export const API_PATHS = {
     UPDATE_PROFILE: "/api/auth/profile",
     UPLOAD_IMAGE: "/api/auth/upload-image",
     GOOGLE_AUTH: "/api/auth/google",
-    DOB: "/api/auth/dob",
   },
   USERS: {
     GET_ALL_USERS: "/api/users", //get all user
@@ -102,6 +101,8 @@ export const API_PATHS = {
     DELETE_INTERVIEW: (id) => `/api/interview/delete-interview/${id}`,
     ADD_DOCS: "/api/interview/add-docs",
     GET_DOCS: "/api/interview/get-docs",
+    GET_DOB: "/api/interview/get-dob",
+    UPDATE_DOB: "/api/interview/upsert-dob",
   },
   LEADREPORT: {
     GET_CHANNEL_ROWS: "/api/channels",
@@ -112,5 +113,5 @@ export const API_PATHS = {
     ADD_EVENT: "/api/channels/events",
     DELETE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
     UPDATE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
-  }
+  },
 };

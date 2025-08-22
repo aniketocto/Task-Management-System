@@ -18,6 +18,7 @@ import { FiX } from "react-icons/fi";
 import { FaRegFileAlt } from "react-icons/fa";
 import { HiBellAlert } from "react-icons/hi2";
 import { HiOutlineTrash } from "react-icons/hi";
+import DobTable from "components/layouts/dobTable";
 
 const HrDashboard = () => {
   const [interviews, setInterviews] = useState([]);
@@ -265,19 +266,6 @@ const HrDashboard = () => {
     }
   };
 
-  const [dobs, setDobs] = useState([]);
-  const getDobs = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get(API_PATHS.AUTH.DOB);
-      setDobs(response.data?.data || []);
-    } catch (error) {
-      console.error("Error fetching DOBs:", error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedCname(cname); // Apply after 1s
@@ -304,10 +292,6 @@ const HrDashboard = () => {
     getUpcomingInterviews();
   }, [getUpcomingInterviews]);
 
-  useEffect(() => {
-    getDobs();
-  }, [getDobs]);
-
   const getDueDateColor = (dueDate) => {
     if (!dueDate) return "#D3D3D3";
     const daysLeft = moment(dueDate)
@@ -318,6 +302,8 @@ const HrDashboard = () => {
     if (daysLeft <= 4) return "#E48E39";
     return "#6FE439";
   };
+
+  if (loading) return <SpinLoader />;
 
   return (
     <DashboardLayout activeMenu="Hr Dashboard">
@@ -332,31 +318,33 @@ const HrDashboard = () => {
             aria-label="Interviews table"
           >
             <div className="overflow-x-auto overscroll-x-contain px-4 sm:px-0">
-
-          <table className="min-w-[920px] sm:min-w-full text-sm text-gray-200 table-fixed whitespace-nowrap">
-            <thead className="sticky top-0 z-10 border-b border-white/20">
-              <tr className="text-left">
-                <th className="py-2 pr-4 w-[220px]">Candidate</th>
-                <th className="py-2 pr-4 w-[220px]">Opening</th>
-                <th className="py-2 pr-4 w-[240px]">Start</th>
-                <th className="py-2 pr-4 w-[120px]">Rounds</th>
-                <th className="py-2 pr-4 w-[140px]">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingInterviews.map((interview) => (
-                <tr key={interview._id} className="border-b border-white/20">
-                  <td className="py-2">{interview.candidateName}</td>
-                  <td className="py-2">{interview.opening}</td>
-                  <td className="py-2">
-                    {new Date(interview.startTime).toLocaleString()}
-                  </td>
-                  <td className="py-2">{interview.rounds}</td>
-                  <td className="py-2">{interview.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <table className="min-w-[920px] sm:min-w-full text-sm text-gray-200 table-fixed whitespace-nowrap">
+                <thead className="sticky top-0 z-10 border-b border-white/20">
+                  <tr className="text-left">
+                    <th className="py-2 pr-4 w-[220px]">Candidate</th>
+                    <th className="py-2 pr-4 w-[220px]">Opening</th>
+                    <th className="py-2 pr-4 w-[240px]">Start</th>
+                    <th className="py-2 pr-4 w-[120px]">Rounds</th>
+                    <th className="py-2 pr-4 w-[140px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {upcomingInterviews.map((interview) => (
+                    <tr
+                      key={interview._id}
+                      className="border-b border-white/20"
+                    >
+                      <td className="py-2">{interview.candidateName}</td>
+                      <td className="py-2">{interview.opening}</td>
+                      <td className="py-2">
+                        {new Date(interview.startTime).toLocaleString()}
+                      </td>
+                      <td className="py-2">{interview.rounds}</td>
+                      <td className="py-2">{interview.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -601,36 +589,12 @@ const HrDashboard = () => {
           </div>
         </div>
       </div>
+
       <div className="my-5 card">
         <HrDocs />
       </div>
 
-      <div className="card my-5">
-        {loading && <SpinLoader />}
-        <div className="overflow-x-auto">
-          <h2 className="text-lg font-regular mb-1">Birthdays</h2>
-          <table className="min-w-full text-sm text-gray-200">
-            <thead>
-              <tr className="text-left border-b border-white/20">
-                <th className="py-2">Name</th>
-                <th className="py-2">DOB</th>
-                <th className="py-2">Department</th>
-                <th className="py-2">Designation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dobs.map((d) => (
-                <tr key={d._id} className="border-b border-white/20">
-                  <td className="py-2">{d.name}</td>
-                  <td className="py-2">{moment(d.dob).format("DD-MM-YYYY")}</td>
-                  <td className="py-2">{d.department}</td>
-                  <td className="py-2">{d.designation}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DobTable />
 
       {/* Interview Modal */}
       <Modal

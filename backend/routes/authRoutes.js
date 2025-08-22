@@ -32,6 +32,5 @@ router.post("/upload-image", upload.single("image"), (req, res) => {
   res.status(200).json({ imageUrl });
 });
 
-router.get("/dob", protect, getDOB);
 
 module.exports = router;

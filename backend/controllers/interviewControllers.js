@@ -1,4 +1,6 @@
+const dob = require("../models/dob");
 const { Opening, Interview, HrDoc } = require("../models/Interview");
+const User = require("../models/User");
 
 // Openings
 const createOpening = async (req, res) => {
@@ -504,6 +506,104 @@ const getDocs = async (_req, res) => {
   }
 };
 
+const upsertBirthdayExpense = async (req, res) => {
+  try {
+    const { userId, amount, month, year, notes } = req.body;
+
+    if (!userId) return res.status(400).json({ message: "userId is required" });
+
+    const now = new Date();
+    const m = Number(month) || now.getMonth() + 1;
+    const y = Number(year) || now.getFullYear();
+
+    const doc = await dob.findOneAndUpdate(
+      { user: userId, month: m, year: y },
+      {
+        $set: {
+          amount: Number(amount) || 0,
+          notes: notes || "",
+          updatedBy: req.user?._id,
+        },
+        $setOnInsert: { createdBy: req.user?._id },
+      },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ message: "Saved", data: doc });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+const getDOB = async (req, res) => {
+  try {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const users = await User.aggregate([
+      { $match: { dob: { $type: "date" } } },
+      { $addFields: { dobMonth: { $month: "$dob" } } },
+      { $match: { dobMonth: currentMonth } },
+
+      {
+        $lookup: {
+          from: "birthdayexpenses",
+          let: { uid: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$uid"] },
+                    { $eq: ["$month", currentMonth] },
+                    { $eq: ["$year", currentYear] },
+                  ],
+                },
+              },
+            },
+            { $project: { amount: 1, notes: 1 } },
+          ],
+          as: "expense",
+        },
+      },
+      {
+        $addFields: {
+          expense: {
+            $ifNull: [{ $arrayElemAt: ["$expense", 0] }, { amount: 0 }],
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          department: 1,
+          designation: 1,
+          dob: 1,
+          expenseAmount: "$expense.amount",
+          expenseNotes: "$expense.notes",
+        },
+      },
+      { $addFields: { dobDay: { $dayOfMonth: "$dob" } } },
+      { $sort: { dobDay: 1, name: 1 } },
+    ]);
+    const total = users.reduce((s, u) => s + (u.expenseAmount || 0), 0);
+
+    res.status(200).json({
+      message: "Users with birthdays this month",
+      month: currentMonth,
+      year: currentYear,
+      totalExpense: total,
+      data: users,
+    });
+  } catch (error) {
+    console.error("❌ getDOB error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createOpening,
   getAllOpenings,
@@ -516,4 +616,6 @@ module.exports = {
   getUpcomingInterviews,
   addOrUpdateDocs,
   getDocs,
+  upsertBirthdayExpense,
+  getDOB,
 };
