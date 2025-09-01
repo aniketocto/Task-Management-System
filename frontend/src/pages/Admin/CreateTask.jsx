@@ -21,6 +21,7 @@ import AddRemarks from "components/Inputs/AddRemarks";
 import { GrPowerReset } from "react-icons/gr";
 
 import { io } from "socket.io-client";
+import TaskHistory from "components/layouts/TaskHistory";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -254,6 +255,7 @@ const CreateTask = () => {
           smp: taskInfo.smp,
           referance: taskInfo.referance || [],
           remarks: taskInfo.remarks || [],
+          dueDateLogs: taskInfo.dueDateLogs || [],
         }));
 
         getUserbyId(taskInfo.createdBy);
@@ -380,8 +382,14 @@ const CreateTask = () => {
 
   return (
     <DashboardLayout activeMenu="Create Task">
-      <div className="mt-5">
-        <div className="grid grid-cols-1  mt-4">
+      <div className="mt-5 ">
+        {taskData.dueDateLogs && taskData.dueDateLogs.length > 0 && (
+          <div className=" form-card">
+            <h3 className="text-lg font-medium text-slate-200">Task History</h3>
+            <TaskHistory logs={taskData?.dueDateLogs} allUsers={allUsers} />
+          </div>
+        )}
+        <div className="grid grid-cols-1 mt-4">
           <div className="form-card col-span-3">
             <div className="flex items-center justify-between">
               <div>
@@ -481,7 +489,8 @@ const CreateTask = () => {
                 <>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Creative Sizes <sup className="text-red-500 text-xs">*</sup>
+                      Creative Sizes{" "}
+                      <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="Creative Sizes"
@@ -495,7 +504,8 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Objective / Goal <sup className="text-red-500 text-xs">*</sup>
+                      Objective / Goal{" "}
+                      <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="Whats the goal of this task?"
@@ -509,7 +519,8 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Target Audience <sup className="text-red-500 text-xs">*</sup>
+                      Target Audience{" "}
+                      <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="Who is the target audience?"
@@ -523,7 +534,8 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Unique Selling Points <sup className="text-red-500 text-xs">*</sup>
+                      Unique Selling Points{" "}
+                      <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="What are the unique selling points?"
@@ -565,7 +577,8 @@ const CreateTask = () => {
                   </div>
                   <div className="mt-4">
                     <label className="text-xs font-medium text-slate-200">
-                      Single Minded Prepositions <sup className="text-red-500 text-xs">*</sup>
+                      Single Minded Prepositions{" "}
+                      <sup className="text-red-500 text-xs">*</sup>
                     </label>
                     <textarea
                       placeholder="SMPs"
@@ -696,7 +709,7 @@ const CreateTask = () => {
             {/* Attachments */}
             <div className="mt-3">
               <label className="text-xs font-medium text-slate-200">
-                Attachments 
+                Attachments
               </label>
 
               <AddAttachmentInputs
