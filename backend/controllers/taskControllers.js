@@ -1103,10 +1103,26 @@ const updateTask = async (req, res) => {
 
     // ✅ SuperAdmin role
     if (role === "superAdmin") {
+      const oldDueDate = task.dueDate;
       task.title = req.body.title || task.title;
       task.description = req.body.description || task.description;
       task.companyName = req.body.companyName || task.companyName;
-      task.dueDate = req.body.dueDate || task.dueDate;
+      if (req.body.dueDate) {
+        const newDate = new Date(req.body.dueDate);
+
+        if (!isNaN(newDate) && (!oldDueDate || newDate.getTime() !== oldDueDate.getTime())) {
+          task.dueDate = newDate;
+
+          task.dueDateLogs.push({
+            oldDate: oldDueDate,
+            newDate: newDate,
+            changedBy: req.user._id,
+            status: "approved", // direct change = auto-approved
+            reviewedBy: req.user._id,
+            reviewedAt: new Date(),
+          });
+        }
+      }
       task.priority = req.body.priority || task.priority;
       if (typeof req.body.attachments !== "undefined") {
         task.attachments = normalizeAttachments(req.body.attachments);
@@ -1615,7 +1631,7 @@ const requestDueDateChange = async (req, res) => {
       return res.status(400).json({ message: "Pending Due date is required" });
     }
     if (!reason) {
-      return res.status(400).json({ message: "Reason date is required" });
+      return res.status(400).json({ message: "Reason is required" });
     }
 
     const date = new Date(pendingDueDate);
@@ -1628,54 +1644,56 @@ const requestDueDateChange = async (req, res) => {
         .json({ message: "pendingDueDate must be in the future" });
     }
 
-    // Finding the task
     const task = await Task.findById(req.params.id);
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    const taskId = task._id.toString();
-
-    // Updating the task
-    task.pendingDueDate = pendingDueDate;
+    task.pendingDueDate = date;
     task.dueDateStatus = "pending";
     task.dueDateRequestedBy = req.user._id;
     task.reason = reason;
+
+    // Log entry
+    task.dueDateLogs.push({
+      oldDate: task.dueDate,
+      newDate: date,
+      requestedBy: req.user._id,
+      reason,
+      status: "pending",
+    });
+
     await task.save();
 
-    // Notify the superAdmin
+    // Notify superAdmins (unchanged)
     const superAdmins = await User.find({ role: "superAdmin" });
     const notifications = await Promise.all(
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `${req.user.name} shifted the deadline for "${task.title
-            }" to ${date.toLocaleDateString()}.`,
-          taskId: taskId,
+          message: `${req.user.name} requested a new deadline for "${task.title}" → ${date.toLocaleDateString()}`,
+          taskId: task._id,
           type: "info",
         })
       )
     );
-    // Emit via socket
     const io = req.app.get("io");
-    notifications.forEach((notification) => {
-      io.to(notification.user.toString()).emit(
-        "new-notification",
-        notification
-      );
+    notifications.forEach((notif) => {
+      io.to(notif.user.toString()).emit("new-notification", notif);
     });
 
     return res.status(200).json({
       message: "Due date change request sent successfully",
       pendingDueDate: date,
       dueDateStatus: "pending",
-      reason: reason,
+      reason,
     });
   } catch (error) {
     console.error("Error requesting due date change:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 const reviewDueDateChange = async (req, res) => {
   try {
@@ -1686,12 +1704,9 @@ const reviewDueDateChange = async (req, res) => {
         .json({ message: "approve must be a boolean in body" });
     }
 
-    // Finding the task
     const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" });
-    }
     if (task.dueDateStatus !== "pending") {
       return res
         .status(400)
@@ -1702,36 +1717,45 @@ const reviewDueDateChange = async (req, res) => {
     task.dueDateReviewedAt = new Date();
 
     let notificationMsg;
+
+    const latestLog = task.dueDateLogs
+      .slice()
+      .reverse()
+      .find((log) => log.status === "pending");
+
     if (approve) {
       task.dueDateStatus = "approved";
       task.dueDate = task.pendingDueDate;
-      notificationMsg = `${req.user.name} has approved task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} approved new due date for "${task.title}" → ${task.dueDate.toLocaleDateString()}`;
+
+      if (latestLog) {
+        latestLog.status = "approved";
+        latestLog.reviewedBy = req.user._id;
+        latestLog.reviewedAt = new Date();
+      }
     } else {
       task.dueDateStatus = "rejected";
-      notificationMsg = `${req.user.name} has rejected task "${task.title
-        }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} rejected due date change for "${task.title}"`;
+
+      if (latestLog) {
+        latestLog.status = "rejected";
+        latestLog.reviewedBy = req.user._id;
+        latestLog.reviewedAt = new Date();
+      }
     }
 
     task.pendingDueDate = undefined;
-
-    // save the updated task
     await task.save();
 
-    const taskId = task._id.toString();
-
-    // notify the admin who requested it
-    const requesterId = task.dueDateRequestedBy;
     const notif = await Notification.create({
-      user: requesterId,
+      user: task.dueDateRequestedBy,
       message: notificationMsg,
-      taskId: taskId,
+      taskId: task._id,
       type: "info",
     });
 
-    // emit in real time
     const io = req.app.get("io");
-    io.to(requesterId.toString()).emit("new-notification", notif);
+    io.to(task.dueDateRequestedBy.toString()).emit("new-notification", notif);
 
     return res.status(200).json({
       message: `Due-date request ${approve ? "approved" : "rejected"}`,
@@ -1745,6 +1769,7 @@ const reviewDueDateChange = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
 
 const approveTask = async (req, res) => {
   try {

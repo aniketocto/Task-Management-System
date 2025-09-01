@@ -21,6 +21,18 @@ const approvalLogSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const dueDateLogSchema = new mongoose.Schema({
+  oldDate: { type: Date},
+  newDate: { type: Date },
+  requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  reason: { type: String },
+  status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  reviewedAt: { type: Date },
+  date: { type: Date, default: Date.now },
+}, { _id: false });
+
+
 const todoSchema = new mongoose.Schema({
   text: { type: String },
   completed: { type: Boolean, default: false },
@@ -95,6 +107,8 @@ const taskSchema = new mongoose.Schema(
     },
     dueDateReviewedAt: { type: Date },
     reason: { type: String },
+
+    dueDateLogs: [dueDateLogSchema],
     // ---------------------------------------
 
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
