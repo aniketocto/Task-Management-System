@@ -170,7 +170,8 @@ const TodoListInput = ({
               updated[index].dueDate = e.target.value;
               setTodoList(updated);
             }}
-            className="border border-gray-300 text-xs px-2 py-1 rounded-md"
+            min={new Date().toISOString().split("T")[0]}
+            className="border border-gray-300 text-xs px-2 py-2 rounded-md"
           />
 
           <div className="flex items-center gap-4">
@@ -263,9 +264,11 @@ const TodoListInput = ({
                   </div>
                 }
               >
-                <span title="Show approval log" tabIndex={0}>
-                  <CiMemoPad className="text-gray-400 text-3xl cursor-pointer" />
-                </span>
+                {item.approvalLogs.length > 0 && (
+                  <span title="Show approval log" tabIndex={0}>
+                    <CiMemoPad className="text-blue-400 text-3xl cursor-pointer" />
+                  </span>
+                )}
               </Tooltip>
             </div>
 

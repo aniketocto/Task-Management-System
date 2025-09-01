@@ -641,9 +641,11 @@ const CreateTask = () => {
               />
               {/* Assigned To */}
               <div className="col-span-12 md:col-span-4">
-                <label className="text-xs font-medium text-slate-200">
+                <label className="text-xs font-medium text-slate-200 ">
                   Assign Owner <sup className="text-red-500 text-xs">*</sup>
                 </label>
+
+                <div className="mb-2"></div>
 
                 <SelectUsers
                   selectedUsers={taskData.assignedTo}
