@@ -280,6 +280,7 @@ const ViewTaskDetails = () => {
                 <TodoCheckList
                   key={`todo_${index}`}
                   text={item.text}
+                  item={item}
                   isChecked={item?.completed}
                   onChange={() => updateTodoChecklist(index)}
                   assignedTo={item?.assignedTo}
@@ -364,11 +365,14 @@ const TodoCheckList = ({
   onChange,
   assignedTo = [],
   approval,
+  item,
   allUsers = [],
 }) => {
   // Find approver name
   const approver =
     approval?.approvedBy && allUsers.find((u) => u._id === approval.approvedBy);
+
+  console.log("dueDate", item);
 
   let badgeColor = "bg-yellow-200 text-yellow-800 border-yellow-400";
   let label = "Pending";
@@ -393,6 +397,11 @@ const TodoCheckList = ({
         <label htmlFor="taskCheck" className="text-[15px] text-gray-50">
           {text}
         </label>
+        {item?.dueDate && (
+          <span className="ml-3 text-xs text-gray-300">
+            Due: {moment(item.dueDate).format("DD MMM YYYY")}
+          </span>
+        )}
         {/* Approval badge with tooltip */}
         <Tooltip
           content={
