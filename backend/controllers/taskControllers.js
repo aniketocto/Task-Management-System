@@ -28,40 +28,58 @@ const calculateTaskStatusWithTimestamp = (taskDoc) => {
     taskDoc.clientApproval?.status === "approved" &&
     taskDoc.superAdminApproval?.status === "approved";
 
-  let newStatus;
+  let newStatus = taskDoc.status; // Start with current status
+  let completedAt = taskDoc.completedAt;
 
-  // KEY IMPROVEMENT: Preserve final states - don't recalculate them
-  if (
-    taskDoc.status === "completed" ||
-    taskDoc.status === "pending" ||
-    taskDoc.status === "delayed"
-  ) {
-    newStatus = taskDoc.status; // Keep existing final states unchanged
-  }
-  // Only auto-transition TO completed when all requirements are met
-  else if (newProgress === 100 && allChecklistApproved && approvalsCleared) {
-    newStatus = "completed";
-  }
-  // Only auto-transition TO pending when work is done but approvals missing
-  else if (
+  // Status transition logic based on your requirements:
+
+  // 1. NEW → INPROGRESS: Only happens from frontend, never auto-calculated here
+
+  // 2. INPROGRESS → COMPLETED: When work is 100% done and within due date
+  if (taskDoc.status === "inProgress" &&
     newProgress === 100 &&
-    (!allChecklistApproved || !approvalsCleared)
-  ) {
+    allChecklistApproved &&
+    approvalsCleared &&
+    now <= dueDateEnd) {
+    newStatus = "completed";
+    completedAt = completedAt || now; // Set completion time if not already set
+  }
+
+  // 3. INPROGRESS → DELAYED: When work is 100% done but after due date
+  else if (taskDoc.status === "inProgress" &&
+    newProgress === 100 &&
+    allChecklistApproved &&
+    approvalsCleared &&
+    now > dueDateEnd) {
+    newStatus = "delayed";
+    completedAt = completedAt || now; // Set completion time if not already set
+  }
+
+  // 4. INPROGRESS → PENDING: When in progress but due date has passed (incomplete work)
+  else if (taskDoc.status === "inProgress" &&
+    now > dueDateEnd &&
+    newProgress < 100) {
     newStatus = "pending";
   }
-  // Only auto-transition TO delayed when past due and work incomplete
-  else if (now > dueDateEnd && newProgress < 100) {
-    newStatus = "delayed";
-  }
-  // Active work states that can still change
-  else if (newProgress > 0) {
-    newStatus = "inProgress";
-  } else {
-    newStatus = "new";
+
+  // 5. PENDING → COMPLETED: When pending work gets completed within reasonable time
+  else if (taskDoc.status === "pending" &&
+    newProgress === 100 &&
+    allChecklistApproved &&
+    approvalsCleared) {
+    newStatus = "delayed"; // Since it was already past due, mark as delayed
+    completedAt = completedAt || now;
   }
 
-  return { newStatus, newProgress };
-};
+  // Keep all final states unchanged (completed, delayed) unless explicitly changed
+  // Keep new status unchanged (only frontend can move from new to inProgress)
+
+  return {
+    newStatus,
+    newProgress,
+    completedAt
+  };
+}
 
 const getTasks = async (req, res) => {
   try {
@@ -1631,9 +1649,8 @@ const requestDueDateChange = async (req, res) => {
       superAdmins.map((sa) =>
         Notification.create({
           user: sa._id,
-          message: `${req.user.name} shifted the deadline for "${
-            task.title
-          }" to ${date.toLocaleDateString()}.`,
+          message: `${req.user.name} shifted the deadline for "${task.title
+            }" to ${date.toLocaleDateString()}.`,
           taskId: taskId,
           type: "info",
         })
@@ -1688,14 +1705,12 @@ const reviewDueDateChange = async (req, res) => {
     if (approve) {
       task.dueDateStatus = "approved";
       task.dueDate = task.pendingDueDate;
-      notificationMsg = `${req.user.name} has approved task "${
-        task.title
-      }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has approved task "${task.title
+        }", due date to ${task.dueDate.toLocaleDateString()}`;
     } else {
       task.dueDateStatus = "rejected";
-      notificationMsg = `${req.user.name} has rejected task "${
-        task.title
-      }", due date to ${task.dueDate.toLocaleDateString()}`;
+      notificationMsg = `${req.user.name} has rejected task "${task.title
+        }", due date to ${task.dueDate.toLocaleDateString()}`;
     }
 
     task.pendingDueDate = undefined;
