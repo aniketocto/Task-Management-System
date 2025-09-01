@@ -41,9 +41,11 @@ const TodoListInput = ({
         text: option,
         completed: false,
         assignedTo: [],
-        completionLogs: [], // <-- add this
-        approvalLogs: [], // <-- add this
-        approval: { status: "pending" }, // also safe to add this default
+        completionLogs: [],
+        approvalLogs: [],
+        approval: { status: "pending" },
+        dueDate: null,
+        dueDateStatus: "none",
       },
     ]);
     setOption("");
@@ -157,6 +159,19 @@ const TodoListInput = ({
               )}
             </span>
           )}
+
+          <input
+            type="date"
+            value={
+              item.dueDate ? moment(item.dueDate).format("YYYY-MM-DD") : ""
+            }
+            onChange={(e) => {
+              const updated = [...todoList];
+              updated[index].dueDate = e.target.value;
+              setTodoList(updated);
+            }}
+            className="border border-gray-300 text-xs px-2 py-1 rounded-md"
+          />
 
           <div className="flex items-center gap-4">
             {/* Completion Log Tooltip (🕑) */}

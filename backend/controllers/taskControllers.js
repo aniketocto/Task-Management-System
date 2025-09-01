@@ -1357,7 +1357,15 @@ const updateTaskChecklist = async (req, res) => {
       );
 
       if (updated && (isPrivileged || isAssigned)) {
-        let newItem = { ...item.toObject(), completed: updated.completed };
+        let newItem = {
+          ...item.toObject(),
+          completed: updated.completed,
+          dueDate: updated.dueDate || item.dueDate,
+          pendingDueDate: updated.pendingDueDate || item.pendingDueDate,
+          dueDate: updated.dueDate ? new Date(updated.dueDate) : item.dueDate,
+          reason: updated.reason || item.reason,
+        };
+
         // Log only when user marks as completed (false -> true)
         if (!item.completed && updated.completed) {
           newItem.completionLogs = item.completionLogs || [];
