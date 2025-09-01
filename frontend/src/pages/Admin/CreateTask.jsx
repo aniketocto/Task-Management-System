@@ -107,6 +107,8 @@ const CreateTask = () => {
         text: item.text,
         completed: item.completed || false, // ✅ preserve completed state
         assignedTo: item.assignedTo || [],
+        dueDate: item.dueDate || null,
+        approval: item.approval || { status: "pending" },
       }));
 
       const response = await axiosInstance.post(API_PATHS.TASKS.CREATE_TASK, {
@@ -140,7 +142,7 @@ const CreateTask = () => {
             : null;
 
           return {
-            _id: item._id, // important for backend merge
+            _id: item._id,
             text: item.text,
             completed: matchedTask
               ? matchedTask.completed
@@ -151,6 +153,7 @@ const CreateTask = () => {
                 : matchedTask?.assignedTo || [],
             approval: item.approval ||
               matchedTask?.approval || { status: "pending" },
+            dueDate: item.dueDate || matchedTask?.dueDate || null, // ✅ keep dueDate
           };
         });
 
