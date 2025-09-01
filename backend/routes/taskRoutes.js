@@ -15,6 +15,8 @@ const {
   reviewDueDateChange,
   approveTask,
   approveChecklistItem,
+  reviewSubTaskDueDateChange,
+  requestSubTaskDueDateChange
 } = require("../controllers/taskControllers");
 
 const router = express.Router();
@@ -70,6 +72,22 @@ router.patch(
   protect,
   allowRoleOrDept(["superAdmin"], []),
   reviewDueDateChange
+);
+
+// Sub-task due date request (Admin)
+router.post(
+  "/:id/checklist/:itemId/due-date-request",
+  protect,
+  allowRoleOrDept(["user", "admin"], []),
+  requestSubTaskDueDateChange
+);
+
+// Sub-task due date approval (SuperAdmin)
+router.patch(
+  "/:id/checklist/:itemId/due-date-approval",
+  protect,
+  allowRoleOrDept(["superAdmin", "admin"], []),
+  reviewSubTaskDueDateChange
 );
 
 router.patch(

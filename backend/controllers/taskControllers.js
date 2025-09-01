@@ -1771,6 +1771,151 @@ const reviewDueDateChange = async (req, res) => {
 };
 
 
+const requestSubTaskDueDateChange = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const { pendingDueDate, reason } = req.body;
+    const { itemId } = req.params;
+
+    if (!pendingDueDate) {
+      return res.status(400).json({ message: "Pending Due date is required" });
+    }
+    if (!reason) {
+      return res.status(400).json({ message: "Reason is required" });
+    }
+
+    const date = new Date(pendingDueDate);
+    if (isNaN(date)) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+    if (date < new Date()) {
+      return res.status(400).json({
+        message: "pendingDueDate must be in the future",
+      });
+    }
+
+    const subtask = task.todoChecklist.id(itemId);
+    if (!subtask) {
+      return res.status(404).json({ message: "Subtask not found" });
+    }
+
+    subtask.pendingDueDate = date;
+    subtask.dueDateStatus = "pending";
+    subtask.dueDateRequestedBy = req.user._id;
+    subtask.reason = reason;
+
+    subtask.dueDateLogs.push({
+      oldDate: subtask.dueDate,
+      newDate: date,
+      requestedBy: req.user._id,
+      reason,
+      status: "pending",
+    });
+
+    await task.save();
+
+    // 🔔 Notification (optional, you already had this)
+    // const superAdmins = await User.find({ role: "superAdmin" });
+    // const notifications = await Promise.all(
+    //   superAdmins.map((sa) =>
+    //     Notification.create({
+    //       user: sa._id,
+    //       message: `${req.user.name} requested a new due date for sub-task "${subtask.text}" → ${date.toLocaleDateString()}`,
+    //       taskId: task._id,
+    //       type: "info",
+    //     })
+    //   )
+    // );
+    // const io = req.app.get("io");
+    // notifications.forEach((notif) => {
+    //   io.to(notif.user.toString()).emit("new-notification", notif);
+    // });
+
+    return res.status(200).json({
+      message: "Sub-task due date change request sent successfully",
+      subTaskId: subtask._id,
+      pendingDueDate: date,
+      dueDateStatus: "pending",
+      reason,
+    });
+  } catch (error) {
+    console.error("requestSubTaskDueDateChange error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+const reviewSubTaskDueDateChange = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+
+    const task = await Task.findById(id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const subtask = task.todoChecklist.id(itemId);
+    if (!subtask) return res.status(404).json({ message: "Subtask not found" });
+
+    const { approve } = req.body;
+    if (typeof approve !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "approve must be a boolean in body" });
+    }
+
+    if (subtask.dueDateStatus !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "No pending due-date request to review" });
+    }
+
+    subtask.dueDateReviewedBy = req.user._id;
+    subtask.dueDateReviewedAt = new Date();
+
+    const latestLog = subtask.dueDateLogs.slice().reverse().find((log) => log.status === "pending");
+
+    if (approve) {
+      subtask.dueDateStatus = "approved";
+      subtask.dueDate = subtask.pendingDueDate;
+
+      if (latestLog) {
+        latestLog.status = "approved";
+        latestLog.reviewedBy = req.user._id;
+        latestLog.reviewedAt = new Date();
+      }
+    } else {
+      subtask.dueDateStatus = "rejected";
+
+      if (latestLog) {
+        latestLog.status = "rejected";
+        latestLog.reviewedBy = req.user._id;
+        latestLog.reviewedAt = new Date();
+      }
+    }
+    subtask.pendingDueDate = undefined;
+
+    await task.save();
+
+    return res.status(200).json({
+      message: `Sub-task due date ${approve ? "approved" : "rejected"}`,
+      subTaskId: subtask._id,
+      dueDate: subtask.dueDate,
+      dueDateStatus: subtask.dueDateStatus,
+    });
+
+  } catch (error) {
+    console.error("reviewSubTaskDueDateChange error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+}
+
+
 const approveTask = async (req, res) => {
   try {
     const { type, status } = req.body;
@@ -1833,7 +1978,7 @@ const approveTask = async (req, res) => {
       task,
     });
   } catch (err) {
-    console.error("❌ approveTask error:", err);
+    console.error("ApproveTask error:", err);
     return res
       .status(500)
       .json({ message: "Server error", error: err.message });
@@ -1931,4 +2076,6 @@ module.exports = {
   reviewDueDateChange,
   approveTask,
   approveChecklistItem,
+  requestSubTaskDueDateChange,
+  reviewSubTaskDueDateChange,
 };
