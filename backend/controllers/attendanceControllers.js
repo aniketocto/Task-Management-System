@@ -136,6 +136,14 @@ const calculateUnifiedSummary = (records) => {
     if (isWorkingDay(record)) {
       userSummary.totalWorkingDaysSet.add(dateKey);
     }
+    if (record.workMode === "wfh") {
+      userSummary.wfh = (userSummary.wfh || 0) + 1;
+    }
+
+    if (record.workMode === "leave") {
+      userSummary.leave = (userSummary.leave || 0) + 1;
+    }
+
   });
 
   Object.keys(weeklyLateCount).forEach((wk) => {
@@ -463,6 +471,14 @@ const saveAttendanceAdmin = async (req, res) => {
     }
     doc.state = evaluateAttendanceState(doc);
 
+    if (req.body.workMode) {
+      if (!["office", "wfh", "onsite"].includes(req.body.workMode)) {
+        return res.status(400).json({ message: "Invalid workMode" });
+      }
+      doc.workMode = req.body.workMode;
+    }
+
+
     await doc.save();
     req.app.get("io")?.emit("attendance:sync");
 
@@ -512,6 +528,7 @@ const exportAttendance = async (req, res) => {
       CheckInStatus: r.checkInStatus,
       CheckOutStatus: r.checkOutStatus,
       TotalHours: r.totalHours,
+      WorkMode: r.workMode || "office",
     }));
 
     const fields = [

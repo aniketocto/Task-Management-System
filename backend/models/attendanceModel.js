@@ -31,6 +31,11 @@ const attendanceSchema = new mongoose.Schema(
       type: String,
       enum: ["present", "early", "absent"],
     },
+    workMode: {
+      type: String,
+      enum: ["office", "wfh", "onsite"],
+      default: "office",
+    },
     state: {
       type: String,
       enum: ["checkedInOnly", "checkedOutOnly", "completeEntry", "absent"],
