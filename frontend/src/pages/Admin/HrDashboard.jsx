@@ -328,6 +328,7 @@ const HrDashboard = () => {
                     <th className="py-2 pr-4 w-[240px]">Start</th>
                     <th className="py-2 pr-4 w-[120px]">Rounds</th>
                     <th className="py-2 pr-4 w-[140px]">Status</th>
+                    <th className="py-2 pr-4 w-[120px]">Resume</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -343,6 +344,22 @@ const HrDashboard = () => {
                       </td>
                       <td className="py-2">{interview.rounds}</td>
                       <td className="py-2">{interview.status}</td>
+                      <td className="py-2">
+                        <a
+                          href={interview.resume}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <a
+                            href={interview.resume}
+                            target="_blank"
+                            rel="noopener"
+                            className="text-[#E43941] text-xl "
+                          >
+                            <FaRegFileAlt />
+                          </a>
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -386,10 +403,10 @@ const HrDashboard = () => {
                   <tr className="text-left">
                     <th className="py-2 pr-4 w-[220px]">Candidate</th>
                     <th className="py-2 pr-4 w-[220px]">Opening</th>
-                    <th className="py-2 pr-4 w-[120px]">Resume</th>
                     <th className="py-2 pr-4 w-[240px]">Start</th>
                     <th className="py-2 pr-4 w-[120px]">Rounds</th>
                     <th className="py-2 pr-4 w-[140px]">Status</th>
+                    <th className="py-2 pr-4 w-[120px]">Resume</th>
                     <th className="py-2 pr-2 w-[120px]">Action</th>
                   </tr>
                 </thead>
@@ -401,16 +418,7 @@ const HrDashboard = () => {
                     >
                       <td className="py-2">{interview.candidateName}</td>
                       <td className="py-2">{interview.opening}</td>
-                      <td className="py-2">
-                        <a
-                          href={interview.resume}
-                          target="_blank"
-                          rel="noopener"
-                          className="text-[#E43941] text-xl "
-                        >
-                          <FaRegFileAlt />
-                        </a>
-                      </td>
+
                       <td className="py-2">
                         {new Date(interview.startTime).toLocaleString()}
                       </td>
@@ -427,6 +435,16 @@ const HrDashboard = () => {
                       maxVisible={3}
                     />
                   </td> */}
+                      <td className="py-2">
+                        <a
+                          href={interview.resume}
+                          target="_blank"
+                          rel="noopener"
+                          className="text-[#E43941] text-xl "
+                        >
+                          <FaRegFileAlt />
+                        </a>
+                      </td>
                       <td className="py-2">
                         <button
                           onClick={() => {
