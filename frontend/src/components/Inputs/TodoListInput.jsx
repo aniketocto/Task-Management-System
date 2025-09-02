@@ -266,7 +266,7 @@ const TodoListInput = ({
               >
                 {item.approvalLogs.length > 0 && (
                   <span title="Show approval log" tabIndex={0}>
-                    <CiMemoPad className="text-blue-400 text-3xl cursor-pointer" />
+                    <CiMemoPad className="text-red-400 text-3xl cursor-pointer" />
                   </span>
                 )}
               </Tooltip>
