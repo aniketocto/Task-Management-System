@@ -7,7 +7,7 @@ import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import SelectUsers from "components/Inputs/SelectUsers";
 
-const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
+const UserCard = ({ userInfo, onUserDeleted, allUsers, userRole }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
 
@@ -74,12 +74,14 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
             <p className="text-xs text-gray-100">{userInfo?.email}</p>
           </div>
 
-          <button
-            onClick={() => setOpenDeleteAlert(true)}
-            className="absolute top-2 right-2 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
-          >
-            <LuTrash className="text-base" />
-          </button>
+          {userRole === "superAdmin" && (
+            <button
+              onClick={() => setOpenDeleteAlert(true)}
+              className="absolute top-2 right-2 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
+            >
+              <LuTrash className="text-base" />
+            </button>
+          )}
         </div>
 
         {userInfo?.role === "admin" ? (

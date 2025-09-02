@@ -1,10 +1,13 @@
 import axiosInstance from "../../utils/axiosInstance";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { API_PATHS } from "../../utils/apiPaths";
 import UserCard from "../../components/Cards/UserCard";
+import { UserContext } from "../../context/userContext";
 
 const ManageUser = () => {
+  const { user } = useContext(UserContext);
+  const userRole = user?.role;
   const [allUsers, setAllUsers] = useState([]);
   const [filterMonth, setFilterMonth] = useState("");
   const [availableMonths, setAvailableMonths] = useState([]);
@@ -110,6 +113,7 @@ const ManageUser = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((user) => (
                   <UserCard
+                    userRole={userRole}
                     allUsers={allUsers}
                     key={user._id}
                     userInfo={user}

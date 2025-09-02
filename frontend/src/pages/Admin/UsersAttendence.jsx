@@ -143,6 +143,28 @@ const UsersAttendence = () => {
     };
   }, [fetchAttendance, selectMonth]);
 
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get(API_PATHS.ATTENDANCE.EXPORT_ATTENDANCE, {
+        params: { month: selectMonth },
+        responseType: "blob", // important for file downloads
+      });
+
+      const blob = new Blob([res.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Attendance-${selectMonth}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+      toast.error("Failed to export CSV");
+    }
+  };
+
   // All dates of the selected month (YYYY-MM-DD)
   const allDates = useMemo(() => {
     const start = moment(selectMonth, "YYYY-MM").startOf("month");
@@ -269,9 +291,14 @@ const UsersAttendence = () => {
             </div>
           </div>
 
-          <button onClick={openSetHoliday} className="w-fit! add-btn">
-            Set Holiday
-          </button>
+          <div className="flex gap-2">
+            <button onClick={openSetHoliday} className="w-fit! add-btn">
+              Set Holiday
+            </button>
+            <button onClick={handleExport} className="w-fit! add-btn">
+              Export CSV
+            </button>
+          </div>
         </div>
 
         {/* Table */}
