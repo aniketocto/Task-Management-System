@@ -236,7 +236,10 @@ const ManageTasksTable = ({
   };
 
   return (
-    <div className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg">
+    <div
+      className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg custom-scrollbar"
+      style={{ overflowX: "scroll", scrollbarWidth: "thin" }}
+    >
       <table className="min-w-full text-left">
         <thead>
           <tr className="border-b border-gray-700">
@@ -248,6 +251,9 @@ const ManageTasksTable = ({
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Task
+            </th>
+            <th className="px-4 py-2 text-sm font-semibold text-gray-300">
+              Counts
             </th>
             <th className="px-4 py-2 text-sm font-semibold text-gray-300">
               Status
@@ -329,6 +335,10 @@ const ManageTasksTable = ({
               </td>
               <td className="px-4 py-2 text-white text-[13px] overflow-hidden text-ellipsis max-w-[160px]">
                 {task.title}
+              </td>
+              <td className="px-4 py-2 text-white text-[13px] overflow-hidden text-ellipsis max-w-[160px]">
+                {task.todoChecklist?.filter((t) => t.completed).length || 0} /{" "}
+                {task.todoChecklist?.length || 0}
               </td>
               <td className="px-4 py-2">
                 <span
