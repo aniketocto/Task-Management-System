@@ -153,7 +153,10 @@ const CreateTask = () => {
                 : matchedTask?.assignedTo || [],
             approval: item.approval ||
               matchedTask?.approval || { status: "pending" },
-            dueDate: item.dueDate || matchedTask?.dueDate || null, // ✅ keep dueDate
+            dueDate: item.dueDate || matchedTask?.dueDate || null,
+            approvalLogs: matchedTask?.approvalLogs || item.approvalLogs || [],
+            completionLogs:
+              matchedTask?.completionLogs || item.completionLogs || [],
           };
         });
 

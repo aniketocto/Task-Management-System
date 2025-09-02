@@ -8,6 +8,7 @@ import React from "react";
 import { io } from "socket.io-client";
 import Modal from "components/layouts/Modal";
 import toast from "react-hot-toast";
+import { beautify } from "../../utils/helper";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -73,11 +74,13 @@ const UsersAttendence = () => {
 
     const changedIn = edit.inTime !== edit._initial.inTime;
     const changedOut = edit.outTime !== edit._initial.outTime;
+    const workModeChanged = edit.workMode !== edit._initial?.workMode;
 
     const payload = {
       id: edit.id || undefined,
       userId: edit.userId,
       date: edit.date,
+      workMode: edit.workMode,
     };
 
     if (changedIn) {
@@ -90,6 +93,10 @@ const UsersAttendence = () => {
       payload.checkOut = edit.outTime
         ? mergeDateTime(edit.date, edit.outTime) // set/replace
         : null; // explicit clear
+    }
+
+    if (workModeChanged) {
+      payload.workMode = edit.workMode;
     }
 
     try {
@@ -136,6 +143,28 @@ const UsersAttendence = () => {
     };
   }, [fetchAttendance, selectMonth]);
 
+  const handleExport = async () => {
+    try {
+      const res = await axiosInstance.get(API_PATHS.ATTENDANCE.EXPORT_ATTENDANCE, {
+        params: { month: selectMonth },
+        responseType: "blob", // important for file downloads
+      });
+
+      const blob = new Blob([res.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Attendance-${selectMonth}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+      toast.error("Failed to export CSV");
+    }
+  };
+
   // All dates of the selected month (YYYY-MM-DD)
   const allDates = useMemo(() => {
     const start = moment(selectMonth, "YYYY-MM").startOf("month");
@@ -163,6 +192,7 @@ const UsersAttendence = () => {
         checkInStatus: a.checkInStatus || "",
         checkOutStatus: a.checkOutStatus || "",
         work: a.totalHours || "",
+        workMode: a.workMode || "office",
       };
     });
     return m;
@@ -237,6 +267,8 @@ const UsersAttendence = () => {
         return "bg-yellow-100 text-yellow-800 ";
       case "early":
         return "bg-yellow-100 text-yellow-800 ";
+      case "wfh":
+        return "bg-purple-200 text-purple-800";
       default:
         return;
     }
@@ -259,9 +291,14 @@ const UsersAttendence = () => {
             </div>
           </div>
 
-          <button onClick={openSetHoliday} className="w-fit! add-btn">
-            Set Holiday
-          </button>
+          <div className="flex gap-2">
+            <button onClick={openSetHoliday} className="w-fit! add-btn">
+              Set Holiday
+            </button>
+            <button onClick={handleExport} className="w-fit! add-btn">
+              Export CSV
+            </button>
+          </div>
         </div>
 
         {/* Table */}
@@ -328,7 +365,7 @@ const UsersAttendence = () => {
                   ))}
                 </tr>
                 <tr className="border-b border-gray-800">
-                  {allDates.map((d,i) => (
+                  {allDates.map((d, i) => (
                     <React.Fragment key={i}>
                       <th className="px-2 py-1 text-xs font-medium text-gray-400 text-center border-r border-gray-800">
                         In
@@ -384,44 +421,61 @@ const UsersAttendence = () => {
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-in`}
                               className={`px-2 py-3 text-center text-md border-r border-gray-800 cursor-pointer
-  ${
-    holidayDates[d]
-      ? "bg-blue-200 text-blue-800"
-      : getStatusBgColor(cell?.checkInStatus)
-  }`}
+                              ${
+                                holidayDates[d]
+                                  ? "bg-blue-200 text-blue-800"
+                                  : getStatusBgColor(cell?.checkInStatus)
+                              }`}
                               title={holidayDates[d] || ""}
                             >
-                              {holidayDates[d] ? holidayDates[d] : fmt(cell.in)}
+                              <span className=" inline-block text-sm">
+                                {holidayDates[d]
+                                  ? holidayDates[d]
+                                  : fmt(cell.in)}
+                              </span>{" "}
+                              <br />
+                              {cell.workMode !== "office" && (
+                                <span className=" inline-block text-sm">
+                                  {beautify(cell.workMode)}
+                                </span>
+                              )}
                             </td>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-out`}
                               className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer
-  ${
-    holidayDates[d]
-      ? "bg-blue-200 text-blue-800"
-      : getStatusBgColor(cell?.checkOutStatus)
-  }`}
+                              ${
+                                holidayDates[d]
+                                  ? "bg-blue-200 text-blue-800"
+                                  : getStatusBgColor(cell?.checkOutStatus)
+                              }`}
                               title={holidayDates[d] || ""}
                             >
-                              {holidayDates[d]
-                                ? holidayDates[d]
-                                : fmt(cell.out)}
+                              <span className=" inline-block text-sm">
+                                {holidayDates[d]
+                                  ? holidayDates[d]
+                                  : fmt(cell.out)}{" "}
+                                <br />
+                                {cell.workMode !== "office" && (
+                                  <span className=" inline-block text-sm">
+                                    {beautify(cell.workMode)}
+                                  </span>
+                                )}
+                              </span>
                             </td>
                             <td
                               onClick={() => openEdit(name, d, cell)}
                               key={`${name}-${d}-work`}
                               className={`px-2 py-3 text-center text-md border-r border-gray-700 cursor-pointer
-  ${
-    holidayDates[d]
-      ? "bg-blue-200 text-blue-800"
-      : getStatusBgColor(cell?.checkInStatus)
-  }`}
+                              ${
+                                holidayDates[d]
+                                  ? "bg-blue-200 text-blue-800"
+                                  : getStatusBgColor(cell?.checkInStatus)
+                              }`}
                               title={holidayDates[d] || ""}
                             >
-                              {holidayDates[d]
-                                ? holidayDates[d]
-                                : cell.work}
+                              {holidayDates[d] ? holidayDates[d] : cell.work}
+                              <span></span>
                             </td>
                           </React.Fragment>
                         );
@@ -455,6 +509,21 @@ const UsersAttendence = () => {
         onClose={() => setEdit(null)}
         title={`Edit Attendance - ${edit?.name || ""}`}
       >
+        <label className="block text-white text-sm">
+          Work Mode
+          <select
+            value={edit?.workMode || "office"}
+            onChange={(e) =>
+              setEdit((s) => ({ ...s, workMode: e.target.value }))
+            }
+            className="form-input"
+          >
+            <option value="office">Office</option>
+            <option value="wfh">WFH</option>
+            <option value="onsite">On-Site</option>
+          </select>
+        </label>
+
         <label className="block text-white text-sm">
           Date
           <input

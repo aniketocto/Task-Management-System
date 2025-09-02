@@ -44,6 +44,7 @@ const interviewSchema = new mongoose.Schema(
     candidateName: { type: String, required: true, trim: true },
     startTime: { type: Date, required: true },
     rounds: { type: Number, required: true, min: 1 },
+    resume: { type: String},
     interviewers: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -57,6 +58,7 @@ const interviewSchema = new mongoose.Schema(
       default: "scheduled",
     },
   },
+
   { timestamps: true }
 );
 
@@ -89,7 +91,7 @@ const hrdocsSchema = new mongoose.Schema(
     employeeExitForm: mongoose.Schema.Types.Mixed,
     employeeEng: mongoose.Schema.Types.Mixed,
     evaluationForm: mongoose.Schema.Types.Mixed,
-    compensation : mongoose.Schema.Types.Mixed,
+    compensation: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );

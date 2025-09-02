@@ -136,6 +136,14 @@ const calculateUnifiedSummary = (records) => {
     if (isWorkingDay(record)) {
       userSummary.totalWorkingDaysSet.add(dateKey);
     }
+    if (record.workMode === "wfh") {
+      userSummary.wfh = (userSummary.wfh || 0) + 1;
+    }
+
+    if (record.workMode === "leave") {
+      userSummary.leave = (userSummary.leave || 0) + 1;
+    }
+
   });
 
   Object.keys(weeklyLateCount).forEach((wk) => {
@@ -463,6 +471,14 @@ const saveAttendanceAdmin = async (req, res) => {
     }
     doc.state = evaluateAttendanceState(doc);
 
+    if (req.body.workMode) {
+      if (!["office", "wfh", "onsite"].includes(req.body.workMode)) {
+        return res.status(400).json({ message: "Invalid workMode" });
+      }
+      doc.workMode = req.body.workMode;
+    }
+
+
     await doc.save();
     req.app.get("io")?.emit("attendance:sync");
 
@@ -480,62 +496,118 @@ const saveAttendanceAdmin = async (req, res) => {
 
 const exportAttendance = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { month } = req.query;
 
-    if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "Start and end date are required" });
+    if (!month) {
+      return res.status(400).json({ message: "Month (YYYY-MM) is required" });
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // include full day
+    // 1) Build start/end of month
+    const [year, monthIndex] = month.split("-").map(Number);
+    const start = new Date(year, monthIndex - 1, 1);
+    const end = new Date(year, monthIndex, 0, 23, 59, 59, 999);
 
+    // 2) Fetch attendances
     const records = await Attendance.find({
       date: { $gte: start, $lte: end },
-    }).populate("user", "name email");
+    })
+      .populate("user", "name email")
+      .lean();
 
     if (!records.length) {
       return res
         .status(404)
-        .json({ message: "No records found for the given date range" });
+        .json({ message: "No records found for the given month" });
     }
 
-    // Format data for CSV
-    const exportData = records.map((r) => ({
-      Name: r.user.name,
-      Email: r.user.email || "",
-      Date: moment.tz(r.date, TZ).format("YYYY-MM-DD"),
-      CheckIn: r.checkIn ? moment.tz(r.checkIn, TZ).format("HH:mm") : "—",
-      CheckOut: r.checkOut ? moment.tz(r.checkOut, TZ).format("HH:mm") : "—",
-      CheckInStatus: r.checkInStatus,
-      CheckOutStatus: r.checkOutStatus,
-      TotalHours: r.totalHours,
-    }));
+    // 3) Fetch holidays for month
+    const mStart = moment.tz(month, "YYYY-MM", TZ).startOf("month").toDate();
+    const mEnd = moment.tz(month, "YYYY-MM", TZ).endOf("month").toDate();
 
-    const fields = [
-      "Name",
-      "Email",
-      "Date",
-      "CheckIn",
-      "CheckOut",
-      "CheckInStatus",
-      "CheckOutStatus",
-      "TotalHours",
-    ];
+    const holidays = await Holiday.find({
+      date: { $gte: mStart, $lte: mEnd },
+    }).lean();
+
+    const holidayMap = {};
+    holidays.forEach((h) => {
+      holidayMap[moment(h.date).format("YYYY-MM-DD")] = h.label;
+    });
+
+    // 4) All dates in month
+    const allDates = [];
+    let cur = new Date(start);
+    while (cur <= end) {
+      allDates.push(moment.tz(cur, TZ).format("YYYY-MM-DD"));
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // 5) Group by user
+    const grouped = {};
+    records.forEach((r) => {
+      const userName = r.user?.name || "Unknown";
+      if (!grouped[userName]) grouped[userName] = { __raw: [], email: r.user?.email || "" };
+      grouped[userName].__raw.push(r);
+    });
+
+    // 6) Build rows
+    const finalRows = [];
+    for (const [userName, userData] of Object.entries(grouped)) {
+      const row = { Name: userName, Email: userData.email };
+
+      allDates.forEach((d) => {
+        // If holiday → mark it
+        if (holidayMap[d]) {
+          row[`${d}-In`] = holidayMap[d];
+          row[`${d}-Out`] = "—";
+          return;
+        }
+
+        const rec = userData.__raw.find(
+          (r) => moment.tz(r.date, TZ).format("YYYY-MM-DD") === d
+        );
+
+        row[`${d}-In`] = rec?.checkIn
+          ? moment.tz(rec.checkIn, TZ).format("HH:mm")
+          : "—";
+        row[`${d}-Out`] = rec?.checkOut
+          ? moment.tz(rec.checkOut, TZ).format("HH:mm")
+          : "—";
+      });
+
+      // Summary for this user
+      const summary = calculateUnifiedSummary(userData.__raw);
+      const s = summary[0] || {};
+      row["Present"] = s.present || 0;
+      row["Absent"] = s.absent || 0;
+      row["HalfDay"] = s.halfDayTotal || 0;
+      row["Late"] = s.late || 0;
+      row["Total"] = s.totalWorkingDays || 0;
+      row["WFH"] = s.wfh || 0;
+      row["Onsite"] = s.onsite || 0;
+
+      finalRows.push(row);
+    }
+
+    // 7) Build headers
+    const fields = ["Name", "Email"];
+    allDates.forEach((d) => {
+      fields.push(`${d}-In`, `${d}-Out`, `${d}-Hours`, `${d}-WorkMode`);
+    });
+    fields.push("Present", "Absent", "HalfDay", "Late", "Total", "WFH", "Onsite");
 
     const parser = new Parser({ fields });
-    const csv = parser.parse(exportData);
+    const csv = parser.parse(finalRows);
 
     res.header("Content-Type", "text/csv");
-    res.attachment(`Attendance-${startDate}-to-${endDate}.csv`);
+    res.attachment(`Attendance-${month}.csv`);
     res.send(csv);
   } catch (error) {
     console.error("Export error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 
 module.exports = {
   getAllAttendance,

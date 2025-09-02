@@ -12,7 +12,6 @@ const exportTasksReport = async (req, res) => {
     worksheet.columns = [
       { header: "Task ID", key: "id", width: 25 },
       { header: "Title", key: "title", width: 30 },
-      { header: "Description", key: "description", width: 50 },
       { header: "Assigned To", key: "assignedTo.name", width: 20 },
       { header: "Priority", key: "priority", width: 20 },
       { header: "Status", key: "status", width: 20 },

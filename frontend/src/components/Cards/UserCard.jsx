@@ -7,7 +7,7 @@ import Modal from "../../components/layouts/Modal";
 import DeleteAlert from "../../components/layouts/DeleteAlert";
 import SelectUsers from "components/Inputs/SelectUsers";
 
-const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
+const UserCard = ({ userInfo, onUserDeleted, allUsers, userRole }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
 
@@ -74,16 +74,18 @@ const UserCard = ({ userInfo, onUserDeleted, allUsers }) => {
             <p className="text-xs text-gray-100">{userInfo?.email}</p>
           </div>
 
-          <button
-            onClick={() => setOpenDeleteAlert(true)}
-            className="absolute top-2 right-2 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
-          >
-            <LuTrash className="text-base" />
-          </button>
+          {userRole === "superAdmin" && (
+            <button
+              onClick={() => setOpenDeleteAlert(true)}
+              className="absolute top-2 right-2 text-[13px] font-medium text-rose-500 bg-rose-50 rounded px-2 py-1 border border-rose-100 hover:border-rose-300 cursor-pointer"
+            >
+              <LuTrash className="text-base" />
+            </button>
+          )}
         </div>
 
         {userInfo?.role === "admin" ? (
-          <div className="grid grid-cols-3 lg:grid-cols-4 gap-3 border-t border-gray-200 py-3 mt-5">
+          <div className="grid grid-cols-3 lg:grid-cols-3 gap-3 border-t border-gray-200 py-3 mt-5">
             <StatCard label="Total" count={userInfo?.totalTask} />
             <StatCard label="New" count={userInfo?.newTask} />
             <StatCard label="InProgress" count={userInfo?.inProgressTask} />

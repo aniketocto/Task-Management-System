@@ -242,7 +242,8 @@ export const MENU_DATA = [
         label: "Team Members",
         icon: RiTeamLine,
         path: "/admin/users",
-        access: ({ role }) => role === "superAdmin",
+        access: ({ role, department }) =>
+          role === "superAdmin" || (role === "admin" && department === "HR"),
       },
       {
         label: "Users Attendance",

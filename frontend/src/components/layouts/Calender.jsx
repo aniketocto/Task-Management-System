@@ -85,6 +85,12 @@ const Calendar = ({
                     )}
                   </div>
 
+                  {attendance?.workMode !== "office" && (
+                    <div className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-purple-300 italic uppercase">
+                      {beautify(attendance?.workMode || "")}
+                    </div>
+                  )}
+
                   {attendance ? (
                     <div className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-white space-y-0.5 sm:space-y-1 leading-snug">
                       <div className="whitespace-nowrap overflow-hidden text-ellipsis">

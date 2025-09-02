@@ -187,14 +187,14 @@ const deleteOpening = async (req, res) => {
     const { id } = req.params;
     await Opening.findByIdAndDelete(id);
     res.status(200).json({ message: "Opening deleted successfully" });
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // Interviews
 
 const createInterview = async (req, res) => {
   try {
-    const { opening, candidateName, startTime, interviewers, status, rounds } =
+    const { opening, candidateName, startTime, interviewers, status, rounds, resume } =
       req.body;
 
     const interview = await Interview.create({
@@ -204,6 +204,7 @@ const createInterview = async (req, res) => {
       rounds,
       interviewers,
       status,
+      resume
     });
 
     res.status(201).json({
@@ -363,7 +364,7 @@ const getAllInterviews = async (req, res) => {
 const updateInterview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { startTime, status, rounds, done } = req.body;
+    const { startTime, status, rounds, done, resume } = req.body;
 
     const interview = await Interview.findById(id);
     if (!interview) {
@@ -380,6 +381,9 @@ const updateInterview = async (req, res) => {
     }
     if (typeof done !== "undefined") {
       interview.done = done;
+    }
+    if (typeof resume !== "undefined") {
+      interview.resume = resume;
     }
 
     await interview.save();
