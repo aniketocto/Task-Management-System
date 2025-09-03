@@ -93,8 +93,6 @@ const MyTasks = () => {
         const tasks = resp.data.tasks || [];
         setAllTasks(tasks);
         setStatusSummary(resp.data.statusSummary || {});
-        console.log(resp.data);
-
         // status tabs
         const s = resp.data.statusSummary || {};
         setTabs([
@@ -121,6 +119,7 @@ const MyTasks = () => {
       sortOrder,
       sortBy,
       debouncedSearchSerial,
+      user,
     ]
   );
 
@@ -224,8 +223,6 @@ const MyTasks = () => {
                 }}
               />
             </div>
-
-           
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 mt-5">
             {infoCard.map(({ label, key2, color, description }) => (

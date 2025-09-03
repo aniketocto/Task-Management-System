@@ -87,6 +87,7 @@ const MyTasks = () => {
             sortBy,
             fields: "tasks,statusSummary",
             serialNumber: debouncedSearchSerial || undefined,
+            userId: user?._id, // 👈 force only my tasks
           },
         });
 
