@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
     designation: {
       type: String,
       enum: [
+        "ceo",
         "projectManager",
         "artDirector",
         "brandStrategist",

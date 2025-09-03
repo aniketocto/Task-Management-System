@@ -274,6 +274,7 @@ export const MENU_DATA = [
 ];
 
 export const DESIGNATIONS = [
+  { value: "ceo", label: "CEO" },
   { value: "projectManager", label: "Project Manager" },
   { value: "artDirector", label: "Art Director" },
   { value: "brandStrategist", label: "Brand Strategist" },
