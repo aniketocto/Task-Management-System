@@ -29,7 +29,26 @@ const userSchema = new mongoose.Schema(
       ],
       default: "Other",
     },
-    designation: { type: String },
+    designation: {
+      type: String,
+      enum: [
+        "projectManager",
+        "artDirector",
+        "brandStrategist",
+        "hrExecutive",
+        "graphicDesigner",
+        "businessDevelopmentManager",
+        "marketingCoordinator",
+        "socialMediaStrategist",
+        "socialMediaIntern",
+        "graphicDesigningIntern",
+        "jrFrontendDeveloper",
+        "other",
+      ],
+      default: "other",
+    },
+
+
   },
   {
     timestamps: true,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
@@ -368,6 +368,9 @@ const TodoCheckList = ({
   item,
   allUsers = [],
 }) => {
+  const { user } = useContext(UserContext);
+
+  const canToggle = assignedTo.some((u) => u._id === user?._id);
   // Find approver name
   const approver =
     approval?.approvedBy && allUsers.find((u) => u._id === approval.approvedBy);
@@ -391,6 +394,7 @@ const TodoCheckList = ({
           type="checkbox"
           name="taskCheck"
           checked={isChecked}
+          disabled={!canToggle}
           onChange={onChange}
           className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none cursor-pointer"
         />

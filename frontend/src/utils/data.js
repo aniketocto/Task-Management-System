@@ -273,6 +273,21 @@ export const MENU_DATA = [
   },
 ];
 
+export const DESIGNATIONS = [
+  { value: "projectManager", label: "Project Manager" },
+  { value: "artDirector", label: "Art Director" },
+  { value: "brandStrategist", label: "Brand Strategist" },
+  { value: "hrExecutive", label: "HR Executive" },
+  { value: "graphicDesigner", label: "Graphic Designer" },
+  { value: "businessDevelopmentManager", label: "Business Development Manager" },
+  { value: "marketingCoordinator", label: "Marketing Coordinator" },
+  { value: "socialMediaStrategist", label: "Social Media Strategist" },
+  { value: "socialMediaIntern", label: "Social Media Intern" },
+  { value: "graphicDesigningIntern", label: "Graphic Designing Intern" },
+  { value: "jrFrontendDeveloper", label: "Jr. Frontend Developer" },
+  { value: "other", label: "Other" },
+]
+
 export const PRIORITY_OPTIONS = [
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },

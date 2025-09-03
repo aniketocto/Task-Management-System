@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { MENU_DATA } from "../../utils/data";
+import { DESIGNATIONS, MENU_DATA } from "../../utils/data";
 import Modal from "./Modal";
 import DeleteAlert from "./DeleteAlert";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
@@ -13,6 +13,8 @@ import SpinLoader from "./SpinLoader";
 import Input from "components/Inputs/Input";
 import toast from "react-hot-toast";
 import moment from "moment";
+import SelectOption from "components/Inputs/SelectOption";
+import { beautify } from "../../utils/helper";
 
 const SideMenu = ({ activeMenu }) => {
   const { user, clearUser, updateUser } = useContext(UserContext);
@@ -317,7 +319,7 @@ const SideMenu = ({ activeMenu }) => {
           )}
 
           <p className="text-white text-sm font-regular mt-3 ">
-            {user?.designation}
+            {beautify(user?.designation)}
           </p>
           <p className="text-white text-xs font-light ">{user?.name}</p>
           <p className="text-[10px] text-gray-500">
@@ -424,13 +426,18 @@ const SideMenu = ({ activeMenu }) => {
           placeholder="Enter your name"
           type="text"
         />
-        <Input
-          value={designation || user.designation}
-          onChange={(e) => setDesignation(e.target.value)}
-          label="Designation"
-          placeholder="Enter your designation"
-          type="text"
-        />
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-xs font-medium text-slate-200">
+            Designation
+          </label>
+          <SelectOption
+            options={DESIGNATIONS}
+            value={designation || user.designation}
+            onChange={(val) => setDesignation(val)}
+            label="Designation"
+            placeholder="Select your designation"
+          />
+        </div>
         <div className="col-span-12 md:col-span-4">
           <label className="text-xs font-medium text-slate-200">DOB</label>
           <input
@@ -441,6 +448,7 @@ const SideMenu = ({ activeMenu }) => {
             className="form-input-date"
           />
         </div>
+
         <button
           className="bg-[#E43941] text-white w-full py-2 rounded"
           onClick={handleImageUpload}

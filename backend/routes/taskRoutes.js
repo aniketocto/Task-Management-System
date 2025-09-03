@@ -25,7 +25,7 @@ const router = express.Router();
 router.get(
   "/dashboard-data",
   protect,
-  allowRoleOrDept(["admin", "superAdmin"], ["BusinessDevelopment"]),
+  allowRoleOrDept(["admin", "superAdmin"], []),
   getDashboardData
 ); // All data dashboard for admin
 

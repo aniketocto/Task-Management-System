@@ -24,6 +24,8 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
   withCredentials: true,
 });
 
+const privilegedDesignations = ["projectManager", "hrExecutive"];
+
 const ManageTask = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
@@ -172,9 +174,12 @@ const ManageTask = () => {
             serialNumber: debouncedSearchSerial || undefined,
             companyName: selectedCompany || undefined,
             userId:
-              userRole === "superAdmin" && selectedUserId
+              (userRole === "superAdmin" ||
+                (userRole === "admin" &&
+                  privilegedDesignations.includes(user?.designation))) &&
+              selectedUserId
                 ? selectedUserId
-                : undefined, // NEW: user filter
+                : undefined,
           },
         });
 
@@ -500,7 +505,9 @@ const ManageTask = () => {
               )}
 
               {/* User (superAdmin only) */}
-              {userRole === "superAdmin" && (
+              {(user?.role === "superAdmin" ||
+                (user?.role === "admin" &&
+                  privilegedDesignations.includes(user?.designation))) && (
                 <div className="flex gap-1 flex-col">
                   <label className="text-sm font-medium text-gray-600">
                     User:
