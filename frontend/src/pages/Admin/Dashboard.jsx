@@ -47,6 +47,8 @@ const getDailyQuote = () => {
   return officeQuotes[key[hash]];
 };
 
+const privilegedDesignations  = ["projectManager", "hr"];
+
 const Dashboard = () => {
   useUserAuth();
 
@@ -197,7 +199,12 @@ const Dashboard = () => {
       }
       if (filterDepartment) params.department = filterDepartment;
       if (selectedCompany) params.companyName = selectedCompany;
-      if (user?.role === "superAdmin" && selectedUserId) {
+      if (
+        (user?.role === "superAdmin" ||
+          (user?.role === "admin" &&
+            privilegedDesignations .includes(user?.designation))) &&
+        selectedUserId
+      ) {
         params.userId = selectedUserId;
       }
 
@@ -259,6 +266,7 @@ const Dashboard = () => {
     selectedUserId,
     user?.role,
     departmentsMaster,
+    user?.designation,
   ]);
 
   // Debounced API trigger
@@ -502,7 +510,9 @@ const Dashboard = () => {
                 </div>
               )}
               {/* User filter (superAdmin only) */}
-              {user?.role === "superAdmin" && (
+              {(user?.role === "superAdmin" ||
+                (user?.role === "admin" &&
+                  privilegedDesignations .includes(user?.designation))) && (
                 <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                   <label className="text-sm font-medium text-gray-600">
                     User:
@@ -512,7 +522,7 @@ const Dashboard = () => {
                     onChange={(e) => setSelectedUserId(e.target.value)}
                     className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    <option value="">All</option>
+                    <option value=""  className="text-black">All</option>
                     {availableUsers
                       .sort((a, b) => a.name.localeCompare(b.name))
                       .map((u) => (

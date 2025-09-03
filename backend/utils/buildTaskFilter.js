@@ -81,15 +81,18 @@ async function buildTaskFilter(opts) {
     companyName,
   } = opts;
 
-  const isPrivileged = reqUser.role === "superAdmin";
+  const privilegedDesignations = ["projectManager", "hr"];
+
+  const isPrivileged = reqUser.role === "superAdmin" ||
+    (reqUser.role === "admin" && privilegedDesignations.includes(reqUser.designation));
   const filter = isPrivileged
     ? {}
     : {
-        $or: [
-          { assignedTo: reqUser._id },
-          { "todoChecklist.assignedTo": reqUser._id },
-        ],
-      };
+      $or: [
+        { assignedTo: reqUser._id },
+        { "todoChecklist.assignedTo": reqUser._id },
+      ],
+    };
 
   //   department wise
   if (department) {
