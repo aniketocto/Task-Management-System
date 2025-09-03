@@ -32,19 +32,23 @@ const userSchema = new mongoose.Schema(
     designation: {
       type: String,
       enum: [
-        "fullStackDeveloper",
-        "socialMediaIntern",
-        "socialMediaManager",
-        "hr",
-        "artDirector",
-        "graphicDesigner",
         "projectManager",
+        "artDirector",
+        "brandStrategist",
+        "hrExecutive",
+        "graphicDesigner",
         "businessDevelopmentManager",
-        "CreativeDesigner",
-        "Other",
+        "marketingCoordinator",
+        "socialMediaStrategist",
+        "socialMediaIntern",
+        "graphicDesigningIntern",
+        "jrFrontendDeveloper",
+        "other",
       ],
-      default: "Other",
+      default: "other",
     },
+
+
   },
   {
     timestamps: true,
