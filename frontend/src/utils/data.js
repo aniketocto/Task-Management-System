@@ -273,6 +273,19 @@ export const MENU_DATA = [
   },
 ];
 
+export const DESIGNATIONS = [
+  { value: "fullStackDeveloper", label: "Full Stack Developer" },
+  { value: "socialMediaIntern", label: "Social Media Intern" },
+  { value: "socialMediaManager", label: "Social Media Manager" },
+  { value: "hr", label: "HR" },
+  { value: "artDirector", label: "Art Director" },
+  { value: "graphicDesigner", label: "Graphic Designer" },
+  { value: "projectManager", label: "Project Manager" },
+  { value: "businessDevelopmentManager", label: "Business Development Manager" },
+  { value: "CreativeDesigner", label: "Creative Designer" },
+  { value: "Other", label: "Other" }, 
+]
+
 export const PRIORITY_OPTIONS = [
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },
