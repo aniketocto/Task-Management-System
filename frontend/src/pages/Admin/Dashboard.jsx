@@ -47,7 +47,7 @@ const getDailyQuote = () => {
   return officeQuotes[key[hash]];
 };
 
-const privilegedDesignations  = ["projectManager", "hr"];
+const privilegedDesignations = ["projectManager", "hrExecutive"];
 
 const Dashboard = () => {
   useUserAuth();
@@ -202,7 +202,7 @@ const Dashboard = () => {
       if (
         (user?.role === "superAdmin" ||
           (user?.role === "admin" &&
-            privilegedDesignations .includes(user?.designation))) &&
+            privilegedDesignations.includes(user?.designation))) &&
         selectedUserId
       ) {
         params.userId = selectedUserId;
@@ -512,7 +512,7 @@ const Dashboard = () => {
               {/* User filter (superAdmin only) */}
               {(user?.role === "superAdmin" ||
                 (user?.role === "admin" &&
-                  privilegedDesignations .includes(user?.designation))) && (
+                  privilegedDesignations.includes(user?.designation))) && (
                 <div className="flex gap-1 mb-4 items-start flex-col justify-start">
                   <label className="text-sm font-medium text-gray-600">
                     User:
@@ -522,7 +522,9 @@ const Dashboard = () => {
                     onChange={(e) => setSelectedUserId(e.target.value)}
                     className="border rounded px-3 py-2 text-sm text-white"
                   >
-                    <option value=""  className="text-black">All</option>
+                    <option value="" className="text-black">
+                      All
+                    </option>
                     {availableUsers
                       .sort((a, b) => a.name.localeCompare(b.name))
                       .map((u) => (

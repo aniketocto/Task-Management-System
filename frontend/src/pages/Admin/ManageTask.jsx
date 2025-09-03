@@ -24,7 +24,7 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
   withCredentials: true,
 });
 
-const privilegedDesignations = ["projectManager", "hr"];
+const privilegedDesignations = ["projectManager", "hrExecutive"];
 
 const ManageTask = () => {
   const navigate = useNavigate();

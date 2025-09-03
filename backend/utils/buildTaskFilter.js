@@ -81,7 +81,7 @@ async function buildTaskFilter(opts) {
     companyName,
   } = opts;
 
-  const privilegedDesignations = ["projectManager", "hr"];
+  const privilegedDesignations = ["projectManager", "hrExecutive"];
 
   const isPrivileged = reqUser.role === "superAdmin" ||
     (reqUser.role === "admin" && privilegedDesignations.includes(reqUser.designation));
