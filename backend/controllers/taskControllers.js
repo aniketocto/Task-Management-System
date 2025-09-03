@@ -2007,6 +2007,18 @@ const approveChecklistItem = async (req, res) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
+    const isSuperAdmin = req.user.role === "superAdmin";
+    const isAssignedAdmin =
+      req.user.role === "admin" &&
+      task.assignedTo.some((id) => id.toString() === req.user._id.toString());
+
+    if (!isSuperAdmin && !isAssignedAdmin) {
+      return res.status(403).json({
+        message:
+          "Only superAdmins or the assigned admin can approve checklist items.",
+      });
+    }
+
     const checklistItem = task.todoChecklist.id(itemId);
     if (!checklistItem) {
       return res.status(404).json({ message: "Checklist item not found" });

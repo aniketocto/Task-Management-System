@@ -370,8 +370,10 @@ const CreateTask = () => {
         ...prev,
         todoChecklist: res.data.task.todoChecklist,
       }));
+      toast.success("Checklist approval status updated");
     } catch (err) {
       console.error("Checklist approval failed:", err);
+      toast.error(err.response?.data?.message || "Server error");
     }
   };
 
