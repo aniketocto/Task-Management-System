@@ -31,6 +31,7 @@ import ManageLead from "./pages/Lead/ManageLead";
 import Attendance from "pages/User/Attendance";
 import UsersAttendence from "pages/Admin/UsersAttendence";
 import HrDashboard from "pages/Admin/HrDashboard";
+import ManageSOPs from "pages/Admin/ManageSOPs";
 
 function App() {
   return (
@@ -41,6 +42,11 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/sign-up" element={<SignUp />} />
+
+            {/* SuperAdmin Only Routes */}
+            <Route element={<PrivateRoute allowedRoles={["superAdmin"]} />}>
+              <Route path="/admin/manage-sops" element={<ManageSOPs />} />
+            </Route>
 
             {/* Admin Routes */}
             <Route
@@ -66,7 +72,7 @@ function App() {
               />
             </Route>
 
-            {/* Lead Routes */}
+            {/* BD Routes */}
             <Route
               element={
                 <PrivateRoute
@@ -78,6 +84,7 @@ function App() {
               <Route path="/leads-create" element={<CreateLead />} />
             </Route>
 
+            {/* HR Routes */}
             <Route
               element={
                 <PrivateRoute

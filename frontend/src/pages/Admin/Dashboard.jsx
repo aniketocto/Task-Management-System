@@ -28,8 +28,8 @@ import { infoCard, officeQuotes } from "../../utils/data";
 import SpinLoader from "../../components/layouts/SpinLoader";
 import { io } from "socket.io-client";
 import { userSOPs } from "../../utils/userSOPs";
-import DailySOP from "components/Inputs/DailySOP";
 import { RiResetLeftLine } from "react-icons/ri";
+import MySopsPanel from "components/layouts/MySopsPanel";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   auth: { token: localStorage.getItem("taskManagerToken") },
@@ -638,7 +638,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <DailySOP sops={sops} email={userEmail} />
+      <div className="my-4 md:my-6">
+        <MySopsPanel />
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
