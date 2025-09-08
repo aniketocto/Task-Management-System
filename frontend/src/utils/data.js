@@ -4,159 +4,9 @@ import {
   LuLogOut,
   LuSquare,
 } from "react-icons/lu";
-
+import { FaFileSignature } from "react-icons/fa";
 import { RiTeamLine } from "react-icons/ri";
 import { CiCalendarDate } from "react-icons/ci";
-
-// export const SIDE_MENU_ADMIN_DATA = [
-//   {
-//     id: "01",
-//     label: "Dashboard",
-//     icon: LuLayoutDashboard,
-//     path: "/admin/dashboard",
-//   },
-//   {
-//     id: "02",
-//     label: "Manage Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/admin/tasks",
-//   },
-//   {
-//     id: "03",
-//     label: "Create Task",
-//     icon: LuSquare,
-//     path: "/admin/create-task",
-//   },
-//   {
-//     id: "04",
-//     label: "My Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/admin/my-tasks",
-//   },
-//   {
-//     id: "04",
-//     label: "Manage Lead",
-//     icon: LuClipboardCheck,
-//     path: "/manage-lead",
-//   },
-//   {
-//     id: "05",
-//     label: "Logout",
-//     icon: LuLogOut,
-//     path: "logout",
-//   },
-// ];
-
-// export const SIDE_MENU_SUPER_ADMIN_DATA = [
-//   {
-//     id: "01",
-//     label: "Dashboard",
-//     icon: LuLayoutDashboard,
-//     path: "/admin/dashboard",
-//   },
-//   {
-//     id: "03",
-//     label: "Manage Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/admin/tasks",
-//   },
-//   {
-//     id: "04",
-//     label: "Manage Lead",
-//     icon: LuClipboardCheck,
-//     path: "/manage-lead",
-//   },
-//   {
-//     id: "04",
-//     label: "Create Task",
-//     icon: LuSquare,
-//     path: "/admin/create-task",
-//   },
-//   {
-//     id: "05",
-//     label: "Create Leads",
-//     icon: LuSquare,
-//     path: "/leads-create",
-//   },
-//   {
-//     id: "06",
-//     label: "Team Members",
-//     icon: RiTeamLine,
-//     path: "/admin/users",
-//   },
-//   {
-//     id: "07",
-//     label: "Logout",
-//     icon: LuLogOut,
-//     path: "logout",
-//   },
-// ];
-
-// export const SIDE_MENU_BE_USER_DATA = [
-//   {
-//     id: "01",
-//     label: "Dashboard",
-//     icon: LuLayoutDashboard,
-//     path: "/admin/dashboard",
-//   },
-//   {
-//     id: "04",
-//     label: "Manage Lead",
-//     icon: LuClipboardCheck,
-//     path: "/manage-lead",
-//   },
-//   {
-//     id: "02",
-//     label: "Manage Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/admin/tasks",
-//   },
-//   {
-//     id: "02",
-//     label: "My Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/user/tasks",
-//   },
-//   {
-//     id: "03",
-//     label: "Create Task",
-//     icon: LuSquare,
-//     path: "/admin/create-task",
-//   },
-//   {
-//     id: "04",
-//     label: "Create Leads",
-//     icon: LuClipboardCheck,
-//     path: "/leads-create",
-//   },
-//   {
-//     id: "05",
-//     label: "Logout",
-//     icon: LuLogOut,
-//     path: "logout",
-//   },
-// ];
-
-// export const SIDE_MENU_USER_DATA = [
-//   {
-//     id: "01",
-//     label: "Dashboard",
-//     icon: LuLayoutDashboard,
-//     path: "/user/dashboard",
-//   },
-//   {
-//     id: "02",
-//     label: "View Tasks",
-//     icon: LuClipboardCheck,
-//     path: "/user/tasks",
-//   },
-//   {
-//     id: "03",
-//     label: "Logout",
-//     icon: LuLogOut,
-//     path: "logout",
-//   },
-// ];
 
 export const MENU_DATA = [
   {
@@ -179,6 +29,12 @@ export const MENU_DATA = [
         icon: LuClipboardCheck,
         path: "/admin/tasks",
         access: ({ role }) => role === "superAdmin" || role === "admin",
+      },
+      {
+        label: "Manage SOPs",
+        icon: FaFileSignature,
+        path: "/admin/manage-sops",
+        access: ({ role }) => role === "superAdmin",
       },
       {
         label: "Create Task",
@@ -280,14 +136,17 @@ export const DESIGNATIONS = [
   { value: "brandStrategist", label: "Brand Strategist" },
   { value: "hrExecutive", label: "HR Executive" },
   { value: "graphicDesigner", label: "Graphic Designer" },
-  { value: "businessDevelopmentManager", label: "Business Development Manager" },
+  {
+    value: "businessDevelopmentManager",
+    label: "Business Development Manager",
+  },
   { value: "marketingCoordinator", label: "Marketing Coordinator" },
   { value: "socialMediaStrategist", label: "Social Media Strategist" },
   { value: "socialMediaIntern", label: "Social Media Intern" },
   { value: "graphicDesigningIntern", label: "Graphic Designing Intern" },
   { value: "jrFrontendDeveloper", label: "Jr. Frontend Developer" },
   { value: "other", label: "Other" },
-]
+];
 
 export const PRIORITY_OPTIONS = [
   { value: "high", label: "High" },

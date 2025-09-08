@@ -114,4 +114,13 @@ export const API_PATHS = {
     DELETE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
     UPDATE_EVENT: (eventId) => `/api/channels/events/${eventId}`,
   },
+  SOPS: {
+    GET_SOPS: "/api/sops",
+    CREATE_SOP: "/api/sops",
+    UPDATE_SOP: (sopId) => `/api/sops/${sopId}`,
+    DELETE_SOP: (sopId) => `/api/sops/${sopId}`,
+    GET_MY_SOPS: "/api/sops/my",
+    TOGGLE_COMPLETE: (id) => `/api/sops/${id}/toggle`,
+    GET_COMPLETIONS: "/api/sops/completion",
+  },
 };

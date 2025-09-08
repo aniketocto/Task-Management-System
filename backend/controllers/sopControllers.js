@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { SOP, SOPCompletion } = require("../models/Sops");
 const User = require("../models/User");
 const moment = require("moment-timezone");
@@ -11,7 +12,9 @@ const generateCompletionKey = (sop, userId, date = new Date()) => {
     return `daily-${user}-${sopId}-${m.format("YYYY-MM-DD")}`;
   }
   if (sop.frequency === "weekly") {
-    return `weekly-${user}-${sopId}-${m.format("YYYY-WW")}`;
+    const isoYear = m.isoWeekYear();
+    const isoWeek = String(m.isoWeek()).padStart(2, "0");
+    return `weekly-${user}-${sopId}-${isoYear}-W${isoWeek}`;
   }
   if (sop.frequency === "monthly") {
     return `monthly-${user}-${sopId}-${m.format("YYYY-MM")}`;
@@ -31,6 +34,10 @@ const createSOP = async (req, res) => {
       createdBy: req.user._id,
     });
     await newSop.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("sop:sync", { action: "created", sopId: newSop._id });
+
     res.status(201).json({ message: "SOP created successfully", sop: newSop });
   } catch (error) {
     res
@@ -44,12 +51,51 @@ const getSOPs = async (req, res) => {
     const filter = {};
     if (req.query.designation) filter.designation = req.query.designation;
     if (req.query.assignedTo) filter.assignedTo = req.query.assignedTo;
+    if (req.query.frequency) filter.frequency = req.query.frequency;
 
+    // Get SOPs with the applied filters
     const sops = await SOP.find(filter)
-      .populate("assignedTo", "name")
+      .populate("assignedTo", "name designation")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ message: "SOPs fetched successfully", data: sops });
+    // Create base filter for counts (without frequency filter to get all frequency counts)
+    const countFilter = {};
+    if (req.query.designation) countFilter.designation = req.query.designation;
+    if (req.query.assignedTo)
+      countFilter.assignedTo = new mongoose.Types.ObjectId(
+        req.query.assignedTo
+      );
+    // Note: We don't include frequency filter here so we can get counts for all frequencies
+
+    // Get frequency counts with the same filters (except frequency)
+    const frequencyCounts = await SOP.aggregate([
+      { $match: countFilter }, // Apply the same filters except frequency
+      {
+        $group: {
+          _id: "$frequency",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Format frequency counts into a more readable structure
+    const counts = {
+      all: 0,
+      daily: 0,
+      weekly: 0,
+      monthly: 0,
+    };
+
+    frequencyCounts.forEach((item) => {
+      counts[item._id] = item.count;
+      counts.all += item.count;
+    });
+
+    res.status(200).json({
+      message: "SOPs fetched successfully",
+      data: sops,
+      counts: counts,
+    });
   } catch (error) {
     res
       .status(500)
@@ -68,6 +114,8 @@ const updateSop = async (req, res) => {
     if (!updatedSop) {
       return res.status(404).json({ message: "SOP not found" });
     }
+    const io = req.app.get("io");
+    if (io) io.emit("sop:sync", { action: "updated", sopId: updatedSop._id });
     res
       .status(200)
       .json({ message: "SOP updated successfully", sop: updatedSop });
@@ -86,6 +134,8 @@ const deleteSop = async (req, res) => {
       return res.status(404).json({ message: "SOP not found" });
     }
     await SOPCompletion.deleteMany({ sop: id });
+    const io = req.app.get("io");
+    if (io) io.emit("sop:sync", { action: "deleted", sopId: id });
     res
       .status(200)
       .json({ message: "SOP and related completions deleted successfully" });
@@ -144,25 +194,33 @@ const getMySops = async (req, res) => {
     const user = req.user;
     const sops = await SOP.find({
       $or: [{ designation: user.designation }, { assignedTo: user._id }],
-    }).lean();
+    })
+      .populate("assignedTo", "name designation")
+      .lean();
 
     const today = new Date();
     const completionKeys = sops.map((sop) =>
       generateCompletionKey(sop, user._id, today)
     );
 
+    // fetch completions and include completedAt
     const completions = await SOPCompletion.find({
       completionKey: { $in: completionKeys },
-    }).select("completionKey");
+    }).select("completionKey completedAt");
 
-    const completedKeysSet = new Set(completions.map((c) => c.completionKey));
+    // build a map from completionKey -> completedAt for quick lookup
+    const completionMap = new Map(
+      completions.map((c) => [c.completionKey, c.completedAt])
+    );
 
-    const sopsWithStatus = sops.map((sop) => ({
-      ...sop,
-      isCompleted: completedKeysSet.has(
-        generateCompletionKey(sop, user._id, today)
-      ),
-    }));
+    const sopsWithStatus = sops.map((sop) => {
+      const key = generateCompletionKey(sop, user._id, today);
+      return {
+        ...sop,
+        isCompleted: completionMap.has(key),
+        completedAt: completionMap.get(key) || null,
+      };
+    });
 
     res.status(200).json({
       message: "User SOPs fetched successfully",
@@ -177,28 +235,49 @@ const getMySops = async (req, res) => {
 
 const toggleSopCompletion = async (req, res) => {
   try {
-    const { id: sopId } = req.params;
-    const userId = req.user._id;
+    const { id } = req.params;
     const { checked } = req.body;
+    const userId = req.user._id;
+    const today = new Date();
 
-    const sop = await SOP.findById(sopId);
+    const sop = await SOP.findById(id);
     if (!sop) {
       return res.status(404).json({ message: "SOP not found" });
     }
 
-    const completionKey = generateCompletionKey(sop, userId);
+    const completionKey = generateCompletionKey(sop, userId, today);
+
+    let updatedAt = null;
 
     if (checked) {
-      await SOPCompletion.findOneAndUpdate(
+      // mark complete
+      const record = await SOPCompletion.findOneAndUpdate(
         { completionKey },
-        { sop: sopId, user: userId, completionKey, completedAt: new Date() },
+        { completionKey, user: userId, sop: sop._id, completedAt: today },
         { upsert: true, new: true }
       );
-      res.status(200).json({ message: "SOP marked as completed successfully" });
+      updatedAt = record.completedAt;
     } else {
-      await SOPCompletion.findOneAndDelete({ completionKey });
-      res.status(200).json({ message: "SOP marked as incomplete." });
+      // mark incomplete
+      await SOPCompletion.deleteOne({ completionKey });
     }
+    const io = req.app.get("io");
+    if (io)
+      io.emit("sop:sync", {
+        action: "toggled",
+        sopId: sop._id.toString(),
+        userId: userId.toString(),
+        checked,
+      });
+
+    res.status(200).json({
+      message: checked ? "SOP marked as completed" : "SOP marked as incomplete",
+      data: {
+        _id: sop._id,
+        isCompleted: checked,
+        completedAt: checked ? updatedAt : null,
+      },
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to toggle SOP completion",

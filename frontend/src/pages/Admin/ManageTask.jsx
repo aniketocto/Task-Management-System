@@ -245,6 +245,7 @@ const ManageTask = () => {
       selectedCompany,
       userRole,
       selectedUserId,
+      user?.designation,
     ]
   );
 

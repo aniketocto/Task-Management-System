@@ -13,6 +13,7 @@ import TaskListTable from "../../components/layouts/TaskListTable";
 import CustomPieChart from "../../components/Charts/CustomPieChart";
 import CustomBarChart from "../../components/Charts/CustomBarChart";
 import { infoCard, officeQuotes } from "../../utils/data";
+import MySopsPanel from "components/layouts/MySopsPanel";
 
 const getDailyQuote = () => {
   const today = new Date().toISOString().slice(0, 10); // e.g., "2025-07-05"
@@ -122,6 +123,10 @@ const UserDashboard = () => {
             />
           ))}
         </div>
+      </div>
+
+      <div className="my-4 md:my-6">
+        <MySopsPanel />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">

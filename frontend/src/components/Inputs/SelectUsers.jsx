@@ -5,6 +5,7 @@ import { LuUser } from "react-icons/lu";
 import Modal from "../../components/layouts/Modal";
 import AvatarGroup from "../../components/layouts/AvatarGroup";
 import { SyncLoader } from "react-spinners";
+import { beautify } from "../../utils/helper";
 
 const SelectUsers = ({
   selectedUsers,
@@ -144,7 +145,7 @@ const SelectUsers = ({
                 />
                 <div className="flex-1">
                   <p className="font-medium text-gray-100">{user.name}</p>
-                  <p className="text-[13px] text-gray-100">{user.department}</p>
+                  <p className="text-[13px] text-gray-100">{beautify(user.designation)}</p>
                 </div>
 
                 <input
