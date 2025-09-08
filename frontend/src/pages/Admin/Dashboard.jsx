@@ -638,9 +638,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="my-4 md:my-6">
-        <MySopsPanel />
-      </div>
+      {user?.role === "admin" && (
+        <div className="my-4 md:my-6">
+          <MySopsPanel />
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
