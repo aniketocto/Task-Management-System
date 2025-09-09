@@ -135,7 +135,7 @@ const ManageSOPs = () => {
     fetchSops();
   }, [fetchSops]);
 
-  console.log(freqCounts)
+  console.log(freqCounts);
 
   return (
     <DashboardLayout activeMenu="Manage SOPs">
@@ -228,7 +228,7 @@ const ManageSOPs = () => {
           onClick={() => setFrequencyFilter("daily")}
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-shadow focus:outline-none cursor-pointer ${
             frequencyFilter === "daily"
-              ? "bg-[#E43941] text-white shadow"
+              ? "bg-yellow-600 text-white shadow"
               : "bg-gray-800 text-gray-200 hover:bg-gray-700"
           }`}
         >
@@ -246,7 +246,7 @@ const ManageSOPs = () => {
           onClick={() => setFrequencyFilter("weekly")}
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-shadow focus:outline-none cursor-pointer ${
             frequencyFilter === "weekly"
-              ? "bg-[#E43941] text-white shadow"
+              ? "bg-blue-600 text-white shadow"
               : "bg-gray-800 text-gray-200 hover:bg-gray-700"
           }`}
         >
@@ -264,7 +264,7 @@ const ManageSOPs = () => {
           onClick={() => setFrequencyFilter("monthly")}
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-shadow focus:outline-none cursor-pointer ${
             frequencyFilter === "monthly"
-              ? "bg-[#E43941] text-white shadow"
+              ? "bg-green-600 text-white shadow"
               : "bg-gray-800 text-gray-200 hover:bg-gray-700"
           }`}
         >
@@ -294,7 +294,19 @@ const ManageSOPs = () => {
                   {sop.title}
                 </h3>
                 <p className="text-sm text-gray-400 mb-2">{sop.description}</p>
-                <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize">
+                <span
+                  c
+                  className={`text-xs rounded-full px-2 py-0.5 capitalize 
+    ${
+      sop.frequency === "daily"
+        ? "bg-yellow-600 text-white"
+        : sop.frequency === "weekly"
+        ? "bg-blue-600 text-white"
+        : sop.frequency === "monthly"
+        ? "bg-green-600 text-white"
+        : "bg-gray-600 text-white"
+    }`}
+                >
                   {sop.frequency}
                 </span>
               </div>
