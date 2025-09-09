@@ -31,7 +31,7 @@ const SopModal = ({ isOpen, onClose, onSuccess, editData }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return; 
+    if (!isOpen) return;
     if (editData) {
       setFormData({
         title: editData.title || "",
@@ -41,7 +41,7 @@ const SopModal = ({ isOpen, onClose, onSuccess, editData }) => {
         assignedTo: editData.assignedTo ? [editData.assignedTo._id] : [],
       });
     } else {
-      setFormData(INITIAL_FORM); 
+      setFormData(INITIAL_FORM);
     }
   }, [isOpen, editData]);
 
@@ -98,6 +98,9 @@ const SopModal = ({ isOpen, onClose, onSuccess, editData }) => {
           value={formData.title}
           onChange={(e) => handleChange("title", e.target.value)}
         />
+        <label htmlFor="" className="text-gray-50">
+          Description
+        </label>
         <textarea
           className="form-input"
           rows={3}
@@ -105,6 +108,9 @@ const SopModal = ({ isOpen, onClose, onSuccess, editData }) => {
           value={formData.description}
           onChange={(e) => handleChange("description", e.target.value)}
         />
+        <label htmlFor="" className="text-gray-50">
+          Frequency
+        </label>
         <SelectOption
           label="Frequency"
           options={FREQUENCY_OPTIONS}
@@ -123,12 +129,17 @@ const SopModal = ({ isOpen, onClose, onSuccess, editData }) => {
         )} */}
 
         {formData.designation === "" && (
-          <SelectUsers
-            selectedUsers={formData.assignedTo}
-            setSelectedUsers={(val) => handleChange("assignedTo", val)}
-            allUsers={allUsers}
-            loading={loadingUsers}
-          />
+          <>
+            <label htmlFor="" className="text-gray-50">
+              Owner
+            </label>
+            <SelectUsers
+              selectedUsers={formData.assignedTo}
+              setSelectedUsers={(val) => handleChange("assignedTo", val)}
+              allUsers={allUsers}
+              loading={loadingUsers}
+            />
+          </>
         )}
 
         <div className="flex justify-end">

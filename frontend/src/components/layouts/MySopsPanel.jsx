@@ -133,7 +133,13 @@ const MySopsPanel = () => {
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-shadow focus:outline-none cursor-pointer
               ${
                 active
-                  ? "bg-[#E43941] text-white shadow"
+                  ? f.key === "daily"
+                    ? "bg-yellow-600 text-white shadow"
+                    : f.key === "weekly"
+                    ? "bg-blue-600 text-white shadow"
+                    : f.key === "monthly"
+                    ? "bg-green-600 text-white shadow"
+                    : "bg-[#E43941] text-white shadow" 
                   : "bg-gray-800 text-gray-200 hover:bg-gray-700"
               }`}
             aria-pressed={active}
@@ -191,7 +197,18 @@ const MySopsPanel = () => {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <h5 className="font-medium text-white">{sop.title}</h5>
-                  <span className="text-xs rounded-full px-2 py-0.5 capitalize bg-gray-700 text-gray-200">
+                  <span
+                    className={`text-xs rounded-full px-2 py-0.5 capitalize 
+    ${
+      sop.frequency === "daily"
+        ? "bg-yellow-600 text-white"
+        : sop.frequency === "weekly"
+        ? "bg-blue-600 text-white"
+        : sop.frequency === "monthly"
+        ? "bg-green-600 text-white"
+        : "bg-gray-600 text-white"
+    }`}
+                  >
                     {sop.frequency || "—"}
                   </span>
                 </div>
