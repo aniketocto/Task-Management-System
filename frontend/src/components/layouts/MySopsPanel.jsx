@@ -218,12 +218,12 @@ const MySopsPanel = () => {
                 </p>
 
                 <div className="text-xs text-gray-300 mt-2">
-                  <div>
+                  {/* <div>
                     <strong>Assigned to:</strong>{" "}
                     {typeof sop.assignedTo === "object"
                       ? sop.assignedTo.name || sop.assignedTo._id
                       : sop.assignedTo || "—"}
-                  </div>
+                  </div> */}
                   {sop.completedAt && (
                     <div>
                       <strong>Completed:</strong>{" "}
