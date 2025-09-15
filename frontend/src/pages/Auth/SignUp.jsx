@@ -10,6 +10,8 @@ import { UserContext } from "../../context/userContext";
 import { GoogleLogin } from "@react-oauth/google";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import SpinLoader from "../../components/layouts/SpinLoader";
+import SelectOption from "components/Inputs/SelectOption";
+import { DESIGNATIONS } from "../../utils/data";
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState("");
@@ -223,13 +225,18 @@ const SignUp = () => {
                 type="text"
               />
             )}
-            <Input
-              value={designation}
-              onChange={(e) => setDesignation(e.target.value)}
-              label="Designation"
-              placeholder="Enter your Designation"
-              type="text"
-            />
+            <div className="col-span-12 md:col-span-4">
+              <label className="text-xs font-medium text-slate-200">
+                Designation
+              </label>
+              <SelectOption
+                options={DESIGNATIONS}
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                label="Designation"
+                placeholder="Select your designation"
+              />
+            </div>
             <SelectInput
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
